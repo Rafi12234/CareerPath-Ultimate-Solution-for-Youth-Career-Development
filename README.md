@@ -63,7 +63,7 @@ CareerPath is an interactive platform designed to guide students and job-seekers
 ---
 
 #### Features
-Core Features
+#### Core Features
 
 - Interactive UI Dashboard:
   The platform provides an interactive dashboard that recommends relevant courses and job opportunities based on the user's interests, knowledge, and skills. It helps users discover personalized career pathways and learning resources.
