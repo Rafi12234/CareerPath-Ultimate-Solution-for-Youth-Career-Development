@@ -60,9 +60,11 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to={user ? '/dashboard' : '/'} className="flex items-center gap-2.5 group shrink-0">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#7c3aed] to-[#ec4899] flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#7c3aed]/25 group-hover:shadow-[#7c3aed]/50 transition-all duration-300 group-hover:scale-105">
-                C
-              </div>
+              <img
+                src="https://res.cloudinary.com/dnzjg9lq8/image/upload/v1771619628/a-modern-minimalist-logo-design-featurin_1uJsjrn8RAWcX1Q_cP56-A_L4ta2RDPTV60VCZaV-IRKA_cover_sd_q0fsvx.jpg"
+                alt="CareerPath Logo"
+                className="w-9 h-9 rounded-lg object-cover shadow-md shadow-[#7c3aed]/25 group-hover:shadow-[#7c3aed]/50 transition-all duration-300 group-hover:scale-105"
+              />
               <span className="text-xl font-bold gradient-text hidden sm:inline">CareerPath</span>
             </Link>
 
