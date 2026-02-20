@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Search, BookOpen, Users, CheckCircle, Clock, Star } from 'lucide-react';
+import { Search, BookOpen, Users, CheckCircle, Clock, Star, X, ChevronRight, Award, Layers, GraduationCap } from 'lucide-react';
 import api from '../utils/api';
 
 const courseImages = [
@@ -33,6 +33,7 @@ export default function Resources() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
+  const [selectedCourse, setSelectedCourse] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -191,7 +192,10 @@ export default function Resources() {
                     </div>
 
                     <div className="flex gap-2.5">
-                      <button className="flex-1 py-2.5 border border-[#2a2a5a] rounded-xl text-gray-400 text-sm font-medium hover:border-[#7c3aed]/40 hover:text-white transition-all duration-200">
+                      <button
+                        onClick={() => setSelectedCourse(course)}
+                        className="flex-1 py-2.5 border border-[#2a2a5a] rounded-xl text-gray-400 text-sm font-medium hover:border-[#7c3aed]/40 hover:text-white transition-all duration-200 cursor-pointer"
+                      >
                         View Details
                       </button>
                       {enrolled ? (
@@ -219,6 +223,171 @@ export default function Resources() {
           </div>
         )}
       </div>
+
+      {/* ======= Course Details Modal ======= */}
+      {selectedCourse && (() => {
+        const enrolled = isEnrolled(selectedCourse.id);
+        const tc = getTopicColor(selectedCourse.topic);
+        const modalImg = courseImages[(courses.findIndex(c => c.id === selectedCourse.id)) % courseImages.length] || courseImages[0];
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedCourse(null)}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+            {/* Modal */}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#111128] border border-[#2a2a5a]/80 rounded-3xl shadow-2xl shadow-[#7c3aed]/10 animate-[modalIn_0.25s_ease-out]"
+            >
+              {/* Hero Image */}
+              <div className="relative h-52 sm:h-60 overflow-hidden rounded-t-3xl">
+                <img
+                  src={modalImg}
+                  alt={selectedCourse.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-[#111128] via-[#111128]/40 to-transparent" />
+
+                {/* Close button */}
+                <button
+                  onClick={() => setSelectedCourse(null)}
+                  className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-xl bg-black/40 backdrop-blur-sm border border-white/10 text-white/80 hover:text-white hover:bg-black/60 transition-all duration-200 cursor-pointer z-10"
+                >
+                  <X size={18} />
+                </button>
+
+                {/* Badges on image */}
+                <div className="absolute bottom-4 left-5 flex items-center gap-2">
+                  {selectedCourse.topic && (
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${tc}`}>
+                      {selectedCourse.topic}
+                    </span>
+                  )}
+                  {enrolled && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/90 backdrop-blur-sm rounded-full text-white text-xs font-semibold">
+                      <CheckCircle size={12} /> Enrolled
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6 sm:p-8">
+                {/* Title */}
+                <h2 className="text-2xl font-extrabold text-white mb-2 leading-tight">{selectedCourse.name}</h2>
+
+                {/* Quick stats row */}
+                <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-6">
+                  <span className="flex items-center gap-1.5">
+                    <Users size={14} className="text-[#8b5cf6]" />
+                    {selectedCourse.enrollment_count || 0} students enrolled
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock size={14} className="text-[#ec4899]" />
+                    Self-paced learning
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <GraduationCap size={14} className="text-emerald-400" />
+                    Certificate on completion
+                  </span>
+                </div>
+
+                {/* Description */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <ChevronRight size={14} className="text-[#7c3aed]" /> About This Course
+                  </h4>
+                  <p className="text-sm text-gray-400 leading-relaxed pl-5">
+                    {selectedCourse.description || 'Learn essential skills in this comprehensive course designed to advance your career. This course covers fundamental concepts and advanced techniques with hands-on projects.'}
+                  </p>
+                </div>
+
+                {/* What You'll Learn */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Award size={14} className="text-[#ec4899]" /> What You'll Learn
+                  </h4>
+                  <div className="grid sm:grid-cols-2 gap-2 pl-5">
+                    {[
+                      `Core ${selectedCourse.topic || 'technical'} fundamentals`,
+                      'Hands-on project experience',
+                      'Industry best practices',
+                      'Problem-solving skills',
+                      'Portfolio-ready projects',
+                      'Career preparation guidance',
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-2 text-sm text-gray-400">
+                        <CheckCircle size={14} className="text-emerald-400 mt-0.5 shrink-0" />
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Course Details cards */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  <div className="bg-[#0a0a1a]/50 border border-[#2a2a5a]/40 rounded-xl p-4 text-center">
+                    <Layers size={20} className="mx-auto text-[#8b5cf6] mb-2" />
+                    <div className="text-xs text-gray-500 mb-1">Level</div>
+                    <div className="text-sm font-bold text-white">All Levels</div>
+                  </div>
+                  <div className="bg-[#0a0a1a]/50 border border-[#2a2a5a]/40 rounded-xl p-4 text-center">
+                    <Clock size={20} className="mx-auto text-[#ec4899] mb-2" />
+                    <div className="text-xs text-gray-500 mb-1">Duration</div>
+                    <div className="text-sm font-bold text-white">Self-paced</div>
+                  </div>
+                  <div className="bg-[#0a0a1a]/50 border border-[#2a2a5a]/40 rounded-xl p-4 text-center">
+                    <Star size={20} className="mx-auto text-amber-400 mb-2" />
+                    <div className="text-xs text-gray-500 mb-1">Rating</div>
+                    <div className="text-sm font-bold text-white">4.8 / 5.0</div>
+                  </div>
+                </div>
+
+                {/* Topic */}
+                {selectedCourse.topic && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <BookOpen size={14} className="text-[#8b5cf6]" /> Topic
+                    </h4>
+                    <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-medium ${tc}`}>
+                      {selectedCourse.topic}
+                    </span>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex gap-3">
+                  {enrolled ? (
+                    <button
+                      onClick={() => { handleUnenroll(selectedCourse.id); setSelectedCourse(null); }}
+                      disabled={actionLoading === selectedCourse.id}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#ec4899] hover:bg-[#db2777] rounded-xl text-white text-sm font-bold transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                    >
+                      {actionLoading === selectedCourse.id ? 'Processing...' : 'Unenroll from Course'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { handleEnroll(selectedCourse.id); setSelectedCourse(null); }}
+                      disabled={actionLoading === selectedCourse.id}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-linear-to-r from-[#7c3aed] to-[#ec4899] rounded-xl text-white text-sm font-bold hover:shadow-lg hover:shadow-[#7c3aed]/25 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                    >
+                      <GraduationCap size={16} /> {actionLoading === selectedCourse.id ? 'Enrolling...' : 'Enroll Now'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setSelectedCourse(null)}
+                    className="px-6 py-3 border border-[#2a2a5a] rounded-xl text-gray-400 text-sm font-medium hover:border-[#7c3aed]/40 hover:text-white transition-all duration-200 cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
