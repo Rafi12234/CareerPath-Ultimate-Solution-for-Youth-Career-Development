@@ -145,10 +145,9 @@ export default function Navbar() {
                   </Link>
                   <Link
                     to="/register"
-                    className="px-5 py-2 text-sm font-semibold bg-gradient-to-r from-[#10b981] to-[#059669] rounded-full text-white shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.03] transition-all duration-200 flex items-center gap-1.5"
+                    className="px-5 py-2 text-sm font-semibold bg-linear-to-r from-[#7c3aed] to-[#ec4899] rounded-xl text-white shadow-md shadow-[#7c3aed]/20 hover:shadow-[#7c3aed]/40 hover:scale-[1.03] transition-all duration-200"
                   >
-                    <span className="w-4 h-4 rounded bg-white/20 flex items-center justify-center text-[10px]">⚡</span>
-                    Get App
+                    Sign Up
                   </Link>
                 </div>
               )}
@@ -189,8 +188,8 @@ export default function Navbar() {
                 <Link to="/login" className="block px-4 py-2.5 rounded-xl text-sm text-gray-300 hover:text-white hover:bg-white/[0.06] transition-all">
                   Sign In
                 </Link>
-                <Link to="/register" className="block px-4 py-2.5 rounded-xl text-sm bg-gradient-to-r from-[#10b981] to-[#059669] text-white text-center font-semibold">
-                  Get App
+                <Link to="/register" className="block px-4 py-2.5 rounded-xl text-sm bg-linear-to-r from-[#7c3aed] to-[#ec4899] text-white text-center font-semibold">
+                  Sign Up
                 </Link>
               </div>
             )}

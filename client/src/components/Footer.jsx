@@ -14,9 +14,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link to="/" className="inline-flex items-center gap-2.5 mb-5 group">
-              <div className="w-9 h-9 rounded-xl bg-linear-to-br from-[#7c3aed] to-[#ec4899] flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-[#7c3aed]/20">
-                C
-              </div>
+              <img
+                src="https://res.cloudinary.com/dnzjg9lq8/image/upload/v1771619628/a-modern-minimalist-logo-design-featurin_1uJsjrn8RAWcX1Q_cP56-A_L4ta2RDPTV60VCZaV-IRKA_cover_sd_q0fsvx.jpg"
+                alt="CareerPath Logo"
+                className="w-9 h-9 rounded-xl object-cover shadow-lg shadow-[#7c3aed]/20 group-hover:shadow-[#7c3aed]/40 transition-all duration-300"
+              />
               <span className="text-xl font-bold gradient-text">CareerPath</span>
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed max-w-xs">

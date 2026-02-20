@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Search, MapPin, Building2, Briefcase, TrendingUp, Send, X, DollarSign, Star, CheckCircle, Clock, Award, ChevronRight } from 'lucide-react';
 import api from '../utils/api';
@@ -13,6 +14,7 @@ const skillColors = [
 
 export default function Jobs() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [userSkills, setUserSkills] = useState([]);
   const [search, setSearch] = useState('');
@@ -186,20 +188,22 @@ export default function Jobs() {
               className="w-full pl-11 pr-4 py-3 bg-[#111128] border border-[#2a2a5a] rounded-xl text-white placeholder-gray-600 focus:border-[#7c3aed]/50 focus:ring-1 focus:ring-[#7c3aed]/20 transition-all duration-200"
             />
           </div>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="px-5 py-3 bg-[#111128] border border-[#2a2a5a] rounded-xl text-gray-300 focus:border-[#7c3aed]/50 transition-all duration-200 appearance-none cursor-pointer min-w-[160px]"
-          >
-            <option value="all">All Matches</option>
-            <option value="excellent">Excellent (80%+)</option>
-            <option value="good">Good (60-79%)</option>
-            <option value="fair">Fair (&lt;60%)</option>
-          </select>
+          {user && (
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="px-5 py-3 bg-[#111128] border border-[#2a2a5a] rounded-xl text-gray-300 focus:border-[#7c3aed]/50 transition-all duration-200 appearance-none cursor-pointer min-w-[160px]"
+            >
+              <option value="all">All Matches</option>
+              <option value="excellent">Excellent (80%+)</option>
+              <option value="good">Good (60-79%)</option>
+              <option value="fair">Fair (&lt;60%)</option>
+            </select>
+          )}
         </div>
 
-        {/* Stats Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        {/* Stats Bar (logged in only) */}
+        {user && <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           {[
             { label: 'Total Jobs', value: jobs.length, color: 'text-[#8b5cf6]', bg: 'bg-[#7c3aed]/10' },
             { label: 'Excellent', value: excellentCount, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
@@ -211,7 +215,7 @@ export default function Jobs() {
               <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
             </div>
           ))}
-        </div>
+        </div>}
 
         {/* Jobs List */}
         {loading ? (
@@ -249,26 +253,28 @@ export default function Jobs() {
                   style={{ animationDelay: `${idx * 0.05}s` }}
                 >
                   <div className="flex flex-col lg:flex-row gap-5 lg:gap-6">
-                    {/* Match Circle */}
-                    <div className="flex lg:flex-col items-center gap-4 lg:gap-2 lg:justify-center lg:min-w-[100px]">
-                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0">
-                        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                          <circle cx="50" cy="50" r="42" fill="none" stroke="#1a1a3e" strokeWidth="5" />
-                          <circle
-                            cx="50" cy="50" r="42" fill="none"
-                            stroke={scoreColor}
-                            strokeWidth="5"
-                            strokeDasharray={`${dashArray} ${circumference}`}
-                            strokeLinecap="round"
-                            className="transition-all duration-700"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-lg sm:text-xl font-extrabold text-white">{score}%</span>
+                    {/* Match Circle (logged in only) */}
+                    {user && (
+                      <div className="flex lg:flex-col items-center gap-4 lg:gap-2 lg:justify-center lg:min-w-[100px]">
+                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0">
+                          <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#1a1a3e" strokeWidth="5" />
+                            <circle
+                              cx="50" cy="50" r="42" fill="none"
+                              stroke={scoreColor}
+                              strokeWidth="5"
+                              strokeDasharray={`${dashArray} ${circumference}`}
+                              strokeLinecap="round"
+                              className="transition-all duration-700"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-lg sm:text-xl font-extrabold text-white">{score}%</span>
+                          </div>
                         </div>
+                        <span className={`text-xs font-semibold ${match.color} whitespace-nowrap`}>{match.text}</span>
                       </div>
-                      <span className={`text-xs font-semibold ${match.color} whitespace-nowrap`}>{match.text}</span>
-                    </div>
+                    )}
 
                     {/* Job Details */}
                     <div className="flex-1 min-w-0">
@@ -296,10 +302,12 @@ export default function Jobs() {
 
                       {/* Skills */}
                       <div className="mb-4">
-                        <span className="text-xs text-gray-600 uppercase tracking-wider font-medium mb-2 block">Required Skills ({details.matchedSkills.length}/{jobSkills.length} matched)</span>
+                        <span className="text-xs text-gray-600 uppercase tracking-wider font-medium mb-2 block">
+                          Required Skills{user ? ` (${details.matchedSkills.length}/${jobSkills.length} matched)` : ` (${jobSkills.length})`}
+                        </span>
                         <div className="flex flex-wrap gap-1.5">
                           {jobSkills.map((skill, i) => {
-                            const isMatched = details.matchedSkills.includes(skill.toLowerCase());
+                            const isMatched = user && details.matchedSkills.includes(skill.toLowerCase());
                             return (
                               <span key={i} className={`px-2.5 py-1 text-xs rounded-full border ${
                                 isMatched
@@ -313,18 +321,23 @@ export default function Jobs() {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-4 text-sm mb-4">
-                        <span className={`flex items-center gap-1.5 ${expBreakdown >= 15 ? 'text-emerald-400' : expBreakdown >= 8 ? 'text-amber-400' : 'text-gray-500'}`}>
-                          <TrendingUp size={14} /> {expBreakdown >= 20 ? 'Meets experience level' : expBreakdown >= 12 ? 'Close to required level' : 'Below required level'}
-                        </span>
-                        <span className="flex items-center gap-1.5 text-gray-500">
-                          <span className={`w-1.5 h-1.5 rounded-full ${trackBreakdown >= 15 ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                          {trackBreakdown >= 20 ? 'Same track' : trackBreakdown >= 10 ? 'Related track' : 'Different track'}
-                        </span>
-                      </div>
+                      {user && (
+                        <div className="flex flex-wrap gap-4 text-sm mb-4">
+                          <span className={`flex items-center gap-1.5 ${expBreakdown >= 15 ? 'text-emerald-400' : expBreakdown >= 8 ? 'text-amber-400' : 'text-gray-500'}`}>
+                            <TrendingUp size={14} /> {expBreakdown >= 20 ? 'Meets experience level' : expBreakdown >= 12 ? 'Close to required level' : 'Below required level'}
+                          </span>
+                          <span className="flex items-center gap-1.5 text-gray-500">
+                            <span className={`w-1.5 h-1.5 rounded-full ${trackBreakdown >= 15 ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                            {trackBreakdown >= 20 ? 'Same track' : trackBreakdown >= 10 ? 'Related track' : 'Different track'}
+                          </span>
+                        </div>
+                      )}
 
                       <div className="flex gap-2.5">
-                        <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-[#7c3aed] to-[#ec4899] rounded-xl text-white text-sm font-semibold hover:shadow-lg hover:shadow-[#7c3aed]/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+                        <button
+                          onClick={() => { if (!user) navigate('/login'); }}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-[#7c3aed] to-[#ec4899] rounded-xl text-white text-sm font-semibold hover:shadow-lg hover:shadow-[#7c3aed]/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                        >
                           <Send size={14} /> Apply Now
                         </button>
                         <button
@@ -336,28 +349,30 @@ export default function Jobs() {
                       </div>
                     </div>
 
-                    {/* Match Breakdown */}
-                    <div className="lg:min-w-[190px] bg-[#0a0a1a]/50 border border-[#2a2a5a]/40 rounded-xl p-4">
-                      <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3">Match Breakdown</h4>
-                      {[
-                        { label: 'Skills', value: skillsBreakdown, max: 60, color: '#7c3aed' },
-                        { label: 'Experience', value: expBreakdown, max: 20, color: '#ec4899' },
-                        { label: 'Track', value: trackBreakdown, max: 20, color: '#8b5cf6' },
-                      ].map((item) => (
-                        <div key={item.label} className="mb-2.5 last:mb-0">
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="text-gray-500">{item.label}</span>
-                            <span className="text-gray-300 font-medium">{item.value}/{item.max}</span>
+                    {/* Match Breakdown (logged in only) */}
+                    {user && (
+                      <div className="lg:min-w-[190px] bg-[#0a0a1a]/50 border border-[#2a2a5a]/40 rounded-xl p-4">
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3">Match Breakdown</h4>
+                        {[
+                          { label: 'Skills', value: skillsBreakdown, max: 60, color: '#7c3aed' },
+                          { label: 'Experience', value: expBreakdown, max: 20, color: '#ec4899' },
+                          { label: 'Track', value: trackBreakdown, max: 20, color: '#8b5cf6' },
+                        ].map((item) => (
+                          <div key={item.label} className="mb-2.5 last:mb-0">
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-gray-500">{item.label}</span>
+                              <span className="text-gray-300 font-medium">{item.value}/{item.max}</span>
+                            </div>
+                            <div className="h-1.5 bg-[#1a1a3e] rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-700 ease-out"
+                                style={{ width: `${(item.value / item.max) * 100}%`, backgroundColor: item.color }}
+                              />
+                            </div>
                           </div>
-                          <div className="h-1.5 bg-[#1a1a3e] rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-700 ease-out"
-                              style={{ width: `${(item.value / item.max) * 100}%`, backgroundColor: item.color }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
