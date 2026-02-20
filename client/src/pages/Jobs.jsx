@@ -278,6 +278,21 @@ export default function Jobs() {
                         <span className="flex items-center gap-1.5"><Briefcase size={14} /> {job.level}</span>
                       </div>
 
+                      {/* Description */}
+                      {job.description && (
+                        <p className="text-sm text-gray-400 leading-relaxed mb-4">{job.description}</p>
+                      )}
+
+                      {/* Salary Range */}
+                      {(job.salary_min || job.salary_max) && (
+                        <div className="flex items-center gap-2 mb-4">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">Salary:</span>
+                          <span className="text-sm font-semibold text-emerald-400">
+                            ৳{job.salary_min?.toLocaleString()} — ৳{job.salary_max?.toLocaleString()}/mo
+                          </span>
+                        </div>
+                      )}
+
                       {/* Skills */}
                       <div className="mb-4">
                         <span className="text-xs text-gray-600 uppercase tracking-wider font-medium mb-2 block">Required Skills ({details.matchedSkills.length}/{jobSkills.length} matched)</span>
