@@ -161,8 +161,8 @@ export default function Navbar() {
             rgba(10, 26, 34, 0.45) 50%,
             rgba(7, 16, 21, 0.55) 100%
           );
-          backdrop-filter: blur(24px) saturate(1.6);
-          -webkit-backdrop-filter: blur(24px) saturate(1.6);
+          backdrop-filter: blur(20px) saturate(1.6);
+          -webkit-backdrop-filter: blur(20px) saturate(1.6);
         }
 
         .nav-glass-heavy {
@@ -172,8 +172,8 @@ export default function Navbar() {
             rgba(10, 26, 34, 0.68) 50%,
             rgba(7, 16, 21, 0.75) 100%
           );
-          backdrop-filter: blur(24px) saturate(1.8);
-          -webkit-backdrop-filter: blur(24px) saturate(1.8);
+          backdrop-filter: blur(20px) saturate(1.8);
+          -webkit-backdrop-filter: blur(20px) saturate(1.8);
         }
 
         /* Link hover 3D lift */
@@ -226,7 +226,7 @@ export default function Navbar() {
       >
         <div className="w-full max-w-[1200px] nav-3d">
           <div
-            className={`nav-3d-inner relative rounded-[20px] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            className={`nav-3d-inner relative rounded-[30px] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
               scrolled
                 ? 'nav-glass-heavy shadow-[0_8px_40px_-8px_rgba(0,0,0,0.6),0_2px_15px_-3px_rgba(20,184,166,0.08)]'
                 : 'nav-glass shadow-[0_4px_24px_-4px_rgba(0,0,0,0.4),0_1px_10px_-2px_rgba(20,184,166,0.05)]'
