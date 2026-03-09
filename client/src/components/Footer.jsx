@@ -5,7 +5,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-auto border-t border-[#1e3a42]/50 bg-[#081012]">
+    <footer className="relative mt-auto border-t border-[#1e3a42]/50 bg-[#03070A]">
       {/* Glow line */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-px bg-linear-to-r from-transparent via-[#14b8a6]/40 to-transparent" />
 
@@ -76,7 +76,7 @@ export default function Footer() {
                   key={label}
                   href="#"
                   aria-label={label}
-                  className="w-10 h-10 bg-[#162a32] border border-[#1e3a42] rounded-xl flex items-center justify-center text-gray-500 hover:text-[#2dd4bf] hover:border-[#14b8a6]/40 hover:bg-[#14b8a6]/10 transition-all duration-200"
+                  className="w-10 h-10 bg-[#0F3A42] border border-[#1e3a42] rounded-xl flex items-center justify-center text-gray-500 hover:text-[#2dd4bf] hover:border-[#14b8a6]/40 hover:bg-[#14b8a6]/10 transition-all duration-200"
                 >
                   <Icon size={17} />
                 </a>

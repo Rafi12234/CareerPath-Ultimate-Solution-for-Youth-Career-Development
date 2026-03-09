@@ -125,11 +125,18 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-16 page-enter">
-      <div className="max-w-[900px] mx-auto px-6 sm:px-8 lg:px-12">
+    <div className="hero-cinematic min-h-screen pt-24 pb-16 page-enter">
+      {/* Cinematic background haze */}
+      <div className="hero-haze">
+        <div className="haze-orb haze-orb--center" />
+        <div className="haze-orb haze-orb--right" />
+        <div className="haze-orb haze-orb--left" />
+      </div>
+
+      <div className="relative z-10 max-w-[900px] mx-auto px-6 sm:px-8 lg:px-12">
 
         {/* Profile Header */}
-        <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8 mb-8">
+        <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8 mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
             <div className="w-20 h-20 rounded-2xl bg-linear-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/20 shrink-0">
               <span className="text-3xl font-bold text-white">{user.name?.[0]?.toUpperCase()}</span>
@@ -152,7 +159,7 @@ export default function Profile() {
         </div>
 
         {/* Skills Section */}
-        <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8 mb-8">
+        <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -174,7 +181,7 @@ export default function Profile() {
 
           {/* Add Skill Form */}
           {showAddForm && (
-            <form onSubmit={handleAddSkill} className="bg-[#0a1214]/60 border border-[#1e3a42] rounded-xl p-5 mb-6">
+            <form onSubmit={handleAddSkill} className="bg-[#071015]/60 border border-[#1e3a42] rounded-xl p-5 mb-6">
               <h3 className="text-white font-semibold text-sm mb-4">Add New Skill</h3>
               <div className="grid sm:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -184,7 +191,7 @@ export default function Profile() {
                     value={newSkill}
                     onChange={(e) => setNewSkill(e.target.value)}
                     placeholder="e.g. React, Python, Docker..."
-                    className="w-full px-4 py-2.5 bg-[#162a32]/50 border border-[#1e3a42] rounded-xl text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#14b8a6]/50 transition-colors"
+                    className="w-full px-4 py-2.5 bg-[#0F3A42]/50 border border-[#1e3a42] rounded-xl text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#14b8a6]/50 transition-colors"
                     required
                   />
                 </div>
@@ -194,7 +201,7 @@ export default function Profile() {
                     <select
                       value={newProficiency}
                       onChange={(e) => setNewProficiency(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-[#162a32]/50 border border-[#1e3a42] rounded-xl text-white text-sm appearance-none focus:outline-none focus:border-[#14b8a6]/50 transition-colors cursor-pointer"
+                      className="w-full px-4 py-2.5 bg-[#0F3A42]/50 border border-[#1e3a42] rounded-xl text-white text-sm appearance-none focus:outline-none focus:border-[#14b8a6]/50 transition-colors cursor-pointer"
                     >
                       {PROFICIENCY_LEVELS.map((level) => (
                         <option key={level} value={level}>{level}</option>
@@ -238,7 +245,7 @@ export default function Profile() {
               {skills.map((skill) => (
                 <div
                   key={skill.id}
-                  className="group bg-[#0a1214]/40 border border-[#1e3a42]/40 rounded-xl p-4 hover:border-[#14b8a6]/20 transition-all duration-200"
+                  className="group bg-[#071015]/40 border border-[#1e3a42]/40 rounded-xl p-4 hover:border-[#14b8a6]/20 transition-all duration-200"
                 >
                   {editingId === skill.id ? (
                     /* Edit Mode */
@@ -247,13 +254,13 @@ export default function Profile() {
                         type="text"
                         value={editSkill}
                         onChange={(e) => setEditSkill(e.target.value)}
-                        className="flex-1 px-3 py-2 bg-[#162a32]/50 border border-[#1e3a42] rounded-lg text-white text-sm focus:outline-none focus:border-[#14b8a6]/50"
+                        className="flex-1 px-3 py-2 bg-[#0F3A42]/50 border border-[#1e3a42] rounded-lg text-white text-sm focus:outline-none focus:border-[#14b8a6]/50"
                       />
                       <div className="relative">
                         <select
                           value={editProficiency}
                           onChange={(e) => setEditProficiency(e.target.value)}
-                          className="px-3 py-2 bg-[#162a32]/50 border border-[#1e3a42] rounded-lg text-white text-sm appearance-none pr-8 focus:outline-none focus:border-[#14b8a6]/50 cursor-pointer"
+                          className="px-3 py-2 bg-[#0F3A42]/50 border border-[#1e3a42] rounded-lg text-white text-sm appearance-none pr-8 focus:outline-none focus:border-[#14b8a6]/50 cursor-pointer"
                         >
                           {PROFICIENCY_LEVELS.map((level) => (
                             <option key={level} value={level}>{level}</option>
@@ -287,7 +294,7 @@ export default function Profile() {
                             {skill.proficiency}
                           </span>
                         </div>
-                        <div className="w-full h-1.5 bg-[#162a32] rounded-full overflow-hidden">
+                        <div className="w-full h-1.5 bg-[#0F3A42] rounded-full overflow-hidden">
                           <div className={`h-full rounded-full transition-all duration-500 ${PROFICIENCY_COLORS[skill.proficiency]?.bar} ${PROFICIENCY_WIDTH[skill.proficiency]}`} />
                         </div>
                       </div>
@@ -316,7 +323,7 @@ export default function Profile() {
         </div>
 
         {/* Enrolled Courses Section */}
-        <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8 mb-8">
+        <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8 mb-8">
           <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
             <BookOpen size={20} className="text-[#06b6d4]" />
             Enrolled Courses
@@ -332,7 +339,7 @@ export default function Profile() {
           ) : (
             <div className="grid gap-3">
               {enrollments.map((enrollment) => (
-                <div key={enrollment.id} className="bg-[#0a1214]/40 border border-[#1e3a42]/40 rounded-xl p-4 flex items-center gap-4">
+                <div key={enrollment.id} className="bg-[#071015]/40 border border-[#1e3a42]/40 rounded-xl p-4 flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-[#06b6d4]/12 flex items-center justify-center shrink-0">
                     <BookOpen size={18} className="text-[#06b6d4]" />
                   </div>
@@ -358,19 +365,19 @@ export default function Profile() {
 
         {/* Summary Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-xl p-5 text-center">
+          <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-xl p-5 text-center">
             <div className="text-2xl font-bold text-white">{skills.length}</div>
             <div className="text-xs text-gray-500 mt-1">Total Skills</div>
           </div>
-          <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-xl p-5 text-center">
+          <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-xl p-5 text-center">
             <div className="text-2xl font-bold text-white">{skills.filter(s => s.proficiency === 'Professional').length}</div>
             <div className="text-xs text-gray-500 mt-1">Professional</div>
           </div>
-          <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-xl p-5 text-center">
+          <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-xl p-5 text-center">
             <div className="text-2xl font-bold text-white">{skills.filter(s => s.proficiency === 'Expert').length}</div>
             <div className="text-xs text-gray-500 mt-1">Expert</div>
           </div>
-          <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-xl p-5 text-center">
+          <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-xl p-5 text-center">
             <div className="text-2xl font-bold text-white">{enrollments.length}</div>
             <div className="text-xs text-gray-500 mt-1">Courses</div>
           </div>

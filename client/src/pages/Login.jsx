@@ -29,13 +29,13 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-24 page-enter">
       {/* Background effects */}
-      <div className="fixed inset-0 bg-[#0a1214]" />
+      <div className="fixed inset-0 bg-[#071015]" />
       <div className="fixed inset-0 bg-linear-to-br from-[#14b8a6]/5 via-transparent to-[#06b6d4]/5" />
       <div className="fixed top-40 left-20 w-72 h-72 bg-[#14b8a6]/8 rounded-full blur-[100px]" />
       <div className="fixed bottom-20 right-20 w-72 h-72 bg-[#06b6d4]/5 rounded-full blur-[100px]" />
 
       <div className="relative w-full max-w-md">
-        <div className="bg-[#0f1d22]/90 backdrop-blur-xl border border-[#1e3a42]/60 rounded-2xl p-8 shadow-2xl shadow-black/20">
+        <div className="bg-[#0A1A22]/90 backdrop-blur-xl border border-[#1e3a42]/60 rounded-2xl p-8 shadow-2xl shadow-black/20">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-14 h-14 bg-[#14b8a6]/15 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -63,7 +63,7 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full pl-10.5 pr-4 py-3 bg-[#0a1214]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
+                  className="w-full pl-10.5 pr-4 py-3 bg-[#071015]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
                   style={{ paddingLeft: '2.75rem' }}
                 />
               </div>
@@ -79,7 +79,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="w-full pr-12 py-3 bg-[#0a1214]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
+                  className="w-full pr-12 py-3 bg-[#071015]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
                   style={{ paddingLeft: '2.75rem' }}
                 />
                 <button

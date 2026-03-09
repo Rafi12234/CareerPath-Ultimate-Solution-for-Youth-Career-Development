@@ -91,8 +91,15 @@ export default function Resources() {
   );
 
   return (
-    <div className="min-h-screen pt-24 pb-16 page-enter">
-      <div className="max-w-300 mx-auto px-6 sm:px-8 lg:px-12">
+    <div className="hero-cinematic min-h-screen pt-24 pb-16 page-enter">
+      {/* Cinematic background haze */}
+      <div className="hero-haze">
+        <div className="haze-orb haze-orb--center" />
+        <div className="haze-orb haze-orb--right" />
+        <div className="haze-orb haze-orb--left" />
+      </div>
+
+      <div className="relative z-10 max-w-300 mx-auto px-6 sm:px-8 lg:px-12">
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">Learning Resources</h1>

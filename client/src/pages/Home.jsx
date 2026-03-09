@@ -100,20 +100,15 @@ export default function Home() {
   return (
     <div className="page-enter">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        {/* Background effects */}
-        <div className="absolute inset-0 bg-[#0a1214]" />
-        <div className="absolute inset-0 bg-linear-to-br from-[#14b8a6]/5 via-transparent to-[#06b6d4]/5" />
-        <div className="absolute top-32 right-10 w-[500px] h-[500px] bg-[#14b8a6]/8 rounded-full blur-[120px]" />
-        <div className="absolute bottom-20 left-10 w-[400px] h-[400px] bg-[#06b6d4]/5 rounded-full blur-[100px]" />
+      <section className="hero-cinematic min-h-screen flex items-center">
+        {/* Ambient haze orbs (Layer 3) */}
+        <div className="hero-haze">
+          <div className="haze-orb haze-orb--center" />
+          <div className="haze-orb haze-orb--right" />
+          <div className="haze-orb haze-orb--left" />
+        </div>
 
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'radial-gradient(circle, #2dd4bf 1px, transparent 1px)',
-          backgroundSize: '40px 40px'
-        }} />
-
-        <div className="relative w-full max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 pt-24 pb-16">
+        <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 pt-24 pb-16">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Text Content */}
             <div className="space-y-8" key={currentSlide}>
@@ -171,7 +166,7 @@ export default function Home() {
                   alt="Career Development"
                   className="w-full h-[460px] object-cover transition-all duration-700 ease-in-out"
                 />
-                <div className="absolute inset-0 bg-linear-to-t from-[#0a1214]/70 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-[#071015]/70 via-transparent to-transparent" />
               </div>
 
               {/* Floating Cards */}
@@ -218,13 +213,13 @@ export default function Home() {
         {/* Slide nav arrows */}
         <button
           onClick={() => goToSlide('left')}
-          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 glass rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:scale-110"
+          className="absolute z-10 left-3 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 glass rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:scale-110"
         >
           <ChevronLeft size={20} />
         </button>
         <button
           onClick={() => goToSlide('right')}
-          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 glass rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:scale-110"
+          className="absolute z-10 right-3 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 glass rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:scale-110"
         >
           <ChevronRight size={20} />
         </button>
@@ -232,8 +227,8 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="relative py-24 sm:py-32">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a1214] via-[#0f1d22]/50 to-[#0a1214]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#14b8a6]/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#03070A] via-[#071015]/80 to-[#03070A]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#0F3A42]/15 rounded-full blur-[150px] pointer-events-none" />
 
         <div className="relative max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
           <div className="text-center mb-16 sm:mb-20">
@@ -254,7 +249,7 @@ export default function Home() {
             {features.map((f, i) => (
               <div
                 key={f.title}
-                className="group relative bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-7 transition-all duration-300 hover:border-[#14b8a6]/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#14b8a6]/5"
+                className="group relative bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-7 transition-all duration-300 hover:border-[#14b8a6]/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#14b8a6]/5"
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
                 <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${f.gradient} flex items-center justify-center mb-5 shadow-lg transition-transform duration-300 group-hover:scale-110`}
@@ -272,8 +267,8 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="relative py-24 sm:py-32">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a1214] to-[#0f1d22]/30" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#14b8a6]/10 rounded-full blur-[120px]" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#03070A] to-[#071015]/50" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#0F3A42]/20 rounded-full blur-[120px]" />
 
         <div className="relative max-w-3xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-tight">
