@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #7c3aed;
-  --color-primary-light: #8b5cf6;
-  --color-primary-dark: #6d28d9;
-  --color-accent: #ec4899;
-  --color-accent-dark: #db2777;
-  --color-dark: #0a0a1a;
-  --color-dark-card: #111128;
-  --color-dark-lighter: #1a1a3e;
-  --color-dark-border: #2a2a5a;
+  --color-primary: #14b8a6;
+  --color-primary-light: #2dd4bf;
+  --color-primary-dark: #0d9488;
+  --color-accent: #06b6d4;
+  --color-accent-dark: #0891b2;
+  --color-dark: #0a1214;
+  --color-dark-card: #0f1d22;
+  --color-dark-lighter: #162a32;
+  --color-dark-border: #1e3a42;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
@@ -23,7 +23,7 @@
   }
 
   body {
-    background-color: #0a0a1a;
+    background-color: #0a1214;
     color: #e2e8f0;
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
     min-height: 100vh;
@@ -41,14 +41,14 @@
     width: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #0a0a1a;
+    background: #0a1214;
   }
   ::-webkit-scrollbar-thumb {
-    background: #7c3aed;
+    background: #14b8a6;
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #8b5cf6;
+    background: #2dd4bf;
   }
 
   input, textarea, select {
@@ -79,8 +79,8 @@
   50% { transform: translateY(-10px); }
 }
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.15); }
-  50% { box-shadow: 0 0 40px rgba(124, 58, 237, 0.3); }
+  0%, 100% { box-shadow: 0 0 20px rgba(20, 184, 166, 0.15); }
+  50% { box-shadow: 0 0 40px rgba(20, 184, 166, 0.3); }
 }
 
 .animate-fade-in-up {
@@ -107,15 +107,15 @@
 
 /* Glass card */
 .glass {
-  background: rgba(17, 17, 40, 0.7);
+  background: rgba(15, 29, 34, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(42, 42, 90, 0.6);
+  border: 1px solid rgba(30, 58, 66, 0.6);
 }
 
 /* Gradient text helper */
 .gradient-text {
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  background: linear-gradient(135deg, #2dd4bf, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
