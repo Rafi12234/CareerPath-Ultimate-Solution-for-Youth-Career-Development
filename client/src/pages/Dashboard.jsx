@@ -76,7 +76,7 @@ export default function Dashboard() {
     return { total: skillScore + expScore + trackScore, skills: skillScore, experience: expScore, track: trackScore, matchedSkills };
   };
 
-  const getScoreColor = (score) => score >= 80 ? '#10b981' : score >= 60 ? '#7c3aed' : '#f59e0b';
+  const getScoreColor = (score) => score >= 80 ? '#10b981' : score >= 60 ? '#14b8a6' : '#f59e0b';
   const getMatchLabel = (score) => score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : 'Fair';
 
   const recommendedJobs = [...allJobs]
@@ -85,16 +85,16 @@ export default function Dashboard() {
     .slice(0, 3);
 
   const dashCards = [
-    { icon: Briefcase, label: 'Available Jobs', value: stats.jobs, gradient: 'from-[#7c3aed] to-[#6d28d9]', glow: '#7c3aed', link: '/jobs' },
-    { icon: BookOpen, label: 'Courses', value: stats.courses, gradient: 'from-[#ec4899] to-[#db2777]', glow: '#ec4899', link: '/resources' },
+    { icon: Briefcase, label: 'Available Jobs', value: stats.jobs, gradient: 'from-[#14b8a6] to-[#0d9488]', glow: '#14b8a6', link: '/jobs' },
+    { icon: BookOpen, label: 'Courses', value: stats.courses, gradient: 'from-[#06b6d4] to-[#0891b2]', glow: '#06b6d4', link: '/resources' },
     { icon: Award, label: 'My Enrollments', value: stats.enrollments, gradient: 'from-[#10b981] to-[#059669]', glow: '#10b981', link: '/resources' },
     { icon: FileText, label: 'Applications', value: stats.applications, gradient: 'from-[#f59e0b] to-[#d97706]', glow: '#f59e0b', link: '/jobs' },
     { icon: TrendingUp, label: 'Skill Level', value: avgLevelLabel, gradient: 'from-[#3b82f6] to-[#2563eb]', glow: '#3b82f6', link: '/profile' },
   ];
 
   const quickActions = [
-    { icon: Target, label: 'Find Matching Jobs', desc: 'AI-powered job matching based on your skills', link: '/jobs', color: '#7c3aed' },
-    { icon: BookOpen, label: 'Browse Courses', desc: 'Explore learning resources to grow your skills', link: '/resources', color: '#ec4899' },
+    { icon: Target, label: 'Find Matching Jobs', desc: 'AI-powered job matching based on your skills', link: '/jobs', color: '#14b8a6' },
+    { icon: BookOpen, label: 'Browse Courses', desc: 'Explore learning resources to grow your skills', link: '/resources', color: '#06b6d4' },
     { icon: Users, label: 'Contact Support', desc: 'Get help with your career development', link: '/contact', color: '#10b981' },
     { icon: Star, label: 'Update Profile', desc: 'Keep your skills and experience up to date', link: '/profile', color: '#f59e0b' },
   ];
@@ -105,22 +105,22 @@ export default function Dashboard() {
     <div className="min-h-screen pt-24 pb-20 page-enter">
       {/* Decorative background blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute top-20 -left-40 w-96 h-96 bg-[#7c3aed]/[0.04] rounded-full blur-[100px]" />
-        <div className="absolute top-60 -right-40 w-96 h-96 bg-[#ec4899]/[0.04] rounded-full blur-[100px]" />
+        <div className="absolute top-20 -left-40 w-96 h-96 bg-[#14b8a6]/[0.04] rounded-full blur-[100px]" />
+        <div className="absolute top-60 -right-40 w-96 h-96 bg-[#06b6d4]/[0.04] rounded-full blur-[100px]" />
         <div className="absolute bottom-40 left-1/3 w-96 h-96 bg-[#3b82f6]/[0.03] rounded-full blur-[100px]" />
       </div>
 
       <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
 
-        {/* ───── Hero Welcome Section ───── */}
-        <div className="relative mb-10 overflow-hidden rounded-2xl border border-[#2a2a5a]/40 bg-gradient-to-br from-[#111128]/90 to-[#0d0d24]/90 backdrop-blur-xl p-7 sm:p-9">
+        {/* â”€â”€â”€â”€â”€ Hero Welcome Section â”€â”€â”€â”€â”€ */}
+        <div className="relative mb-10 overflow-hidden rounded-2xl border border-[#1e3a42]/40 bg-gradient-to-br from-[#0f1d22]/90 to-[#0c1a1e]/90 backdrop-blur-xl p-7 sm:p-9">
           {/* Decorative inner glow */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#7c3aed]/10 to-transparent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[#ec4899]/8 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#14b8a6]/10 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-[#06b6d4]/8 to-transparent rounded-full blur-3xl" />
 
           <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div className="flex items-center gap-5">
-              <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-br from-[#7c3aed] to-[#ec4899] flex items-center justify-center shadow-lg shadow-[#7c3aed]/25 shrink-0 ring-2 ring-[#7c3aed]/20 ring-offset-2 ring-offset-[#0d0d24]">
+              <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/25 shrink-0 ring-2 ring-[#14b8a6]/20 ring-offset-2 ring-offset-[#0c1a1e]">
                 <span className="text-2xl sm:text-3xl font-bold text-white">{user?.name?.[0]?.toUpperCase()}</span>
               </div>
               <div>
@@ -135,23 +135,23 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-              <div className="flex flex-col items-center px-5 py-3 rounded-xl bg-white/[0.03] border border-[#2a2a5a]/50">
+              <div className="flex flex-col items-center px-5 py-3 rounded-xl bg-white/[0.03] border border-[#1e3a42]/50">
                 <span className="text-sm text-gray-500 mb-0.5">Level</span>
-                <span className="text-base font-bold text-[#7c3aed]">{avgLevelLabel}</span>
+                <span className="text-base font-bold text-[#14b8a6]">{avgLevelLabel}</span>
               </div>
-              <div className="flex flex-col items-center px-5 py-3 rounded-xl bg-white/[0.03] border border-[#2a2a5a]/50">
+              <div className="flex flex-col items-center px-5 py-3 rounded-xl bg-white/[0.03] border border-[#1e3a42]/50">
                 <span className="text-sm text-gray-500 mb-0.5">Skills</span>
-                <span className="text-base font-bold text-[#ec4899]">{userSkills.length}</span>
+                <span className="text-base font-bold text-[#06b6d4]">{userSkills.length}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ───── Stats Grid ───── */}
+        {/* â”€â”€â”€â”€â”€ Stats Grid â”€â”€â”€â”€â”€ */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5 mb-10">
           {dashCards.map((card, i) => (
             <Link key={card.label} to={card.link} className="group" style={{ animationDelay: `${i * 80}ms` }}>
-              <div className="relative h-full bg-[#111128]/60 backdrop-blur-sm border border-[#2a2a5a]/40 rounded-2xl p-6 sm:p-7 hover:border-[#2a2a5a]/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden">
+              <div className="relative h-full bg-[#0f1d22]/60 backdrop-blur-sm border border-[#1e3a42]/40 rounded-2xl p-6 sm:p-7 hover:border-[#1e3a42]/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden">
                 {/* Subtle top accent line */}
                 <div className={`absolute top-0 left-4 right-4 h-[2px] rounded-b-full bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                 <div className="flex items-center justify-between mb-5">
@@ -164,7 +164,7 @@ export default function Dashboard() {
                   <ArrowRight size={16} className="text-gray-600 group-hover:text-gray-400 transition-all duration-200 group-hover:translate-x-0.5" />
                 </div>
                 <div className="text-3xl sm:text-4xl font-extrabold text-white mb-1 tracking-tight">
-                  {loaded ? card.value : <span className="inline-block w-10 h-8 rounded bg-[#1a1a3e] animate-pulse" />}
+                  {loaded ? card.value : <span className="inline-block w-10 h-8 rounded bg-[#162a32] animate-pulse" />}
                 </div>
                 <div className="text-sm text-gray-500 font-medium">{card.label}</div>
               </div>
@@ -172,24 +172,24 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ───── Two-column: Profile + Skills ───── */}
+        {/* â”€â”€â”€â”€â”€ Two-column: Profile + Skills â”€â”€â”€â”€â”€ */}
         <div className="grid lg:grid-cols-5 gap-5 mb-10">
-          {/* Profile Card — 3 cols */}
-          <div className="lg:col-span-3 bg-[#111128]/60 backdrop-blur-sm border border-[#2a2a5a]/40 rounded-2xl p-6 sm:p-7">
+          {/* Profile Card â€” 3 cols */}
+          <div className="lg:col-span-3 bg-[#0f1d22]/60 backdrop-blur-sm border border-[#1e3a42]/40 rounded-2xl p-6 sm:p-7">
             <div className="flex items-center gap-2.5 mb-5">
-              <BarChart3 size={18} className="text-[#7c3aed]" />
+              <BarChart3 size={18} className="text-[#14b8a6]" />
               <h2 className="text-base font-semibold text-white tracking-wide uppercase">Profile Overview</h2>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-5">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#ec4899] flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shrink-0">
                 <span className="text-xl font-bold text-white">{user?.name?.[0]?.toUpperCase()}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-lg font-bold text-white">{user?.name}</h3>
                 <p className="text-gray-500 text-sm truncate">{user?.email}</p>
               </div>
-              <Link to="/profile" className="px-5 py-2.5 rounded-xl bg-white/[0.04] border border-[#2a2a5a]/50 text-sm font-medium text-gray-400 hover:text-white hover:border-[#7c3aed]/40 transition-all duration-200">
-                Edit Profile →
+              <Link to="/profile" className="px-5 py-2.5 rounded-xl bg-white/[0.04] border border-[#1e3a42]/50 text-sm font-medium text-gray-400 hover:text-white hover:border-[#14b8a6]/40 transition-all duration-200">
+                Edit Profile â†’
               </Link>
             </div>
             {/* Skills pills */}
@@ -198,30 +198,30 @@ export default function Dashboard() {
               <div className="flex flex-wrap gap-2">
                 {userSkills.length > 0 ? userSkills.slice(0, 8).map((s) => {
                   const profColor = s.proficiency === 'Professional' ? 'border-emerald-500/40 text-emerald-300 bg-emerald-500/8'
-                    : s.proficiency === 'Expert' ? 'border-[#7c3aed]/40 text-[#a78bfa] bg-[#7c3aed]/8'
+                    : s.proficiency === 'Expert' ? 'border-[#14b8a6]/40 text-[#5eead4] bg-[#14b8a6]/8'
                     : s.proficiency === 'Intermediate' ? 'border-blue-500/40 text-blue-300 bg-blue-500/8'
                     : 'border-gray-500/30 text-gray-400 bg-gray-500/8';
                   return (
                     <span key={s.id} className={`px-3 py-1.5 text-sm rounded-lg border ${profColor} font-medium`}>
                       {s.skill_name}
-                      <span className="ml-1.5 text-xs opacity-60">· {s.proficiency?.[0]}</span>
+                      <span className="ml-1.5 text-xs opacity-60">Â· {s.proficiency?.[0]}</span>
                     </span>
                   );
                 }) : (
-                  <span className="text-xs text-gray-600 italic">No skills added yet — <Link to="/profile" className="text-[#7c3aed] hover:underline">add some</Link></span>
+                  <span className="text-xs text-gray-600 italic">No skills added yet â€” <Link to="/profile" className="text-[#14b8a6] hover:underline">add some</Link></span>
                 )}
                 {userSkills.length > 8 && (
-                  <span className="px-3 py-1.5 text-[#8b5cf6] text-sm font-medium">+{userSkills.length - 8} more</span>
+                  <span className="px-3 py-1.5 text-[#2dd4bf] text-sm font-medium">+{userSkills.length - 8} more</span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Level Ring — 2 cols */}
-          <div className="lg:col-span-2 bg-[#111128]/60 backdrop-blur-sm border border-[#2a2a5a]/40 rounded-2xl p-6 sm:p-7 flex flex-col items-center justify-center">
+          {/* Level Ring â€” 2 cols */}
+          <div className="lg:col-span-2 bg-[#0f1d22]/60 backdrop-blur-sm border border-[#1e3a42]/40 rounded-2xl p-6 sm:p-7 flex flex-col items-center justify-center">
             <div className="relative w-40 h-40 mb-5">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="50" fill="none" stroke="#1a1a3e" strokeWidth="8" />
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#162a32" strokeWidth="8" />
                 <circle cx="60" cy="60" r="50" fill="none" stroke="url(#levelGradient)" strokeWidth="8"
                   strokeDasharray={`${(avgProficiency / 4) * (2 * Math.PI * 50)} ${2 * Math.PI * 50}`}
                   strokeLinecap="round"
@@ -229,8 +229,8 @@ export default function Dashboard() {
                 />
                 <defs>
                   <linearGradient id="levelGradient" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#7c3aed" />
-                    <stop offset="100%" stopColor="#ec4899" />
+                    <stop offset="0%" stopColor="#14b8a6" />
+                    <stop offset="100%" stopColor="#06b6d4" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -241,24 +241,24 @@ export default function Dashboard() {
             </div>
             <span className="text-base font-bold text-white mb-1">{avgLevelLabel}</span>
             <span className="text-sm text-gray-500">{userSkills.length} skills tracked</span>
-            <Link to="/profile" className="mt-4 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-sm font-semibold text-white hover:shadow-lg hover:shadow-[#7c3aed]/20 transition-all duration-200 hover:scale-[1.03]">
+            <Link to="/profile" className="mt-4 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] text-sm font-semibold text-white hover:shadow-lg hover:shadow-[#14b8a6]/20 transition-all duration-200 hover:scale-[1.03]">
               Manage Skills
             </Link>
           </div>
         </div>
 
-        {/* ───── Recommended Jobs ───── */}
+        {/* â”€â”€â”€â”€â”€ Recommended Jobs â”€â”€â”€â”€â”€ */}
         {user && recommendedJobs.length > 0 && (
           <div className="mb-10">
             <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#7c3aed]/15 flex items-center justify-center">
-                  <Zap size={16} className="text-[#7c3aed]" />
+                <div className="w-8 h-8 rounded-lg bg-[#14b8a6]/15 flex items-center justify-center">
+                  <Zap size={16} className="text-[#14b8a6]" />
                 </div>
                 <h2 className="text-base font-semibold text-white uppercase tracking-wide">Top Matches For You</h2>
               </div>
-              <Link to="/jobs" className="text-sm text-[#8b5cf6] hover:text-[#a78bfa] transition-colors font-medium">
-                View all →
+              <Link to="/jobs" className="text-sm text-[#2dd4bf] hover:text-[#5eead4] transition-colors font-medium">
+                View all â†’
               </Link>
             </div>
             <div className="grid sm:grid-cols-3 gap-5">
@@ -270,9 +270,9 @@ export default function Dashboard() {
                 const circumference = 2 * Math.PI * 30;
                 const dashArray = (d.total / 100) * circumference;
                 return (
-                  <div key={job.id} className="group relative bg-[#111128]/60 backdrop-blur-sm border border-[#2a2a5a]/40 rounded-2xl p-6 hover:border-[#2a2a5a]/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col overflow-hidden">
+                  <div key={job.id} className="group relative bg-[#0f1d22]/60 backdrop-blur-sm border border-[#1e3a42]/40 rounded-2xl p-6 hover:border-[#1e3a42]/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col overflow-hidden">
                     {/* Rank badge */}
-                    <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/[0.04] border border-[#2a2a5a]/50 flex items-center justify-center">
+                    <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/[0.04] border border-[#1e3a42]/50 flex items-center justify-center">
                       <span className="text-xs font-bold text-gray-500">#{idx + 1}</span>
                     </div>
 
@@ -280,7 +280,7 @@ export default function Dashboard() {
                     <div className="flex items-start gap-4 mb-4">
                       <div className="relative w-16 h-16 shrink-0">
                         <svg className="w-full h-full -rotate-90" viewBox="0 0 70 70">
-                          <circle cx="35" cy="35" r="30" fill="none" stroke="#1a1a3e" strokeWidth="5" />
+                          <circle cx="35" cy="35" r="30" fill="none" stroke="#162a32" strokeWidth="5" />
                           <circle cx="35" cy="35" r="30" fill="none" stroke={scoreColor} strokeWidth="5" strokeDasharray={`${dashArray} ${circumference}`} strokeLinecap="round" className="transition-all duration-700" />
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -291,7 +291,7 @@ export default function Dashboard() {
                         <h3 className="text-base font-bold text-white leading-snug">{job.title}</h3>
                         <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
                           <Building2 size={12} /> <span className="truncate">{job.company}</span>
-                          <span className="text-gray-700">·</span>
+                          <span className="text-gray-700">Â·</span>
                           <MapPin size={12} /> <span className="truncate">{job.location}</span>
                         </div>
                       </div>
@@ -311,9 +311,9 @@ export default function Dashboard() {
                         const matched = d.matchedSkills.includes(skill.toLowerCase());
                         return (
                           <span key={i} className={`px-2.5 py-1 text-xs font-medium rounded-md border ${
-                            matched ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-white/[0.02] text-gray-500 border-[#2a2a5a]/40'
+                            matched ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-white/[0.02] text-gray-500 border-[#1e3a42]/40'
                           }`}>
-                            {matched && '✓ '}{skill}
+                            {matched && 'âœ“ '}{skill}
                           </span>
                         );
                       })}
@@ -329,7 +329,7 @@ export default function Dashboard() {
                       ].map(b => (
                         <div key={b.label} className="flex items-center gap-2.5">
                           <span className="text-xs text-gray-500 w-10 font-medium">{b.label}</span>
-                          <div className="flex-1 h-2 bg-[#1a1a3e] rounded-full overflow-hidden">
+                          <div className="flex-1 h-2 bg-[#162a32] rounded-full overflow-hidden">
                             <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(b.val / b.max) * 100}%`, background: `linear-gradient(90deg, ${scoreColor}, ${scoreColor}aa)` }} />
                           </div>
                           <span className="text-xs text-gray-500 w-10 text-right font-mono">{b.val}/{b.max}</span>
@@ -339,7 +339,7 @@ export default function Dashboard() {
 
                     {/* Apply button */}
                     <Link to="/jobs" className="mt-auto">
-                      <button className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] rounded-xl text-white text-sm font-semibold hover:shadow-lg hover:shadow-[#7c3aed]/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+                      <button className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#14b8a6] to-[#0d9488] rounded-xl text-white text-sm font-semibold hover:shadow-lg hover:shadow-[#14b8a6]/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
                         <Send size={14} /> Apply Now
                       </button>
                     </Link>
@@ -350,9 +350,9 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ───── Skill Gap Analysis & Course Recommendations ───── */}
+        {/* â”€â”€â”€â”€â”€ Skill Gap Analysis & Course Recommendations â”€â”€â”€â”€â”€ */}
 
-        {/* ───── My Job Applications ───── */}
+        {/* â”€â”€â”€â”€â”€ My Job Applications â”€â”€â”€â”€â”€ */}
         {user && appliedJobs.length > 0 && (
           <div className="mb-10">
             <div className="mb-5 flex items-center justify-between">
@@ -362,7 +362,7 @@ export default function Dashboard() {
                 </div>
                 <h2 className="text-base font-semibold text-white uppercase tracking-wide">My Job Applications</h2>
               </div>
-              <Link to="/jobs" className="text-sm text-[#8b5cf6] hover:text-[#a78bfa] transition-colors font-medium">
+              <Link to="/jobs" className="text-sm text-[#2dd4bf] hover:text-[#5eead4] transition-colors font-medium">
                 Browse jobs &rarr;
               </Link>
             </div>
@@ -379,10 +379,10 @@ export default function Dashboard() {
                 };
                 const statusStyle = statusColors[app.status] || statusColors.Pending;
                 return (
-                  <div key={app.id} className="bg-[#111128]/60 backdrop-blur-sm border border-[#2a2a5a]/40 rounded-2xl p-5 hover:border-[#2a2a5a]/80 transition-all duration-300">
+                  <div key={app.id} className="bg-[#0f1d22]/60 backdrop-blur-sm border border-[#1e3a42]/40 rounded-2xl p-5 hover:border-[#1e3a42]/80 transition-all duration-300">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#ec4899] flex items-center justify-center shrink-0">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shrink-0">
                           <Briefcase size={20} className="text-white" />
                         </div>
                         <div className="min-w-0">
@@ -514,13 +514,13 @@ export default function Dashboard() {
                     <p className="text-xs text-gray-500 mt-0.5">Skills you're missing & courses to fill the gap</p>
                   </div>
                 </div>
-                <Link to="/resources" className="text-sm text-[#8b5cf6] hover:text-[#a78bfa] transition-colors font-medium">
-                  All Courses →
+                <Link to="/resources" className="text-sm text-[#2dd4bf] hover:text-[#5eead4] transition-colors font-medium">
+                  All Courses â†’
                 </Link>
               </div>
 
               {/* Missing Skills Overview */}
-              <div className="bg-[#111128]/60 backdrop-blur-sm border border-[#2a2a5a]/40 rounded-2xl p-6 mb-5">
+              <div className="bg-[#0f1d22]/60 backdrop-blur-sm border border-[#1e3a42]/40 rounded-2xl p-6 mb-5">
                 <div className="flex items-center gap-2 mb-4">
                   <AlertTriangle size={15} className="text-amber-400" />
                   <h3 className="text-sm font-semibold text-white">In-Demand Skills You're Missing</h3>
@@ -542,19 +542,19 @@ export default function Dashboard() {
               {recommendations.length > 0 && (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {recommendations.map(({ course, skills, demand }) => (
-                    <div key={course.id} className="group bg-[#111128]/60 backdrop-blur-sm border border-[#2a2a5a]/40 rounded-2xl p-5 hover:border-[#7c3aed]/30 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl flex flex-col">
+                    <div key={course.id} className="group bg-[#0f1d22]/60 backdrop-blur-sm border border-[#1e3a42]/40 rounded-2xl p-5 hover:border-[#14b8a6]/30 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl flex flex-col">
                       {/* Course header */}
                       <div className="flex items-start gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#ec4899] flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shrink-0">
                           <BookOpen size={18} className="text-white" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-sm font-bold text-white leading-snug group-hover:text-[#8b5cf6] transition-colors">{course.name}</h4>
+                          <h4 className="text-sm font-bold text-white leading-snug group-hover:text-[#2dd4bf] transition-colors">{course.name}</h4>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs text-gray-500">{course.topic}</span>
                             {course.duration && (
                               <>
-                                <span className="text-gray-700">·</span>
+                                <span className="text-gray-700">Â·</span>
                                 <span className="text-xs text-gray-500 flex items-center gap-1"><Clock size={10} />{course.duration}</span>
                               </>
                             )}
@@ -576,9 +576,9 @@ export default function Dashboard() {
 
                       {/* Impact indicator */}
                       <div className="flex items-center gap-2 mb-4 mt-auto">
-                        <div className="flex-1 h-1.5 bg-[#1a1a3e] rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 bg-[#162a32] rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#7c3aed] to-[#ec4899] transition-all duration-700"
+                            className="h-full rounded-full bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] transition-all duration-700"
                             style={{ width: `${Math.min((demand / allJobs.length) * 100, 100)}%` }}
                           />
                         </div>
@@ -588,7 +588,7 @@ export default function Dashboard() {
                       </div>
 
                       {/* CTA */}
-                      <Link to="/resources" className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white/[0.04] border border-[#2a2a5a]/60 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:border-[#7c3aed]/40 hover:bg-[#7c3aed]/5 transition-all duration-200">
+                      <Link to="/resources" className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white/[0.04] border border-[#1e3a42]/60 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:border-[#14b8a6]/40 hover:bg-[#14b8a6]/5 transition-all duration-200">
                         <BookOpen size={14} /> Enroll in Course
                       </Link>
                     </div>
@@ -599,17 +599,17 @@ export default function Dashboard() {
           );
         })()}
 
-        {/* ───── Quick Actions ───── */}
+        {/* â”€â”€â”€â”€â”€ Quick Actions â”€â”€â”€â”€â”€ */}
         <div className="mb-5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#ec4899]/15 flex items-center justify-center">
-            <Zap size={16} className="text-[#ec4899]" />
+          <div className="w-8 h-8 rounded-lg bg-[#06b6d4]/15 flex items-center justify-center">
+            <Zap size={16} className="text-[#06b6d4]" />
           </div>
           <h2 className="text-base font-semibold text-white uppercase tracking-wide">Quick Actions</h2>
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           {quickActions.map((action) => (
             <Link key={action.label} to={action.link}>
-              <div className="group bg-[#111128]/60 backdrop-blur-sm border border-[#2a2a5a]/40 rounded-2xl p-6 hover:border-[#2a2a5a]/80 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl flex items-center gap-4">
+              <div className="group bg-[#0f1d22]/60 backdrop-blur-sm border border-[#1e3a42]/40 rounded-2xl p-6 hover:border-[#1e3a42]/80 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl flex items-center gap-4">
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                   style={{ backgroundColor: `${action.color}15` }}

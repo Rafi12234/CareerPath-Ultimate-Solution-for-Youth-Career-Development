@@ -27,13 +27,13 @@ export default function Contact() {
   };
 
   const contactInfo = [
-    { icon: MapPin, label: 'Address', value: 'Dhaka, Bangladesh', color: 'text-[#8b5cf6]', bg: 'bg-[#7c3aed]/12' },
-    { icon: Phone, label: 'Phone', value: '+880 1700 000000', color: 'text-[#ec4899]', bg: 'bg-[#ec4899]/12' },
+    { icon: MapPin, label: 'Address', value: 'Dhaka, Bangladesh', color: 'text-[#2dd4bf]', bg: 'bg-[#14b8a6]/12' },
+    { icon: Phone, label: 'Phone', value: '+880 1700 000000', color: 'text-[#06b6d4]', bg: 'bg-[#06b6d4]/12' },
     { icon: Mail, label: 'Email', value: 'support@careerpath.dev', color: 'text-emerald-400', bg: 'bg-emerald-500/12' },
-    { icon: MessageSquare, label: 'Live Chat', value: 'Available 9AM – 6PM (BST)', color: 'text-amber-400', bg: 'bg-amber-500/12' },
+    { icon: MessageSquare, label: 'Live Chat', value: 'Available 9AM â€“ 6PM (BST)', color: 'text-amber-400', bg: 'bg-amber-500/12' },
   ];
 
-  const inputClass = "w-full px-4 py-3 bg-[#0a0a1a]/70 border border-[#2a2a5a] rounded-xl text-white placeholder-gray-600 focus:border-[#7c3aed]/50 focus:ring-1 focus:ring-[#7c3aed]/20 transition-all duration-200";
+  const inputClass = "w-full px-4 py-3 bg-[#0a1214]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200";
 
   return (
     <div className="min-h-screen pt-24 pb-16 page-enter">
@@ -49,7 +49,7 @@ export default function Contact() {
         <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
           {/* Contact Info */}
           <div className="lg:col-span-2 space-y-5">
-            <div className="bg-[#111128]/80 border border-[#2a2a5a]/60 rounded-2xl p-6">
+            <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-6">
               <h2 className="text-lg font-bold text-white mb-2">Contact Information</h2>
               <p className="text-gray-500 text-sm mb-6">
                 Reach out through any of these channels or fill out the form.
@@ -71,10 +71,10 @@ export default function Contact() {
             </div>
 
             {/* Map placeholder */}
-            <div className="bg-[#111128]/80 border border-[#2a2a5a]/60 rounded-2xl overflow-hidden h-44 flex items-center justify-center">
+            <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl overflow-hidden h-44 flex items-center justify-center">
               <div className="text-center">
-                <div className="w-12 h-12 bg-[#7c3aed]/12 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <MapPin size={20} className="text-[#8b5cf6]" />
+                <div className="w-12 h-12 bg-[#14b8a6]/12 rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <MapPin size={20} className="text-[#2dd4bf]" />
                 </div>
                 <p className="text-gray-600 text-sm">Interactive Map</p>
                 <p className="text-gray-700 text-xs mt-0.5">Dhaka, Bangladesh</p>
@@ -84,7 +84,7 @@ export default function Contact() {
 
           {/* Form */}
           <div className="lg:col-span-3">
-            <div className="bg-[#111128]/80 border border-[#2a2a5a]/60 rounded-2xl p-6 sm:p-8">
+            <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8">
               <h2 className="text-lg font-bold text-white mb-6">Send a Message</h2>
 
               {success && (
@@ -158,7 +158,7 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 bg-linear-to-r from-[#7c3aed] to-[#ec4899] rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-[#7c3aed]/20 hover:shadow-[#7c3aed]/30 disabled:opacity-50"
+                  className="w-full py-3.5 bg-linear-to-r from-[#14b8a6] to-[#06b6d4] rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-[#14b8a6]/20 hover:shadow-[#14b8a6]/30 disabled:opacity-50"
                 >
                   {loading ? (
                     <>
