@@ -171,8 +171,15 @@ export default function Jobs() {
   const fairCount = jobs.filter(j => getMatchScore(j) < 60).length;
 
   return (
-    <div className="min-h-screen pt-24 pb-16 page-enter">
-      <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
+    <div className="hero-cinematic min-h-screen pt-24 pb-16 page-enter">
+      {/* Cinematic background haze */}
+      <div className="hero-haze">
+        <div className="haze-orb haze-orb--center" />
+        <div className="haze-orb haze-orb--right" />
+        <div className="haze-orb haze-orb--left" />
+      </div>
+
+      <div className="relative z-10 max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">
@@ -185,7 +192,7 @@ export default function Jobs() {
 
         {/* Profile Summary (logged in) */}
         {user && (
-          <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-5 sm:p-6 mb-8">
+          <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-5 sm:p-6 mb-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h3 className="text-base font-bold text-white mb-2">Your Profile</h3>
@@ -219,14 +226,14 @@ export default function Jobs() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by title, company, or skills..."
-              className="w-full pl-11 pr-4 py-3 bg-[#0f1d22] border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
+              className="w-full pl-11 pr-4 py-3 bg-[#0A1A22] border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
             />
           </div>
           {user && (
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-5 py-3 bg-[#0f1d22] border border-[#1e3a42] rounded-xl text-gray-300 focus:border-[#14b8a6]/50 transition-all duration-200 appearance-none cursor-pointer min-w-[160px]"
+              className="px-5 py-3 bg-[#0A1A22] border border-[#1e3a42] rounded-xl text-gray-300 focus:border-[#14b8a6]/50 transition-all duration-200 appearance-none cursor-pointer min-w-[160px]"
             >
               <option value="all">All Matches</option>
               <option value="excellent">Excellent (80%+)</option>
@@ -259,7 +266,7 @@ export default function Jobs() {
           </div>
         ) : filteredJobs.length === 0 ? (
           <div className="text-center py-24">
-            <div className="w-16 h-16 bg-[#0f1d22] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#0A1A22] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Briefcase size={28} className="text-gray-600" />
             </div>
             <p className="text-gray-400 text-lg font-medium">No jobs found</p>
@@ -283,7 +290,7 @@ export default function Jobs() {
               return (
                 <div
                   key={job.id}
-                  className="group bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-5 sm:p-6 hover:border-[#14b8a6]/25 transition-all duration-300 hover:shadow-lg hover:shadow-[#14b8a6]/5"
+                  className="group bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-5 sm:p-6 hover:border-[#14b8a6]/25 transition-all duration-300 hover:shadow-lg hover:shadow-[#14b8a6]/5"
                   style={{ animationDelay: `${idx * 0.05}s` }}
                 >
                   <div className="flex flex-col lg:flex-row gap-5 lg:gap-6">
@@ -292,7 +299,7 @@ export default function Jobs() {
                       <div className="flex lg:flex-col items-center gap-4 lg:gap-2 lg:justify-center lg:min-w-[100px]">
                         <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0">
                           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="42" fill="none" stroke="#162a32" strokeWidth="5" />
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#0F3A42" strokeWidth="5" />
                             <circle
                               cx="50" cy="50" r="42" fill="none"
                               stroke={scoreColor}
@@ -398,7 +405,7 @@ export default function Jobs() {
 
                     {/* Match Breakdown (logged in only) */}
                     {user && (
-                      <div className="lg:min-w-[190px] bg-[#0a1214]/50 border border-[#1e3a42]/40 rounded-xl p-4">
+                      <div className="lg:min-w-[190px] bg-[#071015]/50 border border-[#1e3a42]/40 rounded-xl p-4">
                         <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3">Match Breakdown</h4>
                         {[
                           { label: 'Skills', value: skillsBreakdown, max: 60, color: '#14b8a6' },
@@ -410,7 +417,7 @@ export default function Jobs() {
                               <span className="text-gray-500">{item.label}</span>
                               <span className="text-gray-300 font-medium">{item.value}/{item.max}</span>
                             </div>
-                            <div className="h-1.5 bg-[#162a32] rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-[#0F3A42] rounded-full overflow-hidden">
                               <div
                                 className="h-full rounded-full transition-all duration-700 ease-out"
                                 style={{ width: `${(item.value / item.max) * 100}%`, backgroundColor: item.color }}
@@ -448,7 +455,7 @@ export default function Jobs() {
             {/* Modal */}
             <div
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0f1d22] border border-[#1e3a42]/80 rounded-3xl shadow-2xl shadow-[#14b8a6]/10 animate-[modalIn_0.25s_ease-out]"
+              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0A1A22] border border-[#1e3a42]/80 rounded-3xl shadow-2xl shadow-[#14b8a6]/10 animate-[modalIn_0.25s_ease-out]"
             >
               {/* Header gradient bar */}
               <div className="h-1.5 bg-linear-to-r from-[#14b8a6] via-[#06b6d4] to-[#2dd4bf] rounded-t-3xl" />
@@ -456,7 +463,7 @@ export default function Jobs() {
               {/* Close button */}
               <button
                 onClick={() => setSelectedJob(null)}
-                className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-xl bg-[#162a32] border border-[#1e3a42] text-gray-400 hover:text-white hover:border-[#14b8a6]/50 transition-all duration-200 cursor-pointer z-10"
+                className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-xl bg-[#0F3A42] border border-[#1e3a42] text-gray-400 hover:text-white hover:border-[#14b8a6]/50 transition-all duration-200 cursor-pointer z-10"
               >
                 <X size={18} />
               </button>
@@ -466,7 +473,7 @@ export default function Jobs() {
                 <div className="flex items-start gap-6 mb-6">
                   <div className="relative w-28 h-28 shrink-0">
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                      <circle cx="60" cy="60" r="54" fill="none" stroke="#162a32" strokeWidth="6" />
+                      <circle cx="60" cy="60" r="54" fill="none" stroke="#0F3A42" strokeWidth="6" />
                       <circle
                         cx="60" cy="60" r="54" fill="none"
                         stroke={sColor}
@@ -531,7 +538,7 @@ export default function Jobs() {
                         <span key={i} className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
                           matched
                             ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                            : 'bg-[#162a32] text-gray-500 border-[#1e3a42]'
+                            : 'bg-[#0F3A42] text-gray-500 border-[#1e3a42]'
                         }`}>
                           {matched && <CheckCircle size={12} />} {skill}
                         </span>
@@ -541,7 +548,7 @@ export default function Jobs() {
                 </div>
 
                 {/* Match Breakdown */}
-                <div className="bg-[#0a1214]/60 border border-[#1e3a42]/40 rounded-xl p-5 mb-6">
+                <div className="bg-[#071015]/60 border border-[#1e3a42]/40 rounded-xl p-5 mb-6">
                   <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                     <Award size={14} className="text-[#2dd4bf]" /> Match Breakdown
                   </h4>
@@ -556,7 +563,7 @@ export default function Jobs() {
                           <span className="text-sm text-gray-300 font-medium">{item.label}</span>
                           <span className="text-sm font-bold" style={{ color: item.color }}>{item.value}/{item.max}</span>
                         </div>
-                        <div className="h-2 bg-[#162a32] rounded-full overflow-hidden mb-1">
+                        <div className="h-2 bg-[#0F3A42] rounded-full overflow-hidden mb-1">
                           <div
                             className="h-full rounded-full transition-all duration-700 ease-out"
                             style={{ width: `${(item.value / item.max) * 100}%`, backgroundColor: item.color }}
@@ -570,12 +577,12 @@ export default function Jobs() {
 
                 {/* Experience + Track info */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="bg-[#0a1214]/40 border border-[#1e3a42]/40 rounded-xl p-4 text-center">
+                  <div className="bg-[#071015]/40 border border-[#1e3a42]/40 rounded-xl p-4 text-center">
                     <Clock size={20} className="mx-auto text-[#06b6d4] mb-2" />
                     <div className="text-xs text-gray-500 mb-1">Required Level</div>
                     <div className="text-sm font-bold text-white">{selectedJob.level}</div>
                   </div>
-                  <div className="bg-[#0a1214]/40 border border-[#1e3a42]/40 rounded-xl p-4 text-center">
+                  <div className="bg-[#071015]/40 border border-[#1e3a42]/40 rounded-xl p-4 text-center">
                     <Award size={20} className="mx-auto text-[#2dd4bf] mb-2" />
                     <div className="text-xs text-gray-500 mb-1">Your Level</div>
                     <div className="text-sm font-bold text-white">{avgLevelLabel}</div>
