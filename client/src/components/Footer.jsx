@@ -5,9 +5,9 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-auto border-t border-[#2a2a5a]/50 bg-[#080818]">
+    <footer className="relative mt-auto border-t border-[#1e3a42]/50 bg-[#081012]">
       {/* Glow line */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-px bg-linear-to-r from-transparent via-[#7c3aed]/40 to-transparent" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-px bg-linear-to-r from-transparent via-[#14b8a6]/40 to-transparent" />
 
       <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
@@ -17,12 +17,12 @@ export default function Footer() {
               <img
                 src="https://res.cloudinary.com/dnzjg9lq8/image/upload/v1771619628/a-modern-minimalist-logo-design-featurin_1uJsjrn8RAWcX1Q_cP56-A_L4ta2RDPTV60VCZaV-IRKA_cover_sd_q0fsvx.jpg"
                 alt="CareerPath Logo"
-                className="w-9 h-9 rounded-xl object-cover shadow-lg shadow-[#7c3aed]/20 group-hover:shadow-[#7c3aed]/40 transition-all duration-300"
+                className="w-9 h-9 rounded-xl object-cover shadow-lg shadow-[#14b8a6]/20 group-hover:shadow-[#14b8a6]/40 transition-all duration-300"
               />
               <span className="text-xl font-bold gradient-text">CareerPath</span>
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
-              Ultimate Solution for Youth Career Development. Aligned with SDG 8 — Decent Work and Economic Growth.
+              Ultimate Solution for Youth Career Development. Aligned with SDG 8 â€” Decent Work and Economic Growth.
             </p>
           </div>
 
@@ -39,9 +39,9 @@ export default function Footer() {
                 <li key={item.name}>
                   <Link
                     to={item.to}
-                    className="text-gray-500 hover:text-[#8b5cf6] text-sm transition-colors duration-200 flex items-center gap-1.5 group"
+                    className="text-gray-500 hover:text-[#2dd4bf] text-sm transition-colors duration-200 flex items-center gap-1.5 group"
                   >
-                    <span className="w-0 group-hover:w-2 h-px bg-[#8b5cf6] transition-all duration-200" />
+                    <span className="w-0 group-hover:w-2 h-px bg-[#2dd4bf] transition-all duration-200" />
                     {item.name}
                   </Link>
                 </li>
@@ -76,7 +76,7 @@ export default function Footer() {
                   key={label}
                   href="#"
                   aria-label={label}
-                  className="w-10 h-10 bg-[#1a1a3e] border border-[#2a2a5a] rounded-xl flex items-center justify-center text-gray-500 hover:text-[#8b5cf6] hover:border-[#7c3aed]/40 hover:bg-[#7c3aed]/10 transition-all duration-200"
+                  className="w-10 h-10 bg-[#162a32] border border-[#1e3a42] rounded-xl flex items-center justify-center text-gray-500 hover:text-[#2dd4bf] hover:border-[#14b8a6]/40 hover:bg-[#14b8a6]/10 transition-all duration-200"
                 >
                   <Icon size={17} />
                 </a>
@@ -89,12 +89,12 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-[#2a2a5a]/50 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="border-t border-[#1e3a42]/50 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-gray-600 text-sm">
             &copy; {currentYear} CareerPath. All rights reserved.
           </p>
           <p className="text-gray-600 text-sm flex items-center gap-1.5">
-            Made with <Heart size={13} className="text-[#ec4899]" /> for youth career development
+            Made with <Heart size={13} className="text-[#06b6d4]" /> for youth career development
           </p>
         </div>
       </div>

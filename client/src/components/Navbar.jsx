@@ -52,8 +52,8 @@ export default function Navbar() {
       <div
         className={`w-full max-w-[1200px] transition-all duration-500 rounded-2xl border ${
           scrolled
-            ? 'bg-[#0d0d24]/70 backdrop-blur-2xl border-[#2a2a5a]/50 shadow-2xl shadow-black/30'
-            : 'bg-[#0d0d24]/50 backdrop-blur-xl border-[#2a2a5a]/30 shadow-lg shadow-black/10'
+            ? 'bg-[#0c1a1e]/70 backdrop-blur-2xl border-[#1e3a42]/50 shadow-2xl shadow-black/30'
+            : 'bg-[#0c1a1e]/50 backdrop-blur-xl border-[#1e3a42]/30 shadow-lg shadow-black/10'
         }`}
       >
         <div className="px-6 sm:px-8">
@@ -63,12 +63,12 @@ export default function Navbar() {
               <img
                 src="https://res.cloudinary.com/dnzjg9lq8/image/upload/v1771619628/a-modern-minimalist-logo-design-featurin_1uJsjrn8RAWcX1Q_cP56-A_L4ta2RDPTV60VCZaV-IRKA_cover_sd_q0fsvx.jpg"
                 alt="CareerPath Logo"
-                className="w-9 h-9 rounded-lg object-cover shadow-md shadow-[#7c3aed]/25 group-hover:shadow-[#7c3aed]/50 transition-all duration-300 group-hover:scale-105"
+                className="w-9 h-9 rounded-lg object-cover shadow-md shadow-[#14b8a6]/25 group-hover:shadow-[#14b8a6]/50 transition-all duration-300 group-hover:scale-105"
               />
               <span className="text-xl font-bold gradient-text hidden sm:inline">CareerPath</span>
             </Link>
 
-            {/* Desktop Nav — centered */}
+            {/* Desktop Nav â€” centered */}
             <div className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => (
                 <Link
@@ -82,7 +82,7 @@ export default function Navbar() {
                 >
                   {link.label}
                   {isActive(link.to) && (
-                    <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-[2px] bg-gradient-to-r from-[#7c3aed] to-[#ec4899] rounded-full" />
+                    <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-[2px] bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] rounded-full" />
                   )}
                 </Link>
               ))}
@@ -94,29 +94,29 @@ export default function Navbar() {
                 <>
                   <button className="relative p-2.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-all duration-200">
                     <Bell size={19} />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#ec4899] rounded-full ring-2 ring-[#0d0d24]" />
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#06b6d4] rounded-full ring-2 ring-[#0c1a1e]" />
                   </button>
                   <div className="relative" ref={menuRef}>
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
                       className={`flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-xl border transition-all duration-200 ${
                         userMenuOpen
-                          ? 'bg-[#7c3aed]/15 border-[#7c3aed]/40'
-                          : 'bg-white/[0.04] border-[#2a2a5a]/60 hover:border-[#7c3aed]/30 hover:bg-white/[0.06]'
+                          ? 'bg-[#14b8a6]/15 border-[#14b8a6]/40'
+                          : 'bg-white/[0.04] border-[#1e3a42]/60 hover:border-[#14b8a6]/30 hover:bg-white/[0.06]'
                       }`}
                     >
-                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#7c3aed] to-[#ec4899] flex items-center justify-center">
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center">
                         <span className="text-white text-xs font-bold">{user.name?.[0]?.toUpperCase()}</span>
                       </div>
                       <span className="text-sm font-medium text-gray-300 max-w-[100px] truncate">{user.name}</span>
                       <ChevronDown size={14} className={`text-gray-500 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
                     <div
-                      className={`absolute right-0 top-full mt-2 w-52 bg-[#111128]/95 backdrop-blur-2xl border border-[#2a2a5a]/60 rounded-xl shadow-2xl shadow-black/50 overflow-hidden transition-all duration-200 ${
+                      className={`absolute right-0 top-full mt-2 w-52 bg-[#0f1d22]/95 backdrop-blur-2xl border border-[#1e3a42]/60 rounded-xl shadow-2xl shadow-black/50 overflow-hidden transition-all duration-200 ${
                         userMenuOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-1'
                       }`}
                     >
-                      <div className="px-4 py-3 border-b border-[#2a2a5a]/50">
+                      <div className="px-4 py-3 border-b border-[#1e3a42]/50">
                         <p className="text-sm font-medium text-white truncate">{user.name}</p>
                         <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
                       </div>
@@ -145,7 +145,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     to="/register"
-                    className="px-5 py-2 text-sm font-semibold bg-linear-to-r from-[#7c3aed] to-[#ec4899] rounded-xl text-white shadow-md shadow-[#7c3aed]/20 hover:shadow-[#7c3aed]/40 hover:scale-[1.03] transition-all duration-200"
+                    className="px-5 py-2 text-sm font-semibold bg-linear-to-r from-[#14b8a6] to-[#06b6d4] rounded-xl text-white shadow-md shadow-[#14b8a6]/20 hover:shadow-[#14b8a6]/40 hover:scale-[1.03] transition-all duration-200"
                   >
                     Sign Up
                   </Link>
@@ -166,7 +166,7 @@ export default function Navbar() {
         {/* Mobile Menu */}
         <div
           className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            mobileOpen ? 'max-h-[500px] border-t border-[#2a2a5a]/40' : 'max-h-0'
+            mobileOpen ? 'max-h-[500px] border-t border-[#1e3a42]/40' : 'max-h-0'
           }`}
         >
           <div className="px-4 py-3 space-y-0.5">
@@ -184,17 +184,17 @@ export default function Navbar() {
               </Link>
             ))}
             {!user && (
-              <div className="pt-3 mt-2 border-t border-[#2a2a5a]/40 space-y-2">
+              <div className="pt-3 mt-2 border-t border-[#1e3a42]/40 space-y-2">
                 <Link to="/login" className="block px-4 py-2.5 rounded-xl text-sm text-gray-300 hover:text-white hover:bg-white/[0.06] transition-all">
                   Sign In
                 </Link>
-                <Link to="/register" className="block px-4 py-2.5 rounded-xl text-sm bg-linear-to-r from-[#7c3aed] to-[#ec4899] text-white text-center font-semibold">
+                <Link to="/register" className="block px-4 py-2.5 rounded-xl text-sm bg-linear-to-r from-[#14b8a6] to-[#06b6d4] text-white text-center font-semibold">
                   Sign Up
                 </Link>
               </div>
             )}
             {user && (
-              <div className="pt-3 mt-2 border-t border-[#2a2a5a]/40">
+              <div className="pt-3 mt-2 border-t border-[#1e3a42]/40">
                 <button
                   onClick={() => { logout(); navigate('/'); }}
                   className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
