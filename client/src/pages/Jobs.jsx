@@ -125,7 +125,7 @@ export default function Jobs() {
     }
 
     // --- Track component (max 20) ---
-    // If user has at least one skill matching the job → same career track area
+    // If user has at least one skill matching the job â†’ same career track area
     let trackScore = 0;
     if (matchedSkills.length > 0) {
       trackScore = matchedSkills.length >= jobSkills.length * 0.5 ? 20 : 10;
@@ -139,13 +139,13 @@ export default function Jobs() {
 
   const getMatchLabel = (score) => {
     if (score >= 80) return { text: 'Excellent Match', color: 'text-emerald-400' };
-    if (score >= 60) return { text: 'Good Match', color: 'text-[#8b5cf6]' };
+    if (score >= 60) return { text: 'Good Match', color: 'text-[#2dd4bf]' };
     return { text: 'Fair Match', color: 'text-amber-400' };
   };
 
   const getScoreColor = (score) => {
     if (score >= 80) return '#10b981';
-    if (score >= 60) return '#7c3aed';
+    if (score >= 60) return '#14b8a6';
     return '#f59e0b';
   };
 
@@ -185,7 +185,7 @@ export default function Jobs() {
 
         {/* Profile Summary (logged in) */}
         {user && (
-          <div className="bg-[#111128]/80 border border-[#2a2a5a]/60 rounded-2xl p-5 sm:p-6 mb-8">
+          <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-5 sm:p-6 mb-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h3 className="text-base font-bold text-white mb-2">Your Profile</h3>
@@ -202,7 +202,7 @@ export default function Jobs() {
                       {s.skill_name}
                     </span>
                   )) : (
-                    <span className="text-xs text-gray-600">No skills added yet — visit your Profile page</span>
+                    <span className="text-xs text-gray-600">No skills added yet â€” visit your Profile page</span>
                   )}
                 </div>
               </div>
@@ -219,14 +219,14 @@ export default function Jobs() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by title, company, or skills..."
-              className="w-full pl-11 pr-4 py-3 bg-[#111128] border border-[#2a2a5a] rounded-xl text-white placeholder-gray-600 focus:border-[#7c3aed]/50 focus:ring-1 focus:ring-[#7c3aed]/20 transition-all duration-200"
+              className="w-full pl-11 pr-4 py-3 bg-[#0f1d22] border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
             />
           </div>
           {user && (
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-5 py-3 bg-[#111128] border border-[#2a2a5a] rounded-xl text-gray-300 focus:border-[#7c3aed]/50 transition-all duration-200 appearance-none cursor-pointer min-w-[160px]"
+              className="px-5 py-3 bg-[#0f1d22] border border-[#1e3a42] rounded-xl text-gray-300 focus:border-[#14b8a6]/50 transition-all duration-200 appearance-none cursor-pointer min-w-[160px]"
             >
               <option value="all">All Matches</option>
               <option value="excellent">Excellent (80%+)</option>
@@ -239,12 +239,12 @@ export default function Jobs() {
         {/* Stats Bar (logged in only) */}
         {user && <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           {[
-            { label: 'Total Jobs', value: jobs.length, color: 'text-[#8b5cf6]', bg: 'bg-[#7c3aed]/10' },
+            { label: 'Total Jobs', value: jobs.length, color: 'text-[#2dd4bf]', bg: 'bg-[#14b8a6]/10' },
             { label: 'Excellent', value: excellentCount, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
             { label: 'Good', value: goodCount, color: 'text-blue-400', bg: 'bg-blue-500/10' },
             { label: 'Fair', value: fairCount, color: 'text-amber-400', bg: 'bg-amber-500/10' },
           ].map((stat) => (
-            <div key={stat.label} className={`${stat.bg} border border-[#2a2a5a]/40 rounded-xl p-4 text-center`}>
+            <div key={stat.label} className={`${stat.bg} border border-[#1e3a42]/40 rounded-xl p-4 text-center`}>
               <div className={`text-2xl font-extrabold ${stat.color}`}>{stat.value}</div>
               <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
             </div>
@@ -254,12 +254,12 @@ export default function Jobs() {
         {/* Jobs List */}
         {loading ? (
           <div className="text-center py-24">
-            <div className="w-10 h-10 border-2 border-[#7c3aed] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-10 h-10 border-2 border-[#14b8a6] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-gray-500">Loading jobs...</p>
           </div>
         ) : filteredJobs.length === 0 ? (
           <div className="text-center py-24">
-            <div className="w-16 h-16 bg-[#111128] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[#0f1d22] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Briefcase size={28} className="text-gray-600" />
             </div>
             <p className="text-gray-400 text-lg font-medium">No jobs found</p>
@@ -283,7 +283,7 @@ export default function Jobs() {
               return (
                 <div
                   key={job.id}
-                  className="group bg-[#111128]/80 border border-[#2a2a5a]/60 rounded-2xl p-5 sm:p-6 hover:border-[#7c3aed]/25 transition-all duration-300 hover:shadow-lg hover:shadow-[#7c3aed]/5"
+                  className="group bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-5 sm:p-6 hover:border-[#14b8a6]/25 transition-all duration-300 hover:shadow-lg hover:shadow-[#14b8a6]/5"
                   style={{ animationDelay: `${idx * 0.05}s` }}
                 >
                   <div className="flex flex-col lg:flex-row gap-5 lg:gap-6">
@@ -292,7 +292,7 @@ export default function Jobs() {
                       <div className="flex lg:flex-col items-center gap-4 lg:gap-2 lg:justify-center lg:min-w-[100px]">
                         <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0">
                           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="42" fill="none" stroke="#1a1a3e" strokeWidth="5" />
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#162a32" strokeWidth="5" />
                             <circle
                               cx="50" cy="50" r="42" fill="none"
                               stroke={scoreColor}
@@ -312,7 +312,7 @@ export default function Jobs() {
 
                     {/* Job Details */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-[#8b5cf6] transition-colors duration-200">{job.title}</h3>
+                      <h3 className="text-lg sm:text-xl font-bold text-white mb-2 group-hover:text-[#2dd4bf] transition-colors duration-200">{job.title}</h3>
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-gray-500 mb-3">
                         <span className="flex items-center gap-1.5"><Building2 size={14} /> {job.company}</span>
                         <span className="flex items-center gap-1.5"><MapPin size={14} /> {job.location}</span>
@@ -329,7 +329,7 @@ export default function Jobs() {
                         <div className="flex items-center gap-2 mb-4">
                           <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">Salary:</span>
                           <span className="text-sm font-semibold text-emerald-400">
-                            ৳{job.salary_min?.toLocaleString()} — ৳{job.salary_max?.toLocaleString()}/mo
+                            ৳{job.salary_min?.toLocaleString()} – ৳{job.salary_max?.toLocaleString()}/mo
                           </span>
                         </div>
                       )}
@@ -348,7 +348,7 @@ export default function Jobs() {
                                   ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                                   : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
                               }`}>
-                                {isMatched && '✓ '}{skill}
+                                {isMatched && 'âœ“ '}{skill}
                               </span>
                             );
                           })}
@@ -376,7 +376,7 @@ export default function Jobs() {
                               ? 'bg-emerald-600/80 cursor-default'
                               : applyingTo === job.id
                                 ? 'bg-gray-600 cursor-wait'
-                                : 'bg-linear-to-r from-[#7c3aed] to-[#ec4899] hover:shadow-lg hover:shadow-[#7c3aed]/20 hover:scale-[1.02] active:scale-[0.98]'
+                                : 'bg-linear-to-r from-[#14b8a6] to-[#06b6d4] hover:shadow-lg hover:shadow-[#14b8a6]/20 hover:scale-[1.02] active:scale-[0.98]'
                           }`}
                         >
                           {appliedJobs.has(job.id) ? (
@@ -389,7 +389,7 @@ export default function Jobs() {
                         </button>
                         <button
                           onClick={() => setSelectedJob(job)}
-                          className="px-5 py-2.5 border border-[#2a2a5a] rounded-xl text-gray-400 text-sm font-medium hover:border-[#7c3aed]/40 hover:text-white transition-all duration-200 cursor-pointer"
+                          className="px-5 py-2.5 border border-[#1e3a42] rounded-xl text-gray-400 text-sm font-medium hover:border-[#14b8a6]/40 hover:text-white transition-all duration-200 cursor-pointer"
                         >
                           Details
                         </button>
@@ -398,19 +398,19 @@ export default function Jobs() {
 
                     {/* Match Breakdown (logged in only) */}
                     {user && (
-                      <div className="lg:min-w-[190px] bg-[#0a0a1a]/50 border border-[#2a2a5a]/40 rounded-xl p-4">
+                      <div className="lg:min-w-[190px] bg-[#0a1214]/50 border border-[#1e3a42]/40 rounded-xl p-4">
                         <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3">Match Breakdown</h4>
                         {[
-                          { label: 'Skills', value: skillsBreakdown, max: 60, color: '#7c3aed' },
-                          { label: 'Experience', value: expBreakdown, max: 20, color: '#ec4899' },
-                          { label: 'Track', value: trackBreakdown, max: 20, color: '#8b5cf6' },
+                          { label: 'Skills', value: skillsBreakdown, max: 60, color: '#14b8a6' },
+                          { label: 'Experience', value: expBreakdown, max: 20, color: '#06b6d4' },
+                          { label: 'Track', value: trackBreakdown, max: 20, color: '#2dd4bf' },
                         ].map((item) => (
                           <div key={item.label} className="mb-2.5 last:mb-0">
                             <div className="flex justify-between text-xs mb-1">
                               <span className="text-gray-500">{item.label}</span>
                               <span className="text-gray-300 font-medium">{item.value}/{item.max}</span>
                             </div>
-                            <div className="h-1.5 bg-[#1a1a3e] rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-[#162a32] rounded-full overflow-hidden">
                               <div
                                 className="h-full rounded-full transition-all duration-700 ease-out"
                                 style={{ width: `${(item.value / item.max) * 100}%`, backgroundColor: item.color }}
@@ -448,15 +448,15 @@ export default function Jobs() {
             {/* Modal */}
             <div
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#111128] border border-[#2a2a5a]/80 rounded-3xl shadow-2xl shadow-[#7c3aed]/10 animate-[modalIn_0.25s_ease-out]"
+              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0f1d22] border border-[#1e3a42]/80 rounded-3xl shadow-2xl shadow-[#14b8a6]/10 animate-[modalIn_0.25s_ease-out]"
             >
               {/* Header gradient bar */}
-              <div className="h-1.5 bg-linear-to-r from-[#7c3aed] via-[#ec4899] to-[#8b5cf6] rounded-t-3xl" />
+              <div className="h-1.5 bg-linear-to-r from-[#14b8a6] via-[#06b6d4] to-[#2dd4bf] rounded-t-3xl" />
 
               {/* Close button */}
               <button
                 onClick={() => setSelectedJob(null)}
-                className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-xl bg-[#1a1a3e] border border-[#2a2a5a] text-gray-400 hover:text-white hover:border-[#7c3aed]/50 transition-all duration-200 cursor-pointer z-10"
+                className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-xl bg-[#162a32] border border-[#1e3a42] text-gray-400 hover:text-white hover:border-[#14b8a6]/50 transition-all duration-200 cursor-pointer z-10"
               >
                 <X size={18} />
               </button>
@@ -466,7 +466,7 @@ export default function Jobs() {
                 <div className="flex items-start gap-6 mb-6">
                   <div className="relative w-28 h-28 shrink-0">
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                      <circle cx="60" cy="60" r="54" fill="none" stroke="#1a1a3e" strokeWidth="6" />
+                      <circle cx="60" cy="60" r="54" fill="none" stroke="#162a32" strokeWidth="6" />
                       <circle
                         cx="60" cy="60" r="54" fill="none"
                         stroke={sColor}
@@ -501,7 +501,7 @@ export default function Jobs() {
                     <div>
                       <div className="text-xs text-gray-500 mb-0.5">Salary Range</div>
                       <div className="text-base font-bold text-emerald-400">
-                        ৳{selectedJob.salary_min?.toLocaleString()} — ৳{selectedJob.salary_max?.toLocaleString()}
+                        ৳{selectedJob.salary_min?.toLocaleString()} – ৳{selectedJob.salary_max?.toLocaleString()}
                         <span className="text-emerald-400/60 font-normal text-sm"> / month</span>
                       </div>
                     </div>
@@ -512,7 +512,7 @@ export default function Jobs() {
                 {selectedJob.description && (
                   <div className="mb-6">
                     <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
-                      <ChevronRight size={14} className="text-[#7c3aed]" /> Job Description
+                      <ChevronRight size={14} className="text-[#14b8a6]" /> Job Description
                     </h4>
                     <p className="text-sm text-gray-400 leading-relaxed pl-5">{selectedJob.description}</p>
                   </div>
@@ -521,7 +521,7 @@ export default function Jobs() {
                 {/* Required Skills */}
                 <div className="mb-6">
                   <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Star size={14} className="text-[#ec4899]" /> Required Skills
+                    <Star size={14} className="text-[#06b6d4]" /> Required Skills
                     <span className="text-xs font-normal text-gray-500 ml-auto">{d.matchedSkills.length} of {jSkills.length} matched</span>
                   </h4>
                   <div className="flex flex-wrap gap-2">
@@ -531,7 +531,7 @@ export default function Jobs() {
                         <span key={i} className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
                           matched
                             ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                            : 'bg-[#1a1a3e] text-gray-500 border-[#2a2a5a]'
+                            : 'bg-[#162a32] text-gray-500 border-[#1e3a42]'
                         }`}>
                           {matched && <CheckCircle size={12} />} {skill}
                         </span>
@@ -541,22 +541,22 @@ export default function Jobs() {
                 </div>
 
                 {/* Match Breakdown */}
-                <div className="bg-[#0a0a1a]/60 border border-[#2a2a5a]/40 rounded-xl p-5 mb-6">
+                <div className="bg-[#0a1214]/60 border border-[#1e3a42]/40 rounded-xl p-5 mb-6">
                   <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <Award size={14} className="text-[#8b5cf6]" /> Match Breakdown
+                    <Award size={14} className="text-[#2dd4bf]" /> Match Breakdown
                   </h4>
                   <div className="space-y-4">
                     {[
-                      { label: 'Skills Match', value: d.skills, max: 60, color: '#7c3aed', desc: `${d.matchedSkills.length} of ${jSkills.length} required skills` },
-                      { label: 'Experience Level', value: d.experience, max: 20, color: '#ec4899', desc: d.experience >= 20 ? 'Meets required level' : d.experience >= 12 ? 'Close to required level' : 'Below required level' },
-                      { label: 'Career Track', value: d.track, max: 20, color: '#8b5cf6', desc: d.track >= 20 ? 'Same career track' : d.track >= 10 ? 'Related career track' : 'Different career track' },
+                      { label: 'Skills Match', value: d.skills, max: 60, color: '#14b8a6', desc: `${d.matchedSkills.length} of ${jSkills.length} required skills` },
+                      { label: 'Experience Level', value: d.experience, max: 20, color: '#06b6d4', desc: d.experience >= 20 ? 'Meets required level' : d.experience >= 12 ? 'Close to required level' : 'Below required level' },
+                      { label: 'Career Track', value: d.track, max: 20, color: '#2dd4bf', desc: d.track >= 20 ? 'Same career track' : d.track >= 10 ? 'Related career track' : 'Different career track' },
                     ].map((item) => (
                       <div key={item.label}>
                         <div className="flex justify-between items-center mb-1.5">
                           <span className="text-sm text-gray-300 font-medium">{item.label}</span>
                           <span className="text-sm font-bold" style={{ color: item.color }}>{item.value}/{item.max}</span>
                         </div>
-                        <div className="h-2 bg-[#1a1a3e] rounded-full overflow-hidden mb-1">
+                        <div className="h-2 bg-[#162a32] rounded-full overflow-hidden mb-1">
                           <div
                             className="h-full rounded-full transition-all duration-700 ease-out"
                             style={{ width: `${(item.value / item.max) * 100}%`, backgroundColor: item.color }}
@@ -570,13 +570,13 @@ export default function Jobs() {
 
                 {/* Experience + Track info */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="bg-[#0a0a1a]/40 border border-[#2a2a5a]/40 rounded-xl p-4 text-center">
-                    <Clock size={20} className="mx-auto text-[#ec4899] mb-2" />
+                  <div className="bg-[#0a1214]/40 border border-[#1e3a42]/40 rounded-xl p-4 text-center">
+                    <Clock size={20} className="mx-auto text-[#06b6d4] mb-2" />
                     <div className="text-xs text-gray-500 mb-1">Required Level</div>
                     <div className="text-sm font-bold text-white">{selectedJob.level}</div>
                   </div>
-                  <div className="bg-[#0a0a1a]/40 border border-[#2a2a5a]/40 rounded-xl p-4 text-center">
-                    <Award size={20} className="mx-auto text-[#8b5cf6] mb-2" />
+                  <div className="bg-[#0a1214]/40 border border-[#1e3a42]/40 rounded-xl p-4 text-center">
+                    <Award size={20} className="mx-auto text-[#2dd4bf] mb-2" />
                     <div className="text-xs text-gray-500 mb-1">Your Level</div>
                     <div className="text-sm font-bold text-white">{avgLevelLabel}</div>
                   </div>
@@ -592,7 +592,7 @@ export default function Jobs() {
                         ? 'bg-emerald-600/80 cursor-default'
                         : applyingTo === selectedJob.id
                           ? 'bg-gray-600 cursor-wait'
-                          : 'bg-linear-to-r from-[#7c3aed] to-[#ec4899] hover:shadow-lg hover:shadow-[#7c3aed]/25 hover:scale-[1.01] active:scale-[0.99]'
+                          : 'bg-linear-to-r from-[#14b8a6] to-[#06b6d4] hover:shadow-lg hover:shadow-[#14b8a6]/25 hover:scale-[1.01] active:scale-[0.99]'
                     }`}
                   >
                     {appliedJobs.has(selectedJob.id) ? (
@@ -605,7 +605,7 @@ export default function Jobs() {
                   </button>
                   <button
                     onClick={() => setSelectedJob(null)}
-                    className="px-6 py-3 border border-[#2a2a5a] rounded-xl text-gray-400 text-sm font-medium hover:border-[#7c3aed]/40 hover:text-white transition-all duration-200 cursor-pointer"
+                    className="px-6 py-3 border border-[#1e3a42] rounded-xl text-gray-400 text-sm font-medium hover:border-[#14b8a6]/40 hover:text-white transition-all duration-200 cursor-pointer"
                   >
                     Close
                   </button>
