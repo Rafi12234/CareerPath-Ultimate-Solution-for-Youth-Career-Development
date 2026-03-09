@@ -6,9 +6,9 @@
   --color-primary-dark: #0d9488;
   --color-accent: #06b6d4;
   --color-accent-dark: #0891b2;
-  --color-dark: #0a1214;
-  --color-dark-card: #0f1d22;
-  --color-dark-lighter: #162a32;
+  --color-dark: #03070A;
+  --color-dark-card: #0A1A22;
+  --color-dark-lighter: #0F3A42;
   --color-dark-border: #1e3a42;
   --color-success: #10b981;
   --color-warning: #f59e0b;
@@ -23,7 +23,7 @@
   }
 
   body {
-    background-color: #0a1214;
+    background-color: #03070A;
     color: #e2e8f0;
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
     min-height: 100vh;
@@ -41,7 +41,7 @@
     width: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #0a1214;
+    background: #03070A;
   }
   ::-webkit-scrollbar-thumb {
     background: #14b8a6;
@@ -130,4 +130,148 @@
 /* Smooth page transition */
 .page-enter {
   animation: fadeInUp 0.4s ease-out;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Cinematic Hero Background — layered teal atmospheric glow
+   ═══════════════════════════════════════════════════════════ */
+.hero-cinematic {
+  position: relative;
+  overflow: hidden;
+  background: #03070A;
+}
+
+/* Layer 1 — base radial ambient: soft dark-teal wash */
+.hero-cinematic::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    /* central tall vertical glow */
+    radial-gradient(ellipse 40% 70% at 50% 45%, rgba(15, 58, 66, 0.55) 0%, transparent 100%),
+    /* wider soft bloom behind content */
+    radial-gradient(ellipse 60% 55% at 50% 50%, rgba(31, 109, 120, 0.18) 0%, transparent 100%),
+    /* subtle highlight near top-center */
+    radial-gradient(ellipse 30% 40% at 50% 30%, rgba(44, 138, 150, 0.12) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Layer 2 — vertical light columns + vignette */
+.hero-cinematic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    /* center column — tall teal beam */
+    linear-gradient(to right,
+      transparent 38%,
+      rgba(31, 109, 120, 0.10) 44%,
+      rgba(31, 109, 120, 0.16) 48%,
+      rgba(44, 138, 150, 0.18) 50%,
+      rgba(31, 109, 120, 0.16) 52%,
+      rgba(31, 109, 120, 0.10) 56%,
+      transparent 62%
+    ),
+    /* left off-center streaks */
+    linear-gradient(to right,
+      transparent 22%,
+      rgba(15, 58, 66, 0.06) 26%,
+      rgba(15, 58, 66, 0.09) 28%,
+      rgba(15, 58, 66, 0.06) 30%,
+      transparent 34%
+    ),
+    /* right off-center streaks */
+    linear-gradient(to right,
+      transparent 66%,
+      rgba(15, 58, 66, 0.06) 70%,
+      rgba(15, 58, 66, 0.08) 72%,
+      rgba(15, 58, 66, 0.06) 74%,
+      transparent 78%
+    ),
+    /* edge vignette — darken left and right */
+    linear-gradient(to right,
+      rgba(3, 7, 10, 0.85) 0%,
+      rgba(3, 7, 10, 0.3) 20%,
+      transparent 40%,
+      transparent 60%,
+      rgba(3, 7, 10, 0.3) 80%,
+      rgba(3, 7, 10, 0.85) 100%
+    ),
+    /* top/bottom vignette */
+    linear-gradient(to bottom,
+      rgba(3, 7, 10, 0.5) 0%,
+      transparent 18%,
+      transparent 82%,
+      rgba(3, 7, 10, 0.6) 100%
+    );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Layer 3 — extra ambient haze (DOM element .hero-haze) */
+.hero-haze {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.hero-haze .haze-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+}
+/* primary center orb */
+.hero-haze .haze-orb--center {
+  width: 50vw;
+  height: 60vh;
+  top: 15%;
+  left: 25%;
+  background: radial-gradient(ellipse, rgba(31, 109, 120, 0.14) 0%, transparent 70%);
+}
+/* secondary upper-right halo */
+.hero-haze .haze-orb--right {
+  width: 30vw;
+  height: 40vh;
+  top: 5%;
+  right: 10%;
+  background: radial-gradient(ellipse, rgba(44, 138, 150, 0.07) 0%, transparent 70%);
+  filter: blur(120px);
+}
+/* tertiary lower-left glow */
+.hero-haze .haze-orb--left {
+  width: 28vw;
+  height: 35vh;
+  bottom: 10%;
+  left: 8%;
+  background: radial-gradient(ellipse, rgba(15, 58, 66, 0.09) 0%, transparent 70%);
+  filter: blur(110px);
+}
+
+/* ═══════ Version B: ultra-slow ambient animation ═══════ */
+@keyframes ambientDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
+  33% { transform: translate(1.5vw, -1vh) scale(1.04); opacity: 0.9; }
+  66% { transform: translate(-1vw, 1.5vh) scale(0.97); opacity: 1; }
+}
+.hero-haze .haze-orb--center {
+  animation: ambientDrift 25s ease-in-out infinite;
+}
+.hero-haze .haze-orb--right {
+  animation: ambientDrift 30s ease-in-out infinite 8s;
+}
+.hero-haze .haze-orb--left {
+  animation: ambientDrift 28s ease-in-out infinite 14s;
+}
+
+/* responsive — narrow screens */
+@media (max-width: 768px) {
+  .hero-haze .haze-orb--center {
+    width: 80vw;
+    left: 10%;
+  }
+  .hero-haze .haze-orb--right,
+  .hero-haze .haze-orb--left {
+    display: none;
+  }
 }

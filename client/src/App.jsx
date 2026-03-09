@@ -14,7 +14,7 @@ import Profile from './pages/Profile';
 function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen flex flex-col bg-[#0a1214] text-gray-200">
+      <div className="min-h-screen flex flex-col bg-[#03070A] text-gray-200">
         <Navbar />
         <main className="flex-1">
           <Routes>
