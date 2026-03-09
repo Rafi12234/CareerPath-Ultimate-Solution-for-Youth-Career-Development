@@ -29,17 +29,17 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-24 page-enter">
       {/* Background effects */}
-      <div className="fixed inset-0 bg-[#0a0a1a]" />
-      <div className="fixed inset-0 bg-linear-to-br from-[#7c3aed]/5 via-transparent to-[#ec4899]/5" />
-      <div className="fixed top-40 left-20 w-72 h-72 bg-[#7c3aed]/8 rounded-full blur-[100px]" />
-      <div className="fixed bottom-20 right-20 w-72 h-72 bg-[#ec4899]/5 rounded-full blur-[100px]" />
+      <div className="fixed inset-0 bg-[#0a1214]" />
+      <div className="fixed inset-0 bg-linear-to-br from-[#14b8a6]/5 via-transparent to-[#06b6d4]/5" />
+      <div className="fixed top-40 left-20 w-72 h-72 bg-[#14b8a6]/8 rounded-full blur-[100px]" />
+      <div className="fixed bottom-20 right-20 w-72 h-72 bg-[#06b6d4]/5 rounded-full blur-[100px]" />
 
       <div className="relative w-full max-w-md">
-        <div className="bg-[#111128]/90 backdrop-blur-xl border border-[#2a2a5a]/60 rounded-2xl p-8 shadow-2xl shadow-black/20">
+        <div className="bg-[#0f1d22]/90 backdrop-blur-xl border border-[#1e3a42]/60 rounded-2xl p-8 shadow-2xl shadow-black/20">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-[#7c3aed]/15 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <LogIn size={24} className="text-[#8b5cf6]" />
+            <div className="w-14 h-14 bg-[#14b8a6]/15 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <LogIn size={24} className="text-[#2dd4bf]" />
             </div>
             <h1 className="text-2xl font-bold text-white">Welcome back</h1>
             <p className="text-gray-500 text-sm mt-1.5">Sign in to your CareerPath account</p>
@@ -63,7 +63,7 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full pl-10.5 pr-4 py-3 bg-[#0a0a1a]/70 border border-[#2a2a5a] rounded-xl text-white placeholder-gray-600 focus:border-[#7c3aed]/50 focus:ring-1 focus:ring-[#7c3aed]/20 transition-all duration-200"
+                  className="w-full pl-10.5 pr-4 py-3 bg-[#0a1214]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
                   style={{ paddingLeft: '2.75rem' }}
                 />
               </div>
@@ -79,7 +79,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="w-full pr-12 py-3 bg-[#0a0a1a]/70 border border-[#2a2a5a] rounded-xl text-white placeholder-gray-600 focus:border-[#7c3aed]/50 focus:ring-1 focus:ring-[#7c3aed]/20 transition-all duration-200"
+                  className="w-full pr-12 py-3 bg-[#0a1214]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
                   style={{ paddingLeft: '2.75rem' }}
                 />
                 <button
@@ -95,7 +95,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 bg-[#7c3aed] hover:bg-[#6d28d9] rounded-xl text-white font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#7c3aed]/20 hover:shadow-[#7c3aed]/30 flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-[#14b8a6] hover:bg-[#0d9488] rounded-xl text-white font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#14b8a6]/20 hover:shadow-[#14b8a6]/30 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -108,10 +108,10 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-[#2a2a5a]/50 text-center">
+          <div className="mt-6 pt-6 border-t border-[#1e3a42]/50 text-center">
             <p className="text-gray-500 text-sm">
               Don't have an account?{' '}
-              <Link to="/register" className="text-[#8b5cf6] hover:text-[#7c3aed] font-medium transition-colors">
+              <Link to="/register" className="text-[#2dd4bf] hover:text-[#14b8a6] font-medium transition-colors">
                 Create one
               </Link>
             </p>

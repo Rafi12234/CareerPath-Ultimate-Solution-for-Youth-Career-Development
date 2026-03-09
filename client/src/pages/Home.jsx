@@ -6,7 +6,7 @@ const heroSlides = [
   {
     title: 'Discover your path.',
     highlight: 'Shape your career.',
-    desc: 'Match your skills to relevant jobs and learning resources — build a roadmap that leads to real opportunities.',
+    desc: 'Match your skills to relevant jobs and learning resources â€” build a roadmap that leads to real opportunities.',
     image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&h=400&fit=crop',
   },
   {
@@ -34,15 +34,15 @@ const features = [
     icon: Target,
     title: 'AI Job Matching',
     desc: 'Our smart algorithm matches your skills and experience to the most relevant job opportunities.',
-    gradient: 'from-[#7c3aed] to-[#6d28d9]',
-    glow: '#7c3aed',
+    gradient: 'from-[#14b8a6] to-[#0d9488]',
+    glow: '#14b8a6',
   },
   {
     icon: BookOpen,
     title: 'Curated Courses',
     desc: 'Access top-quality learning resources across technology, business, design, and more.',
-    gradient: 'from-[#ec4899] to-[#db2777]',
-    glow: '#ec4899',
+    gradient: 'from-[#06b6d4] to-[#0891b2]',
+    glow: '#06b6d4',
   },
   {
     icon: TrendingUp,
@@ -69,8 +69,8 @@ const features = [
     icon: Award,
     title: 'SDG 8 Aligned',
     desc: 'Supporting decent work and economic growth for youth career development.',
-    gradient: 'from-[#a78bfa] to-[#7c3aed]',
-    glow: '#a78bfa',
+    gradient: 'from-[#5eead4] to-[#14b8a6]',
+    glow: '#5eead4',
   },
 ];
 
@@ -102,14 +102,14 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
         {/* Background effects */}
-        <div className="absolute inset-0 bg-[#0a0a1a]" />
-        <div className="absolute inset-0 bg-linear-to-br from-[#7c3aed]/5 via-transparent to-[#ec4899]/5" />
-        <div className="absolute top-32 right-10 w-[500px] h-[500px] bg-[#7c3aed]/8 rounded-full blur-[120px]" />
-        <div className="absolute bottom-20 left-10 w-[400px] h-[400px] bg-[#ec4899]/5 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-[#0a1214]" />
+        <div className="absolute inset-0 bg-linear-to-br from-[#14b8a6]/5 via-transparent to-[#06b6d4]/5" />
+        <div className="absolute top-32 right-10 w-[500px] h-[500px] bg-[#14b8a6]/8 rounded-full blur-[120px]" />
+        <div className="absolute bottom-20 left-10 w-[400px] h-[400px] bg-[#06b6d4]/5 rounded-full blur-[100px]" />
 
         {/* Grid pattern overlay */}
         <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'radial-gradient(circle, #8b5cf6 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, #2dd4bf 1px, transparent 1px)',
           backgroundSize: '40px 40px'
         }} />
 
@@ -118,7 +118,7 @@ export default function Home() {
             {/* Text Content */}
             <div className="space-y-8" key={currentSlide}>
               <div className="animate-fade-in-up">
-                <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#7c3aed]/10 border border-[#7c3aed]/20 rounded-full text-sm text-[#8b5cf6] font-medium">
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#14b8a6]/10 border border-[#14b8a6]/20 rounded-full text-sm text-[#2dd4bf] font-medium">
                   <Sparkles size={14} />
                   Aligned with SDG 8
                 </span>
@@ -140,13 +140,13 @@ export default function Home() {
               <div className="flex flex-wrap gap-3 animate-fade-in-up delay-300" style={{ animationFillMode: 'both' }}>
                 <Link
                   to="/register"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 bg-linear-to-r from-[#7c3aed] to-[#6d28d9] rounded-full text-white font-semibold transition-all duration-300 shadow-lg shadow-[#7c3aed]/25 hover:shadow-[#7c3aed]/40 hover:scale-[1.03] active:scale-[0.98]"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 bg-linear-to-r from-[#14b8a6] to-[#0d9488] rounded-full text-white font-semibold transition-all duration-300 shadow-lg shadow-[#14b8a6]/25 hover:shadow-[#14b8a6]/40 hover:scale-[1.03] active:scale-[0.98]"
                 >
                   Get Started <ArrowRight size={18} />
                 </Link>
                 <Link
                   to="/jobs"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 border border-[#7c3aed]/30 hover:border-[#7c3aed]/60 rounded-full text-[#8b5cf6] font-semibold transition-all duration-300 hover:bg-[#7c3aed]/5"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 border border-[#14b8a6]/30 hover:border-[#14b8a6]/60 rounded-full text-[#2dd4bf] font-semibold transition-all duration-300 hover:bg-[#14b8a6]/5"
                 >
                   Explore Jobs
                 </Link>
@@ -165,20 +165,20 @@ export default function Home() {
 
             {/* Hero Image */}
             <div className="hidden lg:block relative animate-fade-in delay-200" style={{ animationFillMode: 'both' }}>
-              <div className="relative rounded-2xl overflow-hidden border border-[#2a2a5a]/50 shadow-2xl shadow-[#7c3aed]/10">
+              <div className="relative rounded-2xl overflow-hidden border border-[#1e3a42]/50 shadow-2xl shadow-[#14b8a6]/10">
                 <img
                   src={slide.image}
                   alt="Career Development"
                   className="w-full h-[460px] object-cover transition-all duration-700 ease-in-out"
                 />
-                <div className="absolute inset-0 bg-linear-to-t from-[#0a0a1a]/70 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-[#0a1214]/70 via-transparent to-transparent" />
               </div>
 
               {/* Floating Cards */}
               <div className="absolute -top-6 -left-6 glass rounded-xl px-4 py-3 shadow-xl animate-float">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#7c3aed]/15 rounded-lg flex items-center justify-center">
-                    <TrendingUp size={18} className="text-[#8b5cf6]" />
+                  <div className="w-10 h-10 bg-[#14b8a6]/15 rounded-lg flex items-center justify-center">
+                    <TrendingUp size={18} className="text-[#2dd4bf]" />
                   </div>
                   <div>
                     <div className="text-[11px] text-gray-500">Career Growth</div>
@@ -189,8 +189,8 @@ export default function Home() {
 
               <div className="absolute -bottom-5 -right-5 glass rounded-xl px-4 py-3 shadow-xl animate-float" style={{ animationDelay: '1.5s' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#ec4899]/15 rounded-lg flex items-center justify-center">
-                    <Award size={18} className="text-[#ec4899]" />
+                  <div className="w-10 h-10 bg-[#06b6d4]/15 rounded-lg flex items-center justify-center">
+                    <Award size={18} className="text-[#06b6d4]" />
                   </div>
                   <div>
                     <div className="text-[11px] text-gray-500">Skills Gained</div>
@@ -206,7 +206,7 @@ export default function Home() {
                     key={i}
                     onClick={() => { setSlideDirection(i > currentSlide ? 'right' : 'left'); setCurrentSlide(i); }}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === currentSlide ? 'w-8 bg-[#8b5cf6]' : 'w-1.5 bg-white/30 hover:bg-white/50'
+                      i === currentSlide ? 'w-8 bg-[#2dd4bf]' : 'w-1.5 bg-white/30 hover:bg-white/50'
                     }`}
                   />
                 ))}
@@ -232,12 +232,12 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="relative py-24 sm:py-32">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a1a] via-[#111128]/50 to-[#0a0a1a]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#7c3aed]/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#0a1214] via-[#0f1d22]/50 to-[#0a1214]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#14b8a6]/5 rounded-full blur-[150px] pointer-events-none" />
 
         <div className="relative max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
           <div className="text-center mb-16 sm:mb-20">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#7c3aed]/10 border border-[#7c3aed]/20 rounded-full text-sm text-[#8b5cf6] font-medium mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#14b8a6]/10 border border-[#14b8a6]/20 rounded-full text-sm text-[#2dd4bf] font-medium mb-6">
               <Sparkles size={14} />
               Powerful Features
             </span>
@@ -254,7 +254,7 @@ export default function Home() {
             {features.map((f, i) => (
               <div
                 key={f.title}
-                className="group relative bg-[#111128]/80 border border-[#2a2a5a]/60 rounded-2xl p-6 sm:p-7 transition-all duration-300 hover:border-[#7c3aed]/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#7c3aed]/5"
+                className="group relative bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-7 transition-all duration-300 hover:border-[#14b8a6]/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#14b8a6]/5"
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
                 <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${f.gradient} flex items-center justify-center mb-5 shadow-lg transition-transform duration-300 group-hover:scale-110`}
@@ -272,8 +272,8 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="relative py-24 sm:py-32">
-        <div className="absolute inset-0 bg-linear-to-b from-[#0a0a1a] to-[#111128]/30" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#7c3aed]/10 rounded-full blur-[120px]" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#0a1214] to-[#0f1d22]/30" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#14b8a6]/10 rounded-full blur-[120px]" />
 
         <div className="relative max-w-3xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-tight">
@@ -284,7 +284,7 @@ export default function Home() {
           </p>
           <Link
             to="/register"
-            className="inline-flex items-center gap-2.5 px-8 py-4 bg-linear-to-r from-[#7c3aed] to-[#ec4899] rounded-full text-white font-bold text-lg transition-all duration-300 shadow-lg shadow-[#7c3aed]/25 hover:shadow-[#7c3aed]/40 hover:scale-[1.03] active:scale-[0.98]"
+            className="inline-flex items-center gap-2.5 px-8 py-4 bg-linear-to-r from-[#14b8a6] to-[#06b6d4] rounded-full text-white font-bold text-lg transition-all duration-300 shadow-lg shadow-[#14b8a6]/25 hover:shadow-[#14b8a6]/40 hover:scale-[1.03] active:scale-[0.98]"
           >
             Get Started Free <ArrowRight size={20} />
           </Link>
