@@ -33,11 +33,18 @@ export default function Contact() {
     { icon: MessageSquare, label: 'Live Chat', value: 'Available 9AM â€“ 6PM (BST)', color: 'text-amber-400', bg: 'bg-amber-500/12' },
   ];
 
-  const inputClass = "w-full px-4 py-3 bg-[#0a1214]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200";
+  const inputClass = "w-full px-4 py-3 bg-[#071015]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200";
 
   return (
-    <div className="min-h-screen pt-24 pb-16 page-enter">
-      <div className="max-w-[1100px] mx-auto px-6 sm:px-8 lg:px-12">
+    <div className="hero-cinematic min-h-screen pt-24 pb-16 page-enter">
+      {/* Cinematic background haze */}
+      <div className="hero-haze">
+        <div className="haze-orb haze-orb--center" />
+        <div className="haze-orb haze-orb--right" />
+        <div className="haze-orb haze-orb--left" />
+      </div>
+
+      <div className="relative z-10 max-w-[1100px] mx-auto px-6 sm:px-8 lg:px-12">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">Get in Touch</h1>
@@ -49,7 +56,7 @@ export default function Contact() {
         <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
           {/* Contact Info */}
           <div className="lg:col-span-2 space-y-5">
-            <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-6">
+            <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-6">
               <h2 className="text-lg font-bold text-white mb-2">Contact Information</h2>
               <p className="text-gray-500 text-sm mb-6">
                 Reach out through any of these channels or fill out the form.
@@ -71,7 +78,7 @@ export default function Contact() {
             </div>
 
             {/* Map placeholder */}
-            <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl overflow-hidden h-44 flex items-center justify-center">
+            <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl overflow-hidden h-44 flex items-center justify-center">
               <div className="text-center">
                 <div className="w-12 h-12 bg-[#14b8a6]/12 rounded-xl flex items-center justify-center mx-auto mb-2">
                   <MapPin size={20} className="text-[#2dd4bf]" />
@@ -84,7 +91,7 @@ export default function Contact() {
 
           {/* Form */}
           <div className="lg:col-span-3">
-            <div className="bg-[#0f1d22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8">
+            <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8">
               <h2 className="text-lg font-bold text-white mb-6">Send a Message</h2>
 
               {success && (
