@@ -15,6 +15,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ============================================================
 -- DROP existing tables (clean slate)
 -- ============================================================
+DROP TABLE IF EXISTS chat_messages;
 DROP TABLE IF EXISTS job_applications;
 DROP TABLE IF EXISTS user_skills;
 DROP TABLE IF EXISTS enrollments;
@@ -48,7 +49,8 @@ INSERT INTO migrations (migration, batch) VALUES
 ('2024_01_01_000002_create_courses_table', 1),
 ('2024_01_01_000003_create_enrollments_table', 1),
 ('2024_01_01_000004_create_contacts_table', 1),
-('2024_01_01_000005_create_job_applications_table', 1);
+('2024_01_01_000005_create_job_applications_table', 1),
+('2024_01_01_000006_create_chat_messages_table', 1);
 
 -- ============================================================
 -- 1. users
@@ -205,6 +207,20 @@ CREATE TABLE contacts (
     message TEXT NOT NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL
+);
+
+-- ============================================================
+-- 12. chat_messages  (AI chatbot conversation history)
+-- ============================================================
+CREATE TABLE chat_messages (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    user_message TEXT NOT NULL,
+    bot_reply TEXT NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX idx_chat_user (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 
