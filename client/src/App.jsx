@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -12,12 +12,14 @@ import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 
 function App() {
+  const location = useLocation();
+
   return (
     <AuthProvider>
       <div className="min-h-screen flex flex-col bg-[#03070A] text-gray-200">
         <Navbar />
-        <main className="flex-1">
-          <Routes>
+        <main className="flex-1" key={location.pathname}>
+          <Routes location={location}>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
