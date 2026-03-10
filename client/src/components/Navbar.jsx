@@ -23,6 +23,16 @@ export default function Navbar() {
   const [notifPing, setNotifPing] = useState(true);
   const [mouseOnNav, setMouseOnNav] = useState(false);
 
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
+  const handleSafeNav = (e, to) => {
+    // Fallback for cases where auth-page transitions update URL but UI doesn't repaint.
+    if (isAuthPage) {
+      e.preventDefault();
+      window.location.assign(to);
+    }
+  };
+
   // Close user menu on outside click
   useEffect(() => {
     const handler = (e) => {
@@ -291,6 +301,7 @@ export default function Navbar() {
                 {/* ── Logo ── */}
                 <Link
                   to={user ? '/dashboard' : '/'}
+                  onClick={(e) => handleSafeNav(e, user ? '/dashboard' : '/')}
                   className="flex items-center gap-3 group shrink-0 nav-link-3d"
                 >
                   <div className="relative" style={{ animation: 'nav-logo-float 4s ease-in-out infinite' }}>
@@ -349,6 +360,7 @@ export default function Navbar() {
                     <Link
                       key={link.to}
                       to={link.to}
+                      onClick={(e) => handleSafeNav(e, link.to)}
                       ref={el => linkRefs.current[i] = el}
                       onMouseEnter={() => handleHover(i)}
                       className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all duration-300 nav-link-3d z-10 ${
@@ -509,7 +521,12 @@ export default function Navbar() {
                                 {/* Logout */}
                                 <div className="p-2">
                                   <button
-                                    onClick={() => { logout(); setUserMenuOpen(false); navigate('/'); }}
+                                    onClick={() => {
+                                      logout();
+                                      setUserMenuOpen(false);
+                                      setMobileOpen(false);
+                                      window.location.assign('/');
+                                    }}
                                     className="group/out flex items-center gap-3.5 w-full px-3.5 py-3 rounded-xl hover:bg-red-500/[0.06] transition-all duration-300"
                                   >
                                     <div className="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-center group-hover/out:border-red-500/20 group-hover/out:bg-red-500/[0.06] transition-all duration-300">
@@ -530,12 +547,14 @@ export default function Navbar() {
                     <div className="flex items-center gap-2.5">
                       <Link
                         to="/login"
+                        onClick={(e) => handleSafeNav(e, '/login')}
                         className="px-4 py-2 text-[13px] font-semibold text-gray-400 hover:text-white rounded-xl hover:bg-white/[0.05] transition-all duration-300 nav-link-3d"
                       >
                         Sign In
                       </Link>
                       <Link
                         to="/register"
+                        onClick={(e) => handleSafeNav(e, '/register')}
                         className="nav-shimmer-btn group relative px-5 py-2.5 text-[13px] font-bold rounded-2xl text-white transition-all duration-500 hover:scale-[1.04] active:scale-[0.97] hover:shadow-[0_8px_30px_-5px_rgba(20,184,166,0.35)] nav-link-3d"
                         style={{
                           background: 'linear-gradient(135deg, #14b8a6, #0d9488, #06b6d4)',
@@ -594,6 +613,7 @@ export default function Navbar() {
                   <Link
                     key={link.to}
                     to={link.to}
+                    onClick={(e) => handleSafeNav(e, link.to)}
                     className={`group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[14px] font-semibold transition-all duration-300 mb-1 ${
                       isActive(link.to)
                         ? 'text-white bg-gradient-to-r from-[#14b8a6]/10 to-transparent border-l-2 border-[#14b8a6]'
@@ -620,12 +640,14 @@ export default function Navbar() {
                   <div className="mt-3 pt-3 border-t border-[#1e3a42]/30 space-y-2">
                     <Link
                       to="/login"
+                      onClick={(e) => handleSafeNav(e, '/login')}
                       className="flex items-center justify-center px-4 py-3 rounded-2xl text-[14px] font-semibold text-gray-300 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] transition-all duration-300"
                     >
                       Sign In
                     </Link>
                     <Link
                       to="/register"
+                      onClick={(e) => handleSafeNav(e, '/register')}
                       className="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-[14px] font-bold text-white transition-all duration-300"
                       style={{ background: 'linear-gradient(135deg, #14b8a6, #06b6d4)' }}
                     >
@@ -649,7 +671,12 @@ export default function Navbar() {
                     </div>
 
                     <button
-                      onClick={() => { logout(); navigate('/'); }}
+                      onClick={() => {
+                        logout();
+                        setMobileOpen(false);
+                        setUserMenuOpen(false);
+                        window.location.assign('/');
+                      }}
                       className="group flex items-center gap-3.5 w-full px-4 py-3.5 rounded-2xl text-[14px] font-semibold text-red-400/80 hover:text-red-400 hover:bg-red-500/[0.06] transition-all duration-300"
                     >
                       <div className="w-9 h-9 rounded-xl bg-red-500/[0.06] flex items-center justify-center group-hover:bg-red-500/10 transition-all duration-300">
