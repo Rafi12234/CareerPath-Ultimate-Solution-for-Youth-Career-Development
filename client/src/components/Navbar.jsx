@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Menu, X, Bell, ChevronDown, LogOut, User, Briefcase,
   BookOpen, Home, MessageSquare, LayoutDashboard, Sparkles,
-  Settings, ArrowRight, Zap
+  Settings, ArrowRight, Zap, Bot
 } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
@@ -65,12 +65,14 @@ export default function Navbar() {
         { to: '/jobs', label: 'Jobs', icon: Briefcase },
         { to: '/resources', label: 'Resources', icon: BookOpen },
         { to: '/contact', label: 'Contact', icon: MessageSquare },
+        { to: '/chatbot', label: 'AI Chat', icon: Bot },
       ]
     : [
         { to: '/', label: 'Home', icon: Home },
         { to: '/jobs', label: 'Jobs', icon: Briefcase },
         { to: '/resources', label: 'Resources', icon: BookOpen },
         { to: '/contact', label: 'Contact', icon: MessageSquare },
+        { to: '/chatbot', label: 'AI Chat', icon: Bot },
       ];
 
   // Animated pill indicator

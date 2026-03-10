@@ -8,6 +8,7 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\UserSkillController;
 use App\Http\Controllers\JobApplicationController;
+use App\Http\Controllers\ChatbotController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +56,10 @@ Route::delete('/job-applications/{id}', [JobApplicationController::class, 'destr
 // Contacts
 Route::get('/contacts', [ContactController::class, 'index']);
 Route::post('/contacts', [ContactController::class, 'store']);
+
+// Chatbot
+Route::post('/chatbot', [ChatbotController::class, 'chat']);
+Route::get('/chatbot/history', [ChatbotController::class, 'history']);
 
 // Original item routes (keep for backward compatibility)
 Route::get('/items', [UsersController::class, 'index']);
