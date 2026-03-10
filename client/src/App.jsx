@@ -10,6 +10,7 @@ import Jobs from './pages/Jobs';
 import Resources from './pages/Resources';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
+import Chatbot from './pages/Chatbot';
 
 function App() {
   const location = useLocation();
@@ -28,6 +29,7 @@ function App() {
             <Route path="/resources" element={<Resources />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/chatbot" element={<Chatbot />} />
           </Routes>
         </main>
         <Footer />
