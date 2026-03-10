@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff, User, UserPlus, ArrowRight } from 'lucide-react';
 
@@ -12,7 +12,6 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,7 +27,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register(name, email, password);
-      navigate('/dashboard');
+      window.location.assign('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
@@ -39,12 +38,12 @@ export default function Register() {
   const inputClass = "w-full pr-4 py-3 bg-[#071015]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200";
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-24 page-enter">
+    <div className="relative min-h-screen flex items-center justify-center px-4 py-24 page-enter">
       {/* Background effects */}
-      <div className="fixed inset-0 bg-[#071015]" />
-      <div className="fixed inset-0 bg-linear-to-br from-[#06b6d4]/5 via-transparent to-[#14b8a6]/5" />
-      <div className="fixed top-40 right-20 w-72 h-72 bg-[#14b8a6]/8 rounded-full blur-[100px]" />
-      <div className="fixed bottom-20 left-20 w-72 h-72 bg-[#06b6d4]/5 rounded-full blur-[100px]" />
+      <div className="absolute inset-0 bg-[#071015] pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-[#06b6d4]/5 via-transparent to-[#14b8a6]/5 pointer-events-none" />
+      <div className="absolute top-40 right-20 w-72 h-72 bg-[#14b8a6]/8 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-20 left-20 w-72 h-72 bg-[#06b6d4]/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative w-full max-w-md">
         <div className="bg-[#0A1A22]/90 backdrop-blur-xl border border-[#1e3a42]/60 rounded-2xl p-8 shadow-2xl shadow-black/20">
