@@ -9,6 +9,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\UserSkillController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\AvatarController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -60,6 +61,9 @@ Route::post('/contacts', [ContactController::class, 'store']);
 // Chatbot
 Route::post('/chatbot', [ChatbotController::class, 'chat']);
 Route::get('/chatbot/history', [ChatbotController::class, 'history']);
+
+// Avatar upload
+Route::post('/upload-avatar', [AvatarController::class, 'upload']);
 
 // Original item routes (keep for backward compatibility)
 Route::get('/items', [UsersController::class, 'index']);

@@ -1,6 +1,6 @@
 import { useAuth } from '../context/AuthContext';
-import { useState, useEffect } from 'react';
-import { User, Plus, X, Save, Pencil, Trash2, BookOpen, Briefcase, Award, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { User, Plus, X, Save, Pencil, Trash2, BookOpen, Briefcase, Award, ChevronDown, Camera, Loader2 } from 'lucide-react';
 import api from '../utils/api';
 
 const PROFICIENCY_LEVELS = ['Beginner', 'Intermediate', 'Expert', 'Professional'];
@@ -20,10 +20,12 @@ const PROFICIENCY_WIDTH = {
 };
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [skills, setSkills] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef(null);
 
   // Add skill form
   const [showAddForm, setShowAddForm] = useState(false);
@@ -116,6 +118,30 @@ export default function Profile() {
     setEditProficiency(skill.proficiency);
   };
 
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be less than 5MB');
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      formData.append('user_id', user.id);
+      const res = await api.post('/upload-avatar', formData);
+      if (res.data?.user) {
+        updateUser(res.data.user);
+      }
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
@@ -126,6 +152,19 @@ export default function Profile() {
 
   return (
     <div className="hero-cinematic min-h-screen pt-24 pb-16 page-enter">
+      {/* Fullscreen upload overlay */}
+      {uploadingAvatar && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-[#0A1A22]/95 border border-[#14b8a6]/30 rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl shadow-[#14b8a6]/10">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full border-4 border-[#1e3a42] border-t-[#14b8a6] animate-spin" />
+              <Camera size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#14b8a6]" />
+            </div>
+            <p className="text-white font-semibold text-sm">Uploading your photo...</p>
+            <p className="text-gray-500 text-xs">This may take a moment</p>
+          </div>
+        </div>
+      )}
       {/* Cinematic background haze */}
       <div className="hero-haze">
         <div className="haze-orb haze-orb--center" />
@@ -138,8 +177,32 @@ export default function Profile() {
         {/* Profile Header */}
         <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8 mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-            <div className="w-20 h-20 rounded-2xl bg-linear-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/20 shrink-0">
-              <span className="text-3xl font-bold text-white">{user.name?.[0]?.toUpperCase()}</span>
+            <div className="relative group shrink-0">
+              <div
+                onClick={() => !uploadingAvatar && avatarInputRef.current?.click()}
+                className="w-20 h-20 rounded-2xl bg-linear-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/20 cursor-pointer overflow-hidden"
+              >
+                {uploadingAvatar ? (
+                  <Loader2 size={28} className="text-white animate-spin" />
+                ) : user.avatar ? (
+                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl font-bold text-white">{user.name?.[0]?.toUpperCase()}</span>
+                )}
+              </div>
+              <div
+                onClick={() => !uploadingAvatar && avatarInputRef.current?.click()}
+                className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              >
+                <Camera size={20} className="text-white" />
+              </div>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
             </div>
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold text-white">{user.name}</h1>

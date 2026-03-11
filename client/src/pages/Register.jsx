@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, Eye, EyeOff, User, UserPlus, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, UserPlus, ArrowRight, Camera, X, Loader2 } from 'lucide-react';
+import api from '../utils/api';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -11,7 +12,29 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatar, setAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const fileInputRef = useRef(null);
+  const { register, updateUser } = useAuth();
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be less than 5MB');
+        return;
+      }
+      setAvatar(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const removeAvatar = () => {
+    setAvatar(null);
+    setAvatarPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +49,26 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      await register(name, email, password);
+      const userData = await register(name, email, password);
+
+      // Upload avatar if selected
+      if (avatar && userData?.id) {
+        setUploadingAvatar(true);
+        try {
+          const formData = new FormData();
+          formData.append('avatar', avatar);
+          formData.append('user_id', userData.id);
+          const avatarRes = await api.post('/upload-avatar', formData);
+          if (avatarRes.data?.user) {
+            updateUser(avatarRes.data.user);
+          }
+        } catch (avatarErr) {
+          console.error('Avatar upload failed:', avatarErr);
+        } finally {
+          setUploadingAvatar(false);
+        }
+      }
+
       window.location.assign('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -39,6 +81,20 @@ export default function Register() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-24 page-enter">
+      {/* Fullscreen upload overlay */}
+      {uploadingAvatar && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-[#0A1A22]/95 border border-[#14b8a6]/30 rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl shadow-[#14b8a6]/10">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full border-4 border-[#1e3a42] border-t-[#14b8a6] animate-spin" />
+              <Camera size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#14b8a6]" />
+            </div>
+            <p className="text-white font-semibold text-sm">Uploading your photo...</p>
+            <p className="text-gray-500 text-xs">This may take a moment</p>
+          </div>
+        </div>
+      )}
+
       {/* Background effects */}
       <div className="absolute inset-0 bg-[#071015] pointer-events-none" />
       <div className="absolute inset-0 bg-linear-to-br from-[#06b6d4]/5 via-transparent to-[#14b8a6]/5 pointer-events-none" />
@@ -64,6 +120,39 @@ export default function Register() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center mb-2">
+              <div className="relative group">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-20 h-20 rounded-2xl bg-[#071015]/70 border-2 border-dashed border-[#1e3a42] hover:border-[#14b8a6]/50 flex items-center justify-center cursor-pointer transition-all duration-200 overflow-hidden"
+                >
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera size={24} className="text-gray-600 group-hover:text-[#14b8a6] transition-colors" />
+                  )}
+                </div>
+                {avatarPreview && (
+                  <button
+                    type="button"
+                    onClick={removeAvatar}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500/90 hover:bg-red-500 rounded-full flex items-center justify-center transition-colors"
+                  >
+                    <X size={12} className="text-white" />
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-600 mt-2">Profile photo (optional)</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
               <div className="relative">

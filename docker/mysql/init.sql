@@ -50,7 +50,8 @@ INSERT INTO migrations (migration, batch) VALUES
 ('2024_01_01_000003_create_enrollments_table', 1),
 ('2024_01_01_000004_create_contacts_table', 1),
 ('2024_01_01_000005_create_job_applications_table', 1),
-('2024_01_01_000006_create_chat_messages_table', 1);
+('2024_01_01_000006_create_chat_messages_table', 1),
+('2024_01_01_000007_add_avatar_to_users_table', 1);
 
 -- ============================================================
 -- 1. users
@@ -61,6 +62,7 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     email_verified_at TIMESTAMP NULL,
     password VARCHAR(255) NOT NULL,
+    avatar VARCHAR(500) NULL,
     remember_token VARCHAR(100) NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL
