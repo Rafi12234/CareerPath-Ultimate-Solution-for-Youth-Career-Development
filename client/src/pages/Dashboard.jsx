@@ -312,7 +312,11 @@ export default function Dashboard() {
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#14b8a6] shadow-lg shadow-[#14b8a6]/40" />
                   </div>
                   <div className="relative w-full h-full rounded-2xl bg-gradient-to-br from-[#14b8a6] via-[#0d9488] to-[#06b6d4] flex items-center justify-center shadow-2xl shadow-[#14b8a6]/20 overflow-hidden">
-                    <span className="text-3xl font-black text-white">{user?.name?.[0]?.toUpperCase()}</span>
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-3xl font-black text-white">{user?.name?.[0]?.toUpperCase()}</span>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                   </div>
                   <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#10b981] border-[3px] border-[#04111a]" style={{ animation:'dsh-pulse 2s ease infinite' }} />
@@ -414,8 +418,12 @@ export default function Dashboard() {
                   </div>
 
                   <div className="flex items-center gap-5 mb-8">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-xl shadow-[#14b8a6]/15 shrink-0">
-                      <span className="text-xl font-black text-white">{user?.name?.[0]?.toUpperCase()}</span>
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-xl shadow-[#14b8a6]/15 shrink-0 overflow-hidden">
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xl font-black text-white">{user?.name?.[0]?.toUpperCase()}</span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-xl font-bold text-white tracking-tight">{user?.name}</h3>
