@@ -433,8 +433,12 @@ export default function Navbar() {
                           {/* Avatar with glow */}
                           <div className="relative">
                             <div className={`absolute -inset-0.5 rounded-lg bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] blur-sm transition-opacity duration-300 ${userMenuOpen ? 'opacity-40' : 'opacity-0 group-hover:opacity-25'}`} />
-                            <div className="relative w-7 h-7 rounded-lg bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/10">
-                              <span className="text-white text-xs font-bold">{user.name?.[0]?.toUpperCase()}</span>
+                            <div className="relative w-7 h-7 rounded-lg bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/10 overflow-hidden">
+                              {user.avatar ? (
+                                <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-white text-xs font-bold">{user.name?.[0]?.toUpperCase()}</span>
+                              )}
                             </div>
                           </div>
                           <span className="text-[13px] font-semibold text-gray-300 max-w-[90px] truncate group-hover:text-white transition-colors duration-300">
@@ -472,8 +476,12 @@ export default function Navbar() {
                                 <div className="relative p-5 pb-4">
                                   <div className="flex items-center gap-3.5">
                                     <div className="relative">
-                                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/20">
-                                        <span className="text-white text-base font-bold">{user.name?.[0]?.toUpperCase()}</span>
+                                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/20 overflow-hidden">
+                                        {user.avatar ? (
+                                          <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                          <span className="text-white text-base font-bold">{user.name?.[0]?.toUpperCase()}</span>
+                                        )}
                                       </div>
                                       {/* Online dot */}
                                       <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#10b981] border-2 border-[#0A1A22]" style={{ animation: 'nav-glow-pulse 2s ease infinite' }} />
@@ -663,8 +671,12 @@ export default function Navbar() {
                   <div className="mt-3 pt-3 border-t border-[#1e3a42]/30">
                     {/* User info card */}
                     <div className="flex items-center gap-3 px-4 py-3 mb-2 rounded-2xl bg-white/[0.02]">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/15">
-                        <span className="text-white font-bold">{user.name?.[0]?.toUpperCase()}</span>
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/15 overflow-hidden">
+                        {user.avatar ? (
+                          <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white font-bold">{user.name?.[0]?.toUpperCase()}</span>
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold text-white truncate">{user.name}</p>
