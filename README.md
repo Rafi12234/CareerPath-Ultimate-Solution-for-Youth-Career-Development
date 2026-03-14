@@ -16,6 +16,15 @@ CareerPath is an interactive platform designed to guide students and job-seekers
 ---
 ### **Tech Stack**
 
+### Database Approach Requirement
+
+- This project follows a **Database-First** approach as a requirement.
+- The database schema is defined in SQL scripts, not generated from ORM migrations.
+- Canonical SQL setup files are:
+  - `docker/mysql/init.sql` (Docker MySQL initialization)
+  - `careerpath_seed.sql` (manual MySQL Workbench/CLI setup)
+- Do not use Laravel migration commands as the primary schema setup path.
+
 #### **Frontend:**
 - **React.js**:  
   A JavaScript library for building user interfaces. It is used to create dynamic, responsive, and interactive components that make up the CareerPath platform.

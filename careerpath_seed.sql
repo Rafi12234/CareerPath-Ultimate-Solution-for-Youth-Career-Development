@@ -21,6 +21,7 @@ DROP TABLE IF EXISTS job_applications;
 DROP TABLE IF EXISTS user_skills;
 DROP TABLE IF EXISTS enrollments;
 DROP TABLE IF EXISTS contacts;
+DROP TABLE IF EXISTS chat_messages;
 DROP TABLE IF EXISTS personal_access_tokens;
 DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS courses;
@@ -40,6 +41,7 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     email_verified_at TIMESTAMP NULL,
     password VARCHAR(255) NOT NULL,
+    avatar VARCHAR(500) NULL,
     remember_token VARCHAR(100) NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL
@@ -188,6 +190,20 @@ CREATE TABLE contacts (
     updated_at TIMESTAMP NULL
 );
 
+-- ============================================================
+-- 12. chat_messages  (AI chatbot conversation history)
+-- ============================================================
+CREATE TABLE chat_messages (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NULL,
+    user_message TEXT NOT NULL,
+    bot_reply TEXT NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX idx_chat_user (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 
 -- ############################################################
 --                     SEED DATA
@@ -305,7 +321,7 @@ SET SQL_SAFE_UPDATES = 1;
 -- ============================================================
 -- Tables: users, password_reset_tokens, failed_jobs,
 --         personal_access_tokens, posts, jobs, courses,
---         enrollments, user_skills, job_applications, contacts
+--         enrollments, user_skills, job_applications, contacts, chat_messages
 --
 -- Sample login credentials:
 --   Email:    alice@example.com
