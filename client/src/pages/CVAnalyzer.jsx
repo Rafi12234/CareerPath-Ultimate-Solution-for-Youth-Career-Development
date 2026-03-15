@@ -231,11 +231,6 @@ const InjectStyles = () => (
     .step-card{transition:all .3s ease}
     .step-card:hover{transform:translateX(4px);border-color:rgba(20,184,166,.3)}
 
-    .timeline-line{
-      position:absolute;left:15px;top:0;bottom:0;width:2px;
-      background:linear-gradient(180deg,#14b8a6,#06b6d4 50%,transparent);
-    }
-
     .info-field{transition:all .2s ease}
     .info-field:hover{background:rgba(20,184,166,.04);border-color:rgba(20,184,166,.15)}
 
