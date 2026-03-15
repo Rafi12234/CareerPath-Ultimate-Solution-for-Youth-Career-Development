@@ -161,8 +161,22 @@ const InjectStyles = () => (
       animation:cardShine 6s ease-in-out infinite;pointer-events:none;
     }
 
-    .card-wrapper{transition:all 0.3s cubic-bezier(0.16,1,0.3,1)}
-    .card-wrapper:hover{transform:translateY(-4px);box-shadow:0 12px 30px -8px rgba(20,184,166,0.15)}
+    .card-wrapper{
+      transition:all 0.3s cubic-bezier(0.16,1,0.3,1);
+      position:relative;
+      z-index:1;
+    }
+    .card-wrapper:hover{
+      transform:translateY(-4px);
+      box-shadow:0 12px 30px -8px rgba(20,184,166,0.15);
+    }
+    .card-wrapper:active{
+      transform:translateY(-2px);
+    }
+
+    .glass:has(.card-wrapper:hover){
+      border-color:rgba(20,184,166,0.2);
+    }
 
     .dot-grid{
       background-image:radial-gradient(rgba(20,184,166,.05) 1px,transparent 1px);
