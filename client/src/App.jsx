@@ -11,6 +11,7 @@ import Resources from './pages/Resources';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import Chatbot from './pages/Chatbot';
+import CVAnalyzer from './pages/CVAnalyzer';
 
 function App() {
   const location = useLocation();
@@ -30,6 +31,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/cv-analyzer" element={<CVAnalyzer />} />
           </Routes>
         </main>
         <Footer />
