@@ -470,6 +470,29 @@ function Skeleton() {
   );
 }
 
+/* ─── Stats Card ─── */
+function StatsCard({ stat, statsVisible, index }) {
+  const animVal = useAnimatedNumber(statsVisible ? stat.value : 0);
+
+  return (
+    <TiltCard intensity={4}>
+      <div className="glass-card rounded-2xl p-5 text-center relative overflow-hidden group cursor-default"
+        style={{ animationDelay: `${index * 0.08}s` }}>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-[2px] rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{ background: stat.color }} />
+        <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+          style={{ background: `${stat.bg}15` }}>
+          <stat.icon size={18} style={{ color: stat.color }} />
+        </div>
+        <div className="text-3xl font-black tabular-nums mb-1" style={{ color: stat.color }}>
+          {animVal}
+        </div>
+        <div className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-bold">{stat.label}</div>
+      </div>
+    </TiltCard>
+  );
+}
+
 /* ─── Featured Job Card ─── */
 function FeaturedCard({ job, score, onApply, onDetails, applied, applying }) {
   const color = score >= 80 ? '#10b981' : score >= 60 ? '#14b8a6' : '#f59e0b';
@@ -793,26 +816,14 @@ export default function Jobs() {
                   { label: 'Excellent', value: excellentCount, icon: Crown, color: '#10b981', bg: '#10b981' },
                   { label: 'Good Match', value: goodCount, icon: Zap, color: '#14b8a6', bg: '#14b8a6' },
                   { label: 'Fair Match', value: fairCount, icon: Target, color: '#f59e0b', bg: '#f59e0b' },
-                ].map((stat, i) => {
-                  const animVal = useAnimatedNumber(statsVisible ? stat.value : 0);
-                  return (
-                    <TiltCard key={stat.label} intensity={4}>
-                      <div className="glass-card rounded-2xl p-5 text-center relative overflow-hidden group cursor-default"
-                        style={{ animationDelay: `${i * 0.08}s` }}>
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-[2px] rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                          style={{ background: stat.color }} />
-                        <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
-                          style={{ background: `${stat.bg}15` }}>
-                          <stat.icon size={18} style={{ color: stat.color }} />
-                        </div>
-                        <div className="text-3xl font-black tabular-nums mb-1" style={{ color: stat.color }}>
-                          {animVal}
-                        </div>
-                        <div className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-bold">{stat.label}</div>
-                      </div>
-                    </TiltCard>
-                  );
-                })}
+                ].map((stat, i) => (
+                  <StatsCard
+                    key={stat.label}
+                    stat={stat}
+                    statsVisible={statsVisible}
+                    index={i}
+                  />
+                ))}
               </div>
             )}
 
