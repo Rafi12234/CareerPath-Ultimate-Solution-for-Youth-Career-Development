@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import CourseCertificatePanel from '../components/CourseCertificatePanel';
 import {
   ChevronLeft, Play, CheckCircle, Lock, Loader2, AlertCircle,
-  Maximize, Minimize2, Clock, Award, BookOpen, ChevronDown, ChevronRight,
+  Maximize, Minimize2, Clock, BookOpen, ChevronDown, ChevronRight,
   Sparkles, Zap, Target, Shield, Layers, ArrowRight, Star,
   SkipForward, RotateCcw, Eye, Flame, Trophy, Crown, GraduationCap,
   CircleDot, Heart, Pause, Volume2, VolumeX, Settings, X
@@ -498,6 +499,12 @@ const CoursePlayer = () => {
     setVideoError(false);
   }, [currentVideo?.id]);
 
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el || !videoSources.length) return;
+    el.load();
+  }, [videoSources]);
+
   const formatDuration = (d) => {
     if (!d) return 'N/A';
     if (typeof d === 'string' && d.includes('min')) return d;
@@ -872,7 +879,6 @@ const CoursePlayer = () => {
                         <button onClick={startPlayback}
                           className="absolute inset-0 flex items-center justify-center bg-black/60 hover:bg-black/50 transition-all duration-500 group/play cursor-pointer z-10">
                           <div className="flex flex-col items-center gap-5">
-                            {/* Orbiting play button */}
                             <div className="relative">
                               <div className="absolute inset-[-16px] rounded-full border border-dashed border-[#14b8a6]/15"
                                 style={{ animation: 'cp-rotate 12s linear infinite' }}>
@@ -880,13 +886,10 @@ const CoursePlayer = () => {
                               </div>
                               <div className="absolute inset-[-30px] rounded-full border border-dotted border-[#06b6d4]/10"
                                 style={{ animation: 'cp-rotateR 20s linear infinite' }} />
-
                               <div className="cp-play-pulse w-20 h-20 rounded-full bg-gradient-to-br from-[#14b8a6] to-[#06b6d4]
                                 flex items-center justify-center shadow-2xl shadow-[#14b8a6]/30 relative z-10">
                                 <Play className="text-white ml-1" size={28} fill="white" />
                               </div>
-
-                              {/* Pulse rings */}
                               {[0, 1].map(i => (
                                 <div key={i} className="absolute inset-0 rounded-full border-2 border-[#14b8a6]/20"
                                   style={{ animation: `cp-pulseExpand 2.5s ease-out ${i * 1.2}s infinite` }} />
@@ -902,8 +905,7 @@ const CoursePlayer = () => {
                       )}
 
                       {/* Bottom gradient controls */}
-                      <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent
-                        p-4 transition-opacity duration-300 ${isWatching ? 'opacity-100' : 'opacity-0'} z-10`}>
+                      <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300 ${isWatching ? 'opacity-100' : 'opacity-0'} z-10`}>
                         {/* Mini progress */}
                         <div className="mb-3">
                           <input
@@ -1032,6 +1034,13 @@ const CoursePlayer = () => {
                           <><CheckCircle size={16} /> Mark as Complete</>
                         )}
                       </RippleBtn>
+
+                      <CourseCertificatePanel
+                        isVisible={Boolean(isCourseDone)}
+                        userName={user?.name}
+                        courseName={course?.name}
+                        completedAt={progress?.completed_at}
+                      />
                     </div>
                   </div>
 
