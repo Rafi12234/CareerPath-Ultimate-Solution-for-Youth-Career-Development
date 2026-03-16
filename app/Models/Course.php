@@ -22,4 +22,9 @@ class Course extends Model
     {
         return $this->hasMany(Enrollment::class);
     }
+
+    public function videos()
+    {
+        return $this->hasMany(CourseVideo::class)->orderBy('sequence');
+    }
 }

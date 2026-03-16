@@ -12,6 +12,7 @@ import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import Chatbot from './pages/Chatbot';
 import CVAnalyzer from './pages/CVAnalyzer';
+import CoursePlayer from './pages/CoursePlayer';
 
 function App() {
   const location = useLocation();
@@ -28,6 +29,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/resources" element={<Resources />} />
+            <Route path="/course-player/:courseId" element={<CoursePlayer />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/chatbot" element={<Chatbot />} />
