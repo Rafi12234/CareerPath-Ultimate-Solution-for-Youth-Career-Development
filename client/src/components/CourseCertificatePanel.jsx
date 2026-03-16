@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Award, Loader2 } from 'lucide-react';
 
 const CERTIFICATE_TEMPLATE_URL = 'https://res.cloudinary.com/dnzjg9lq8/image/upload/v1773697396/Black_and_Gold_Modern_Certificate_of_Appreciation_A4_hcjxvo.png';
@@ -7,6 +7,20 @@ const CERTIFICATE_HEIGHT = 1414;
 const ALEX_BRUSH_FONT_URL = 'https://fonts.gstatic.com/s/alexbrush/v23/SZc83FzrJKuqFbwMKk6EhUXz7Q.woff2';
 const GLACIAL_REGULAR_FONT_URL = 'https://fonts.cdnfonts.com/s/19355/GlacialIndifference-Regular.woff';
 const GLACIAL_BOLD_FONT_URL = 'https://fonts.cdnfonts.com/s/19355/GlacialIndifference-Bold.woff';
+
+const DEFAULT_TEXT_POSITIONS = {
+  name: { x: 1000, y: 742 },
+  course: { x: 1000, y: 938 },
+  date: { x: 1000, y: 1118 },
+};
+
+const DEFAULT_FONT_SIZES = {
+  name: 156,
+  course: 66,
+  date: 42,
+};
+
+const DRAGGABLE_FIELDS = ['name', 'course', 'date'];
 
 function loadImage(url) {
   return new Promise((resolve, reject) => {
@@ -129,71 +143,166 @@ function drawCenteredTextBlock(ctx, text, options) {
 
 export default function CourseCertificatePanel({ isVisible, userName, courseName, completedAt }) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [textPositions, setTextPositions] = useState(DEFAULT_TEXT_POSITIONS);
+  const [fontSizes, setFontSizes] = useState(DEFAULT_FONT_SIZES);
+  const [draggingField, setDraggingField] = useState(null);
+  const [previewScale, setPreviewScale] = useState(1);
+
+  const previewStageRef = useRef(null);
+
+  const certificateDate = useMemo(() => formatCertificateDate(completedAt), [completedAt]);
+  const certificateDateLabel = useMemo(() => `at ${certificateDate}`, [certificateDate]);
+
+  const renderCertificateDataUrl = useCallback(async (positions, sizes) => {
+    await ensureCertificateFontsLoaded();
+    const template = await loadImage(CERTIFICATE_TEMPLATE_URL);
+    const canvas = document.createElement('canvas');
+    canvas.width = CERTIFICATE_WIDTH;
+    canvas.height = CERTIFICATE_HEIGHT;
+    const context = canvas.getContext('2d');
+
+    if (!context) {
+      throw new Error('Canvas is not supported in this browser.');
+    }
+
+    context.drawImage(template, 0, 0, CERTIFICATE_WIDTH, CERTIFICATE_HEIGHT);
+
+    context.save();
+    context.shadowColor = 'rgba(0, 0, 0, 0.08)';
+    context.shadowBlur = 18;
+    context.shadowOffsetY = 4;
+    drawCenteredTextBlock(context, userName, {
+      centerX: positions.name.x,
+      centerY: positions.name.y,
+      maxWidth: 1180,
+      maxLines: 1,
+      startSize: sizes.name,
+      minSize: Math.max(48, Math.floor(sizes.name * 0.55)),
+      family: 'Alex Brush',
+      weight: '400',
+      color: '#17110d',
+      lineHeight: 1.05,
+    });
+    context.restore();
+
+    drawCenteredTextBlock(context, courseName, {
+      centerX: positions.course.x,
+      centerY: positions.course.y,
+      maxWidth: 1120,
+      maxLines: 2,
+      startSize: sizes.course,
+      minSize: Math.max(24, Math.floor(sizes.course * 0.58)),
+      family: 'Glacial Indifference Bold',
+      weight: '700',
+      color: '#24201a',
+      lineHeight: 1.15,
+    });
+
+    drawCenteredTextBlock(context, certificateDateLabel, {
+      centerX: positions.date.x,
+      centerY: positions.date.y,
+      maxWidth: 560,
+      maxLines: 1,
+      startSize: sizes.date,
+      minSize: Math.max(18, Math.floor(sizes.date * 0.6)),
+      family: 'Glacial Indifference',
+      weight: '400',
+      color: '#3b342c',
+      lineHeight: 1,
+    });
+
+    return canvas.toDataURL('image/png');
+  }, [certificateDateLabel, courseName, userName]);
+
+  const updateDraggedPosition = useCallback((clientX, clientY) => {
+    if (!draggingField || !previewStageRef.current) return;
+    const rect = previewStageRef.current.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    const xPx = ((clientX - rect.left) / rect.width) * CERTIFICATE_WIDTH;
+    const yPx = ((clientY - rect.top) / rect.height) * CERTIFICATE_HEIGHT;
+
+    const clampedX = Math.max(0, Math.min(CERTIFICATE_WIDTH, xPx));
+    const clampedY = Math.max(0, Math.min(CERTIFICATE_HEIGHT, yPx));
+
+    setTextPositions((prev) => ({
+      ...prev,
+      [draggingField]: { x: clampedX, y: clampedY },
+    }));
+  }, [draggingField]);
+
+  useEffect(() => {
+    if (!draggingField) return undefined;
+
+    const onPointerMove = (event) => {
+      updateDraggedPosition(event.clientX, event.clientY);
+    };
+
+    const onPointerUp = () => {
+      setDraggingField(null);
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+  }, [draggingField, updateDraggedPosition]);
+
+  useEffect(() => {
+    if (!isPreviewOpen || !previewStageRef.current) return undefined;
+
+    const updateScale = () => {
+      const stageWidth = previewStageRef.current?.clientWidth || CERTIFICATE_WIDTH;
+      setPreviewScale(stageWidth / CERTIFICATE_WIDTH);
+    };
+
+    updateScale();
+
+    const observer = new ResizeObserver(() => {
+      updateScale();
+    });
+
+    observer.observe(previewStageRef.current);
+
+    return () => observer.disconnect();
+  }, [isPreviewOpen]);
+
+  const onDragStart = useCallback((field, event) => {
+    event.preventDefault();
+    setDraggingField(field);
+  }, []);
+
+  const resetPlacement = useCallback(() => {
+    setTextPositions(DEFAULT_TEXT_POSITIONS);
+    setFontSizes(DEFAULT_FONT_SIZES);
+  }, []);
+
+  const setFontSize = useCallback((field, value) => {
+    const nextValue = Number(value);
+    setFontSizes((prev) => ({
+      ...prev,
+      [field]: nextValue,
+    }));
+  }, []);
+
+  const openPreview = useCallback(async () => {
+    await ensureCertificateFontsLoaded();
+    setIsPreviewOpen(true);
+  }, []);
 
   const downloadCertificate = useCallback(async () => {
     if (!userName || !courseName || isGenerating) return;
 
     setIsGenerating(true);
     try {
-      await ensureCertificateFontsLoaded();
-      const template = await loadImage(CERTIFICATE_TEMPLATE_URL);
-      const canvas = document.createElement('canvas');
-      canvas.width = CERTIFICATE_WIDTH;
-      canvas.height = CERTIFICATE_HEIGHT;
-      const context = canvas.getContext('2d');
-
-      if (!context) {
-        throw new Error('Canvas is not supported in this browser.');
-      }
-
-      context.drawImage(template, 0, 0, CERTIFICATE_WIDTH, CERTIFICATE_HEIGHT);
-
-      context.save();
-      context.shadowColor = 'rgba(0, 0, 0, 0.08)';
-      context.shadowBlur = 18;
-      context.shadowOffsetY = 4;
-      drawCenteredTextBlock(context, userName, {
-        centerX: 1000,
-        centerY: 742,
-        maxWidth: 1180,
-        maxLines: 1,
-        startSize: 156,
-        minSize: 88,
-        family: 'Alex Brush',
-        weight: '400',
-        color: '#17110d',
-        lineHeight: 1.05,
-      });
-      context.restore();
-
-      drawCenteredTextBlock(context, courseName, {
-        centerX: 1000,
-        centerY: 938,
-        maxWidth: 1120,
-        maxLines: 2,
-        startSize: 66,
-        minSize: 38,
-        family: 'Glacial Indifference Bold',
-        weight: '700',
-        color: '#24201a',
-        lineHeight: 1.15,
-      });
-
-      drawCenteredTextBlock(context, formatCertificateDate(completedAt), {
-        centerX: 1000,
-        centerY: 1118,
-        maxWidth: 560,
-        maxLines: 1,
-        startSize: 42,
-        minSize: 30,
-        family: 'Glacial Indifference',
-        weight: '400',
-        color: '#3b342c',
-        lineHeight: 1,
-      });
+      const dataUrl = await renderCertificateDataUrl(textPositions, fontSizes);
 
       const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataUrl;
       link.download = `${sanitizeFileName(userName)}-${sanitizeFileName(courseName)}-certificate.png`;
       document.body.appendChild(link);
       link.click();
@@ -204,13 +313,19 @@ export default function CourseCertificatePanel({ isVisible, userName, courseName
     } finally {
       setIsGenerating(false);
     }
-  }, [completedAt, courseName, isGenerating, userName]);
+  }, [courseName, fontSizes, isGenerating, renderCertificateDataUrl, textPositions, userName]);
 
   if (!isVisible || !userName || !courseName) {
     return null;
   }
 
+  const normalizedPosition = (field) => ({
+    left: `${(textPositions[field].x / CERTIFICATE_WIDTH) * 100}%`,
+    top: `${(textPositions[field].y / CERTIFICATE_HEIGHT) * 100}%`,
+  });
+
   return (
+    <>
     <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.05] p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -219,22 +334,158 @@ export default function CourseCertificatePanel({ isVisible, userName, courseName
             <span className="text-sm font-bold text-white">Course completed</span>
           </div>
           <p className="text-xs text-gray-400">
-            Your certificate will include {userName}, {courseName}, and the completion date {formatCertificateDate(completedAt)}.
+            Open preview, drag name/course/date to where you want, then download the final certificate.
           </p>
         </div>
 
         <button
-          onClick={downloadCertificate}
-          disabled={isGenerating}
-          className={`shrink-0 px-5 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${isGenerating ? 'bg-gray-600 text-white cursor-wait' : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-[#17110d] hover:shadow-xl hover:shadow-amber-500/20'}`}
+          onClick={openPreview}
+          className="shrink-0 px-5 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-[#17110d] hover:shadow-xl hover:shadow-amber-500/20"
         >
-          {isGenerating ? (
-            <><Loader2 size={16} className="animate-spin" /> Generating...</>
-          ) : (
-            <><Award size={16} /> Download Certificate</>
-          )}
+          <><Award size={16} /> Preview Certificate</>
         </button>
       </div>
     </div>
+
+    {isPreviewOpen && (
+      <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm p-4 md:p-8 overflow-y-auto">
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-2xl border border-[#1e3a42]/60 bg-[#071015]/95 p-4 md:p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-white text-lg font-bold">Certificate Preview</h3>
+                <p className="text-xs text-gray-400">Drag text labels and adjust each font size, then download.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={resetPlacement}
+                  className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-xs font-semibold text-white hover:bg-white/15 transition-all cursor-pointer"
+                >
+                  Reset Positions
+                </button>
+                <button
+                  onClick={() => setIsPreviewOpen(false)}
+                  className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-xs font-semibold text-white hover:bg-white/15 transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                <label className="flex items-center justify-between text-xs text-gray-300 mb-2">
+                  <span>Name Size</span>
+                  <span className="font-semibold text-cyan-300">{fontSizes.name}px</span>
+                </label>
+                <input
+                  type="range"
+                  min="88"
+                  max="220"
+                  step="1"
+                  value={fontSizes.name}
+                  onChange={(event) => setFontSize('name', event.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                <label className="flex items-center justify-between text-xs text-gray-300 mb-2">
+                  <span>Course Size</span>
+                  <span className="font-semibold text-indigo-300">{fontSizes.course}px</span>
+                </label>
+                <input
+                  type="range"
+                  min="32"
+                  max="110"
+                  step="1"
+                  value={fontSizes.course}
+                  onChange={(event) => setFontSize('course', event.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                <label className="flex items-center justify-between text-xs text-gray-300 mb-2">
+                  <span>Date Size</span>
+                  <span className="font-semibold text-emerald-300">{fontSizes.date}px</span>
+                </label>
+                <input
+                  type="range"
+                  min="22"
+                  max="72"
+                  step="1"
+                  value={fontSizes.date}
+                  onChange={(event) => setFontSize('date', event.target.value)}
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[#1e3a42]/40 overflow-hidden bg-black/40">
+              <div ref={previewStageRef} className="relative w-full select-none touch-none">
+                <img
+                  src={CERTIFICATE_TEMPLATE_URL}
+                  alt="Certificate template preview"
+                  className="w-full h-auto block"
+                  draggable={false}
+                />
+
+                <div
+                  style={normalizedPosition('name')}
+                  onPointerDown={(event) => onDragStart('name', event)}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+                >
+                  <p className="text-[#17110d] text-center whitespace-nowrap" style={{ fontFamily: 'Alex Brush, cursive', fontSize: `${fontSizes.name * previewScale}px`, lineHeight: 1.05 }}>
+                    {userName}
+                  </p>
+                  <span className="absolute -top-5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-cyan-500/90 text-[10px] font-bold text-white uppercase tracking-wide">Name</span>
+                </div>
+
+                <div
+                  style={normalizedPosition('course')}
+                  onPointerDown={(event) => onDragStart('course', event)}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing max-w-[70%]"
+                >
+                  <p className="text-[#24201a] text-center leading-tight" style={{ fontFamily: 'Glacial Indifference Bold, Glacial Indifference, sans-serif', fontWeight: 700, fontSize: `${fontSizes.course * previewScale}px` }}>
+                    {courseName}
+                  </p>
+                  <span className="absolute -top-5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-indigo-500/90 text-[10px] font-bold text-white uppercase tracking-wide">Course</span>
+                </div>
+
+                <div
+                  style={normalizedPosition('date')}
+                  onPointerDown={(event) => onDragStart('date', event)}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+                >
+                  <p className="text-[#3b342c] text-center whitespace-nowrap" style={{ fontFamily: 'Glacial Indifference, sans-serif', fontSize: `${fontSizes.date * previewScale}px` }}>
+                    {certificateDateLabel}
+                  </p>
+                  <span className="absolute -top-5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-emerald-500/90 text-[10px] font-bold text-white uppercase tracking-wide">Date</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-gray-400">
+                Drag handles are enabled for: {DRAGGABLE_FIELDS.join(', ')}.
+              </p>
+              <button
+                onClick={downloadCertificate}
+                disabled={isGenerating}
+                className={`px-5 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${isGenerating ? 'bg-gray-600 text-white cursor-wait' : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-[#17110d] hover:shadow-xl hover:shadow-amber-500/20'}`}
+              >
+                {isGenerating ? (
+                  <><Loader2 size={16} className="animate-spin" /> Generating...</>
+                ) : (
+                  <><Award size={16} /> Download With Current Placement</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
