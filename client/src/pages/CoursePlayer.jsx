@@ -4,11 +4,50 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import {
   ChevronLeft, Play, CheckCircle, Lock, Loader2, AlertCircle,
-  Maximize, Clock, Award, BookOpen, ChevronDown, ChevronRight,
+  Maximize, Minimize2, Clock, Award, BookOpen, ChevronDown, ChevronRight,
   Sparkles, Zap, Target, Shield, Layers, ArrowRight, Star,
   SkipForward, RotateCcw, Eye, Flame, Trophy, Crown, GraduationCap,
   CircleDot, Heart, Pause, Volume2, VolumeX, Settings, X
 } from 'lucide-react';
+
+const FALLBACK_VIDEO_POOL = [
+  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+];
+
+const SPEED_OPTIONS = [1, 1.5, 1.75, 2];
+
+function inferMimeType(url) {
+  if (!url) return 'video/mp4';
+  const clean = url.split('?')[0].toLowerCase();
+  if (clean.endsWith('.webm')) return 'video/webm';
+  if (clean.endsWith('.ogg') || clean.endsWith('.ogv')) return 'video/ogg';
+  return 'video/mp4';
+}
+
+function getPlayableSources(rawUrl, seed = 0) {
+  if (!rawUrl) return [];
+
+  const clean = rawUrl.split('?')[0].toLowerCase();
+  const looksLikeGif = clean.endsWith('.gif') || rawUrl.includes('/image/upload/');
+
+  if (!looksLikeGif) {
+    return [{ src: rawUrl, type: inferMimeType(rawUrl) }];
+  }
+
+  // Many seeded URLs are GIF image resources, which are not reliably playable in <video>.
+  // Try a Cloudinary MP4 variant first, then fall back to known public MP4 samples.
+  const cloudinaryMp4 = rawUrl
+    .replace('/image/upload/', '/video/upload/f_mp4/')
+    .replace(/\.gif(\?.*)?$/i, '.mp4$1');
+
+  const fallback = FALLBACK_VIDEO_POOL[seed % FALLBACK_VIDEO_POOL.length];
+  return [
+    { src: cloudinaryMp4, type: 'video/mp4' },
+    { src: fallback, type: 'video/mp4' },
+  ];
+}
 
 const InjectStyles = () => (
   <style>{`
@@ -386,12 +425,23 @@ const CoursePlayer = () => {
   const [showCelebration, setShowCelebration] = useState(false);
   const [justCompleted, setJustCompleted] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
   const videoRef = useRef(null);
   const videoContainerRef = useRef(null);
   const isMountedRef = useRef(true);
   const r1 = useReveal();
   const r2 = useReveal();
+
+  const goToResources = useCallback(() => {
+    window.location.assign('/resources');
+  }, []);
+  const videoSources = useMemo(
+    () => getPlayableSources(currentVideo?.url, currentVideo?.id || 0),
+    [currentVideo?.url, currentVideo?.id]
+  );
 
   // Reset mounted flag on component mount and cleanup on unmount
   useEffect(() => {
@@ -435,6 +485,18 @@ const CoursePlayer = () => {
       document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
     };
   }, []);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (el) {
+      el.playbackRate = playbackRate;
+    }
+  }, [playbackRate, currentVideo?.id]);
+
+  useEffect(() => {
+    setShowSpeedMenu(false);
+    setVideoError(false);
+  }, [currentVideo?.id]);
 
   const formatDuration = (d) => {
     if (!d) return 'N/A';
@@ -487,6 +549,27 @@ const CoursePlayer = () => {
     const next = Number(e.target.value);
     el.currentTime = next;
     setVideoCurrentTime(next);
+  };
+
+  const setSpeed = (rate) => {
+    const el = videoRef.current;
+    setPlaybackRate(rate);
+    if (el) el.playbackRate = rate;
+    setShowSpeedMenu(false);
+  };
+
+  const retryPlayback = async () => {
+    const el = videoRef.current;
+    if (!el) return;
+    setVideoError(false);
+    el.load();
+    try {
+      await el.play();
+      setIsWatching(true);
+      setIsPlaying(true);
+    } catch (err) {
+      console.error('Video retry failed:', err);
+    }
   };
 
   const getGroupedModules = useCallback(() => {
@@ -680,7 +763,8 @@ const CoursePlayer = () => {
               <div className="flex items-center justify-between gap-4">
                 {/* Left: back + course info */}
                 <div className="flex items-center gap-4 min-w-0">
-                  <button onClick={() => navigate('/resources')}
+                  <button onClick={goToResources}
+                    aria-label="Go to resources"
                     className="shrink-0 w-9 h-9 rounded-xl bg-[#0F3A42]/40 border border-[#1e3a42]/40
                       flex items-center justify-center text-gray-400 hover:text-[#14b8a6] hover:border-[#14b8a6]/25
                       transition-all duration-300 cursor-pointer hover:scale-105">
@@ -737,19 +821,51 @@ const CoursePlayer = () => {
                       <video
                         key={currentVideo.id}
                         ref={videoRef}
-                        src={currentVideo.url}
                         className="w-full h-full object-cover transition-all duration-500"
                         preload="metadata"
                         playsInline
+                        controls={false}
                         onLoadedMetadata={(e) => {
                           const d = e.currentTarget.duration;
                           setVideoDuration(Number.isFinite(d) ? d : 0);
+                          e.currentTarget.playbackRate = playbackRate;
                         }}
                         onTimeUpdate={(e) => setVideoCurrentTime(e.currentTarget.currentTime || 0)}
                         onPlay={() => { setIsPlaying(true); setIsWatching(true); }}
                         onPause={() => setIsPlaying(false)}
                         onEnded={() => setIsPlaying(false)}
-                      />
+                        onError={() => {
+                          setVideoError(true);
+                          setIsPlaying(false);
+                        }}
+                      >
+                        {videoSources.map((source) => (
+                          <source key={source.src} src={source.src} type={source.type} />
+                        ))}
+                      </video>
+
+                      {videoError && (
+                        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 p-6">
+                          <div className="text-center max-w-md">
+                            <p className="text-red-300 font-semibold mb-2">Video failed to load</p>
+                            <p className="text-gray-400 text-xs mb-4">The original source appears to be a non-video media link. A fallback video source is available.</p>
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={retryPlayback}
+                                className="px-3 py-2 rounded-lg bg-[#14b8a6]/20 border border-[#14b8a6]/30 text-[#14b8a6] text-xs font-bold cursor-pointer hover:bg-[#14b8a6]/30 transition-all"
+                              >
+                                Retry
+                              </button>
+                              <button
+                                onClick={() => window.open(currentVideo?.url, '_blank', 'noopener,noreferrer')}
+                                className="px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-xs font-bold cursor-pointer hover:bg-white/20 transition-all"
+                              >
+                                Open Original Link
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Play overlay */}
                       {!isWatching && (
@@ -815,6 +931,29 @@ const CoursePlayer = () => {
                           </div>
 
                           <div className="flex items-center gap-2">
+                            <div className="relative">
+                              <button
+                                onClick={() => setShowSpeedMenu((prev) => !prev)}
+                                className="w-auto min-w-12 px-2 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all cursor-pointer text-[11px] font-semibold gap-1"
+                                title="Playback speed"
+                              >
+                                <Settings size={11} /> {playbackRate}x
+                              </button>
+                              {showSpeedMenu && (
+                                <div className="absolute right-0 bottom-10 z-20 w-24 rounded-lg bg-[#071015]/95 border border-[#1e3a42]/60 shadow-xl overflow-hidden">
+                                  {SPEED_OPTIONS.map((rate) => (
+                                    <button
+                                      key={rate}
+                                      onClick={() => setSpeed(rate)}
+                                      className={`w-full px-3 py-2 text-xs text-left transition-colors cursor-pointer ${playbackRate === rate ? 'bg-[#14b8a6]/20 text-[#14b8a6] font-bold' : 'text-gray-300 hover:bg-white/10'}`}
+                                    >
+                                      {rate}x
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
                             {currentIndex < videos.length - 1 && (
                               <button onClick={() => { setCurrentVideo(videos[currentIndex + 1]); setIsWatching(false); }}
                                 disabled={!isCurrentVideoCompleted}
@@ -823,8 +962,9 @@ const CoursePlayer = () => {
                               </button>
                             )}
                             <button onClick={toggleFullscreen}
-                              className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all cursor-pointer">
-                              <Maximize size={14} />
+                              className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all cursor-pointer"
+                              title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
+                              {isFullscreen ? <Minimize2 size={14} /> : <Maximize size={14} />}
                             </button>
                           </div>
                         </div>
