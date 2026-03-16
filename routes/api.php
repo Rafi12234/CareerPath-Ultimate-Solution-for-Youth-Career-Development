@@ -11,6 +11,7 @@ use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\CVAnalyzerController;
+use App\Http\Controllers\CourseVideoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,14 @@ Route::delete('/jobs/{id}', [JobController::class, 'destroy']);
 Route::get('/enrollments', [EnrollmentController::class, 'index']);
 Route::post('/enrollments', [EnrollmentController::class, 'store']);
 Route::delete('/enrollments/{id}', [EnrollmentController::class, 'destroy']);
+
+// Course Videos (protected routes - require authentication)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/course-videos/{courseId}', [CourseVideoController::class, 'getVideosByEnrollment']);
+    Route::get('/course-progress/{courseId}', [CourseVideoController::class, 'getCourseProgress']);
+    Route::get('/next-video/{courseId}', [CourseVideoController::class, 'getNextVideo']);
+    Route::post('/mark-video-complete/{videoId}', [CourseVideoController::class, 'markVideoComplete']);
+});
 
 // User Skills
 Route::get('/user-skills', [UserSkillController::class, 'index']);
