@@ -120,6 +120,13 @@ class CourseVideoController extends Controller
         ->where('user_id', $user->id)
         ->count();
 
+        $lastCompletedAt = VideoCompletion::whereHas('video', function ($query) use ($courseId) {
+            $query->where('course_id', $courseId);
+        })
+        ->where('user_id', $user->id)
+        ->orderByDesc('completed_at')
+        ->value('completed_at');
+
         $nextVideo = $course->videos()
             ->whereDoesntHave('completions', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
@@ -133,6 +140,7 @@ class CourseVideoController extends Controller
             'completed_videos' => $completedVideos,
             'progress_percentage' => $totalVideos > 0 ? ($completedVideos / $totalVideos) * 100 : 0,
             'next_video' => $nextVideo,
+            'completed_at' => $lastCompletedAt,
         ]);
     }
 
