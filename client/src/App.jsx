@@ -1,4 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -17,12 +18,17 @@ import CoursePlayer from './pages/CoursePlayer';
 function App() {
   const location = useLocation();
 
+  useEffect(() => {
+    // Ensure each route opens from top; avoids blank view with reveal-on-scroll sections.
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname]);
+
   return (
     <AuthProvider>
       <div className="min-h-screen flex flex-col bg-[#03070A] text-gray-200">
         <Navbar />
-        <main className="flex-1" key={location.pathname}>
-          <Routes location={location}>
+        <main key={location.pathname} className="flex-1">
+          <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
