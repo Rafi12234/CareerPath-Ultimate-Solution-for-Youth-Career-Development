@@ -12,6 +12,12 @@ class CourseVideoSeeder extends Seeder
      */
     public function run(): void
     {
+        $urlBySequence = [
+            1 => 'https://res.cloudinary.com/dnzjg9lq8/video/upload/v1773661019/1-10_iygbnq.mp4',
+            2 => 'https://res.cloudinary.com/dnzjg9lq8/video/upload/v1773661019/11-20_uhcgb8.mp4',
+            3 => 'https://res.cloudinary.com/dnzjg9lq8/video/upload/v1773661018/21-30_ngegrl.mp4',
+        ];
+
         $videos = [
             // Course 1: Complete Web Development Bootcamp (3 videos)
             [
@@ -247,6 +253,14 @@ class CourseVideoSeeder extends Seeder
                 'description' => 'Measure marketing success',
             ],
         ];
+
+        foreach ($videos as &$video) {
+            $seq = (int) ($video['sequence'] ?? 0);
+            if (isset($urlBySequence[$seq])) {
+                $video['url'] = $urlBySequence[$seq];
+            }
+        }
+        unset($video);
 
         foreach ($videos as $video) {
             DB::table('course_videos')->insert(array_merge($video, [

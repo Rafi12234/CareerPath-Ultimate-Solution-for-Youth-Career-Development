@@ -38,11 +38,25 @@ function useReveal(threshold = 0.12) {
   const ref = useCallback((el) => {
     if (obsRef.current) { obsRef.current.disconnect(); obsRef.current = null; }
     if (!el || doneRef.current) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      doneRef.current = true;
+      setVisible(true);
+      return;
+    }
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { doneRef.current = true; setVisible(true); obs.disconnect(); obsRef.current = null; }
     }, { threshold });
     obs.observe(el); obsRef.current = obs;
   }, [threshold]);
+  useEffect(() => {
+    const fallbackId = setTimeout(() => {
+      if (!doneRef.current) {
+        doneRef.current = true;
+        setVisible(true);
+      }
+    }, 900);
+    return () => clearTimeout(fallbackId);
+  }, []);
   useEffect(() => () => { if (obsRef.current) obsRef.current.disconnect(); }, []);
   return { ref, visible };
 }

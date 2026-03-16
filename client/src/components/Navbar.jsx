@@ -26,11 +26,15 @@ export default function Navbar() {
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   const handleSafeNav = (e, to) => {
-    // Fallback for cases where auth-page transitions update URL but UI doesn't repaint.
-    if (isAuthPage) {
-      e.preventDefault();
+    e.preventDefault();
+    // CoursePlayer can retain heavy fullscreen/overlay UI state during client-side transitions.
+    // Force a hard navigation only when exiting CoursePlayer to guarantee clean teardown.
+    const isCoursePlayerRoute = location.pathname.startsWith('/course-player/');
+    if (isAuthPage || isCoursePlayerRoute) {
       window.location.assign(to);
+      return;
     }
+    navigate(to);
   };
 
   // Close user menu on outside click

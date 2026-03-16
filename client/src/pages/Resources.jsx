@@ -476,9 +476,12 @@ export default function Resources() {
   const [statsRef, statsVisible] = useInView();
   const [gridRef, gridVisible] = useInView();
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, [user?.id]);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const [coursesRes, enrollRes] = await Promise.all([
         api.get('/courses'),
@@ -490,7 +493,10 @@ export default function Resources() {
     finally { setLoading(false); }
   };
 
-  const isEnrolled = (courseId) => enrollments.some(en => en.course_id === courseId);
+  const isEnrolled = (courseId) => {
+    const normalizedCourseId = Number(courseId);
+    return enrollments.some(en => Number(en.course_id) === normalizedCourseId);
+  };
 
   const handleEnroll = async (courseId) => {
     if (!user) return alert('Please login to enroll');
