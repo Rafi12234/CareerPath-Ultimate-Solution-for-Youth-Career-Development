@@ -13,6 +13,7 @@ import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import Chatbot from './pages/Chatbot';
 import CVAnalyzer from './pages/CVAnalyzer';
+import VoiceMockInterview from './pages/VoiceMockInterview';
 import CoursePlayer from './pages/CoursePlayer';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/chatbot" element={<Chatbot />} />
             <Route path="/cv-analyzer" element={<CVAnalyzer />} />
+            <Route path="/voice-mock-interview" element={<VoiceMockInterview />} />
           </Routes>
         </main>
         <Footer />
