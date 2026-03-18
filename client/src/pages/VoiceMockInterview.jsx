@@ -13,15 +13,23 @@ export default function VoiceMockInterview() {
   const [timeLeft, setTimeLeft] = useState(DEMO_DURATION_SECONDS);
   const [running, setRunning] = useState(false);
   const [listening, setListening] = useState(false);
+  const [micPermission, setMicPermission] = useState('prompt');
+  const [isMuted, setIsMuted] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState('');
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState('Pick a topic and start your 2-minute mock interview.');
   const [turns, setTurns] = useState([]);
   const [unsupportedSpeech, setUnsupportedSpeech] = useState(false);
 
+  const micStreamRef = useRef(null);
   const recognitionRef = useRef(null);
   const currentQuestionRef = useRef('');
   const turnsRef = useRef([]);
   const endingRef = useRef(false);
+  const runningRef = useRef(false);
+  const processingRef = useRef(false);
+  const timeLeftRef = useRef(DEMO_DURATION_SECONDS);
+  const isMutedRef = useRef(false);
 
   const formattedTime = useMemo(() => {
     const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
@@ -59,6 +67,20 @@ export default function VoiceMockInterview() {
   const askAi = async (message) => {
     const response = await api.post('/chatbot', { message });
     return response?.data?.reply?.trim() || 'Could you explain that a little more?';
+  };
+
+  const parseJsonFromText = (text) => {
+    try {
+      return JSON.parse(text);
+    } catch {
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match) return null;
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        return null;
+      }
+    }
   };
 
   const hasCareerKeywords = (topic) => {
@@ -109,7 +131,7 @@ export default function VoiceMockInterview() {
   };
 
   const startListening = () => {
-    if (!recognitionRef.current || !running) return;
+    if (!recognitionRef.current || !runningRef.current || processingRef.current || isMutedRef.current) return;
     try {
       setStatus('Listening to your answer...');
       recognitionRef.current.start();
@@ -123,8 +145,11 @@ export default function VoiceMockInterview() {
     endingRef.current = true;
 
     setRunning(false);
+    runningRef.current = false;
     setListening(false);
     setProcessing(true);
+    processingRef.current = true;
+    setLiveTranscript('');
     setStatus('Generating final feedback...');
 
     try {
@@ -160,51 +185,87 @@ export default function VoiceMockInterview() {
       await speak(fallback);
     } finally {
       setProcessing(false);
+      processingRef.current = false;
       endingRef.current = false;
     }
   };
 
   const handleUserAnswer = async (answerText) => {
-    if (!running || !answerText.trim()) return;
+    if (!runningRef.current || !answerText.trim()) return;
+
+    try {
+      recognitionRef.current?.stop();
+    } catch {
+      // no-op
+    }
 
     const userTurn = { role: 'user', text: answerText.trim() };
     setTurns((prev) => [...prev, userTurn]);
     turnsRef.current = [...turnsRef.current, userTurn];
 
-    if (timeLeft <= 8) {
+    if (timeLeftRef.current <= 8) {
       await endInterview();
       return;
     }
 
     setProcessing(true);
+    processingRef.current = true;
     setStatus('AI is preparing next question...');
 
     try {
-      const followupPrompt = [
-        aiPromptBase,
+      const evaluationPrompt = [
+        'You are an interview evaluator.',
+        `Topic: ${topicInput.trim() || 'General job and skills interview'}.`,
         `Previous question: ${currentQuestionRef.current || 'N/A'}`,
         `Candidate answer: ${answerText.trim()}`,
-        'Ask next related interview question only.',
+        'Evaluate if answer is RIGHT, PARTIAL, or WRONG.',
+        'Then ask one next related interview question.',
+        'Return only valid JSON with keys: verdict, reason, next_question',
+        'Keep reason under 20 words and next_question under 20 words.',
       ].join('\n');
 
-      const nextQuestion = await askAi(followupPrompt);
+      const evaluationRaw = await askAi(evaluationPrompt);
+      const parsed = parseJsonFromText(evaluationRaw);
+
+      const verdict = String(parsed?.verdict || 'PARTIAL').toUpperCase();
+      const reason = parsed?.reason || 'Decent attempt. You can improve clarity and detail.';
+      const nextQuestion = parsed?.next_question || 'Please explain your answer with one practical example.';
+
       currentQuestionRef.current = nextQuestion;
+
+      const verdictLabel = verdict === 'RIGHT'
+        ? 'Right'
+        : verdict === 'WRONG'
+          ? 'Wrong'
+          : 'Partial';
+
+      const feedbackTurn = {
+        role: 'ai',
+        text: `Assessment: ${verdictLabel}. ${reason}`,
+      };
+
+      setTurns((prev) => [...prev, feedbackTurn]);
+      turnsRef.current = [...turnsRef.current, feedbackTurn];
+
+      await speak(feedbackTurn.text);
 
       const aiTurn = { role: 'ai', text: nextQuestion };
       setTurns((prev) => [...prev, aiTurn]);
       turnsRef.current = [...turnsRef.current, aiTurn];
 
       setProcessing(false);
+      processingRef.current = false;
       await speak(nextQuestion);
       startListening();
     } catch {
       setProcessing(false);
+      processingRef.current = false;
       setStatus('Network issue. Tap End to finish, or wait and try again.');
     }
   };
 
   const startInterview = async () => {
-    if (!user || running || processing) return;
+    if (!user || running || processing || micPermission !== 'granted') return;
 
     const topicIsValid = await validateTopic();
     if (!topicIsValid) {
@@ -215,8 +276,12 @@ export default function VoiceMockInterview() {
     setTurns([]);
     turnsRef.current = [];
     setTimeLeft(DEMO_DURATION_SECONDS);
+    timeLeftRef.current = DEMO_DURATION_SECONDS;
     setRunning(true);
+    runningRef.current = true;
     setProcessing(true);
+    processingRef.current = true;
+    setLiveTranscript('');
     setStatus('Starting interview...');
 
     try {
@@ -233,25 +298,83 @@ export default function VoiceMockInterview() {
       turnsRef.current = [aiTurn];
 
       setProcessing(false);
+      processingRef.current = false;
       await speak(firstQuestion);
       startListening();
     } catch {
       setRunning(false);
+      runningRef.current = false;
       setProcessing(false);
+      processingRef.current = false;
       setStatus('Could not start interview. Please try again.');
     }
   };
+
+  const toggleMute = () => {
+    const nextMuted = !isMutedRef.current;
+    isMutedRef.current = nextMuted;
+    setIsMuted(nextMuted);
+
+    if (micStreamRef.current) {
+      micStreamRef.current.getAudioTracks().forEach((track) => {
+        track.enabled = !nextMuted;
+      });
+    }
+
+    if (nextMuted) {
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        // no-op
+      }
+      setListening(false);
+      setStatus('Microphone muted. Unmute to continue answering.');
+    } else if (runningRef.current && !processingRef.current) {
+      setStatus('Microphone unmuted. Listening...');
+      startListening();
+    }
+  };
+
+  useEffect(() => {
+    const requestMicPermission = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStreamRef.current = stream;
+        setMicPermission('granted');
+      } catch {
+        setMicPermission('denied');
+        setStatus('Microphone permission denied. Allow microphone to run voice interview.');
+      }
+    };
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMicPermission('denied');
+      setStatus('Microphone API is not available in this browser.');
+      return;
+    }
+
+    requestMicPermission();
+
+    return () => {
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!running) return undefined;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
+        timeLeftRef.current = prev;
         if (prev <= 1) {
           clearInterval(timer);
           endInterview();
+          timeLeftRef.current = 0;
           return 0;
         }
+        timeLeftRef.current = prev - 1;
         return prev - 1;
       });
     }, 1000);
@@ -268,24 +391,42 @@ export default function VoiceMockInterview() {
 
     const rec = new SpeechRecognition();
     rec.lang = 'en-US';
-    rec.interimResults = false;
-    rec.continuous = false;
+    rec.interimResults = true;
+    rec.continuous = true;
 
     rec.onstart = () => setListening(true);
-    rec.onend = () => setListening(false);
+    rec.onend = () => {
+      setListening(false);
+      if (runningRef.current && !processingRef.current && !isMutedRef.current) {
+        setTimeout(() => startListening(), 350);
+      }
+    };
     rec.onerror = () => setListening(false);
 
     rec.onresult = (event) => {
-      const text = Array.from(event.results)
-        .map((result) => result[0]?.transcript || '')
-        .join(' ')
-        .trim();
+      let finalText = '';
+      let interimText = '';
 
-      if (text) {
-        handleUserAnswer(text);
-      } else if (running && !processing) {
-        setStatus('No clear answer detected. Listening again...');
-        setTimeout(() => startListening(), 500);
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const result = event.results[i];
+        const transcript = result[0]?.transcript || '';
+        if (result.isFinal) {
+          finalText += `${transcript} `;
+        } else {
+          interimText += transcript;
+        }
+      }
+
+      const cleanedFinal = finalText.trim();
+      const cleanedInterim = interimText.trim();
+
+      if (cleanedInterim) {
+        setLiveTranscript(cleanedInterim);
+      }
+
+      if (cleanedFinal) {
+        setLiveTranscript(cleanedFinal);
+        handleUserAnswer(cleanedFinal);
       }
     };
 
@@ -298,13 +439,29 @@ export default function VoiceMockInterview() {
         // no-op
       }
     };
-  }, [running, processing, aiPromptBase, timeLeft]);
+  }, [aiPromptBase, topicInput]);
 
   useEffect(() => {
     return () => {
       window.speechSynthesis?.cancel();
     };
   }, []);
+
+  useEffect(() => {
+    runningRef.current = running;
+  }, [running]);
+
+  useEffect(() => {
+    processingRef.current = processing;
+  }, [processing]);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
 
   return (
     <div className="min-h-screen bg-[#03070A] pt-28 pb-12 px-4">
@@ -336,6 +493,18 @@ export default function VoiceMockInterview() {
         {unsupportedSpeech && (
           <div className="mb-5 p-4 rounded-2xl border border-red-500/30 bg-red-500/[0.08] text-red-200 text-sm">
             Your browser does not support Web Speech Recognition. Use Google Chrome or Microsoft Edge for this demo.
+          </div>
+        )}
+
+        {micPermission === 'denied' && (
+          <div className="mb-5 p-4 rounded-2xl border border-red-500/30 bg-red-500/[0.08] text-red-200 text-sm">
+            Microphone access is required. Allow mic permission in browser settings and reload this page.
+          </div>
+        )}
+
+        {micPermission === 'granted' && (
+          <div className="mb-5 p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.08] text-emerald-200 text-sm">
+            Microphone access granted. You can start voice interview now.
           </div>
         )}
 
@@ -376,13 +545,24 @@ export default function VoiceMockInterview() {
             <div className="mt-4 flex gap-2">
               <button
                 onClick={startInterview}
-                disabled={!user || unsupportedSpeech || running || processing || validatingTopic}
+                disabled={!user || unsupportedSpeech || micPermission !== 'granted' || running || processing || validatingTopic}
                 className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: 'linear-gradient(135deg, #14b8a6, #06b6d4)' }}
               >
                 <span className="inline-flex items-center gap-2">
                   <Phone size={14} />
                   {validatingTopic ? 'Validating...' : 'Start'}
+                </span>
+              </button>
+
+              <button
+                onClick={toggleMute}
+                disabled={!running || processing}
+                className="px-4 py-2.5 rounded-xl text-sm font-bold text-amber-200 bg-amber-500/[0.12] border border-amber-500/30 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <span className="inline-flex items-center gap-2">
+                  {isMuted ? <MicOff size={14} /> : <Mic size={14} />}
+                  {isMuted ? 'Unmute' : 'Mute'}
                 </span>
               </button>
 
@@ -409,6 +589,32 @@ export default function VoiceMockInterview() {
               ) : (
                 <span>Microphone idle</span>
               )}
+            </div>
+
+            <div className="mt-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+              <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-2">Voice Activity</p>
+              <div className="flex items-end gap-1.5 h-10">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <span
+                    key={i}
+                    className={`w-2 rounded-full ${listening && !isMuted ? 'bg-[#14b8a6]' : 'bg-gray-700'}`}
+                    style={{
+                      height: listening && !isMuted ? `${18 + ((i % 3) * 8)}px` : '8px',
+                      animation: listening && !isMuted ? `voice-bar 0.8s ${i * 0.12}s ease-in-out infinite alternate` : 'none',
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="text-[11px] text-gray-400 mt-2">
+                {isMuted ? 'Microphone muted.' : listening ? 'AI is receiving your voice.' : 'Waiting for your speech...'}
+              </p>
+            </div>
+
+            <div className="mt-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+              <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-2">Live Transcript</p>
+              <p className="text-sm text-gray-200 min-h-[22px]">
+                {liveTranscript || 'Your spoken words will appear here...'}
+              </p>
             </div>
           </div>
 
@@ -441,6 +647,13 @@ export default function VoiceMockInterview() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes voice-bar {
+          from { transform: scaleY(0.55); opacity: 0.6; }
+          to { transform: scaleY(1.15); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
