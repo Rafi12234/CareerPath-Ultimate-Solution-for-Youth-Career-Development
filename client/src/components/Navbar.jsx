@@ -77,7 +77,6 @@ export default function Navbar() {
         { to: '/jobs', label: 'Jobs', icon: Briefcase },
         { to: '/resources', label: 'Resources', icon: BookOpen },
         { to: '/contact', label: 'Contact', icon: MessageSquare },
-        { to: '/chatbot', label: 'AI Chat', icon: Bot },
       ];
 
   // Animated pill indicator
