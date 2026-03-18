@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Menu, X, Bell, ChevronDown, LogOut, User, Briefcase,
   BookOpen, Home, MessageSquare, LayoutDashboard, Sparkles,
-  Settings, ArrowRight, Zap
+  Settings, ArrowRight, Zap, Bot, FileText
 } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
@@ -13,11 +13,14 @@ export default function Navbar() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [aiMenuOpen, setAiMenuOpen] = useState(false);
+  const [mobileAiOpen, setMobileAiOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [hoverIndex, setHoverIndex] = useState(null);
   const [pillStyle, setPillStyle] = useState({ left: 0, width: 0, opacity: 0 });
   const menuRef = useRef(null);
+  const aiMenuRef = useRef(null);
   const navContainerRef = useRef(null);
   const linkRefs = useRef([]);
   const [notifPing, setNotifPing] = useState(true);
@@ -41,6 +44,7 @@ export default function Navbar() {
   useEffect(() => {
     const handler = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setUserMenuOpen(false);
+      if (aiMenuRef.current && !aiMenuRef.current.contains(e.target)) setAiMenuOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -58,7 +62,11 @@ export default function Navbar() {
   }, []);
 
   // Close mobile on route change
-  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    setMobileOpen(false);
+    setAiMenuOpen(false);
+    setMobileAiOpen(false);
+  }, [location.pathname]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -68,7 +76,14 @@ export default function Navbar() {
         { to: '/profile', label: 'Profile', icon: User },
         { to: '/jobs', label: 'Jobs', icon: Briefcase },
         { to: '/resources', label: 'Resources', icon: BookOpen },
-        { to: '/chatbot', label: 'AI Features', icon: Sparkles },
+        {
+          label: 'AI Features',
+          icon: Sparkles,
+          children: [
+            { to: '/chatbot', label: 'AI Chat', icon: Bot },
+            { to: '/cv-analyzer', label: 'CV Analyzer', icon: FileText },
+          ],
+        },
         { to: '/contact', label: 'Contact', icon: MessageSquare },
       ]
     : [
@@ -77,6 +92,13 @@ export default function Navbar() {
         { to: '/resources', label: 'Resources', icon: BookOpen },
         { to: '/contact', label: 'Contact', icon: MessageSquare },
       ];
+
+  const isLinkActive = (link) => {
+    if (link.children) {
+      return link.children.some((child) => isActive(child.to));
+    }
+    return isActive(link.to);
+  };
 
   // Animated pill indicator
   const updatePill = useCallback((index) => {
@@ -95,7 +117,7 @@ export default function Navbar() {
 
   // Update pill on route change
   useEffect(() => {
-    const activeIdx = navLinks.findIndex(l => isActive(l.to));
+    const activeIdx = navLinks.findIndex((l) => isLinkActive(l));
     if (activeIdx >= 0) {
       // Small delay to ensure refs are ready
       setTimeout(() => updatePill(activeIdx), 50);
@@ -111,7 +133,7 @@ export default function Navbar() {
 
   const handleLeave = () => {
     setHoverIndex(null);
-    const activeIdx = navLinks.findIndex(l => isActive(l.to));
+    const activeIdx = navLinks.findIndex((l) => isLinkActive(l));
     if (activeIdx >= 0) updatePill(activeIdx);
     else setPillStyle(prev => ({ ...prev, opacity: 0 }));
   };
@@ -362,40 +384,102 @@ export default function Navbar() {
                   />
 
                   {navLinks.map((link, i) => (
-                    <Link
-                      key={link.to}
-                      to={link.to}
-                      onClick={(e) => handleSafeNav(e, link.to)}
-                      ref={el => linkRefs.current[i] = el}
-                      onMouseEnter={() => handleHover(i)}
-                      className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all duration-300 nav-link-3d z-10 ${
-                        isActive(link.to)
-                          ? 'text-white'
-                          : 'text-gray-400 hover:text-gray-200'
-                      }`}
-                    >
-                      <link.icon
-                        size={14}
-                        className={`transition-all duration-300 ${
-                          isActive(link.to) ? 'text-[#14b8a6]' : 'text-gray-500 group-hover:text-gray-400'
-                        }`}
-                        style={{
-                          filter: isActive(link.to) ? 'drop-shadow(0 0 4px rgba(20,184,166,0.4))' : 'none',
-                        }}
-                      />
-                      {link.label}
+                    link.children ? (
+                      <div key={link.label} className="relative z-10" ref={aiMenuRef}>
+                        <button
+                          type="button"
+                          ref={el => linkRefs.current[i] = el}
+                          onMouseEnter={() => handleHover(i)}
+                          onClick={() => setAiMenuOpen((prev) => !prev)}
+                          className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all duration-300 nav-link-3d ${
+                            isLinkActive(link)
+                              ? 'text-white'
+                              : 'text-gray-400 hover:text-gray-200'
+                          }`}
+                        >
+                          <link.icon
+                            size={14}
+                            className={`transition-all duration-300 ${
+                              isLinkActive(link) ? 'text-[#14b8a6]' : 'text-gray-500'
+                            }`}
+                            style={{
+                              filter: isLinkActive(link) ? 'drop-shadow(0 0 4px rgba(20,184,166,0.4))' : 'none',
+                            }}
+                          />
+                          {link.label}
+                          <ChevronDown
+                            size={13}
+                            className={`transition-all duration-300 ${aiMenuOpen ? 'rotate-180 text-[#14b8a6]' : 'text-gray-500'}`}
+                          />
+                          {isLinkActive(link) && (
+                            <span
+                              className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#14b8a6]"
+                              style={{
+                                boxShadow: '0 0 8px rgba(20,184,166,0.6)',
+                                animation: 'nav-glow-pulse 2s ease-in-out infinite',
+                              }}
+                            />
+                          )}
+                        </button>
 
-                      {/* Active dot */}
-                      {isActive(link.to) && (
-                        <span
-                          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#14b8a6]"
+                        {aiMenuOpen && (
+                          <div className="absolute left-0 top-full mt-2 w-48 rounded-xl nav-glass-heavy border border-[#1e3a42]/50 shadow-[0_12px_30px_-12px_rgba(0,0,0,0.7)] p-1.5">
+                            {link.children.map((child) => (
+                              <Link
+                                key={child.to}
+                                to={child.to}
+                                onClick={(e) => {
+                                  handleSafeNav(e, child.to);
+                                  setAiMenuOpen(false);
+                                }}
+                                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[12px] font-semibold transition-all duration-300 ${
+                                  isActive(child.to)
+                                    ? 'text-white bg-[#14b8a6]/12'
+                                    : 'text-gray-300 hover:text-white hover:bg-white/[0.05]'
+                                }`}
+                              >
+                                <child.icon size={14} className={isActive(child.to) ? 'text-[#14b8a6]' : 'text-gray-500'} />
+                                {child.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        onClick={(e) => handleSafeNav(e, link.to)}
+                        ref={el => linkRefs.current[i] = el}
+                        onMouseEnter={() => handleHover(i)}
+                        className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold transition-all duration-300 nav-link-3d z-10 ${
+                          isLinkActive(link)
+                            ? 'text-white'
+                            : 'text-gray-400 hover:text-gray-200'
+                        }`}
+                      >
+                        <link.icon
+                          size={14}
+                          className={`transition-all duration-300 ${
+                            isLinkActive(link) ? 'text-[#14b8a6]' : 'text-gray-500 group-hover:text-gray-400'
+                          }`}
                           style={{
-                            boxShadow: '0 0 8px rgba(20,184,166,0.6)',
-                            animation: 'nav-glow-pulse 2s ease-in-out infinite',
+                            filter: isLinkActive(link) ? 'drop-shadow(0 0 4px rgba(20,184,166,0.4))' : 'none',
                           }}
                         />
-                      )}
-                    </Link>
+                        {link.label}
+
+                        {isLinkActive(link) && (
+                          <span
+                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#14b8a6]"
+                            style={{
+                              boxShadow: '0 0 8px rgba(20,184,166,0.6)',
+                              animation: 'nav-glow-pulse 2s ease-in-out infinite',
+                            }}
+                          />
+                        )}
+                      </Link>
+                    )
                   ))}
                 </div>
 
@@ -623,29 +707,77 @@ export default function Navbar() {
               <div className="p-4 nav-mobile-stagger">
                 {/* Mobile links */}
                 {navLinks.map((link) => (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    onClick={(e) => handleSafeNav(e, link.to)}
-                    className={`group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[14px] font-semibold transition-all duration-300 mb-1 ${
-                      isActive(link.to)
-                        ? 'text-white bg-gradient-to-r from-[#14b8a6]/10 to-transparent border-l-2 border-[#14b8a6]'
-                        : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
-                    }`}
-                  >
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                      isActive(link.to) ? 'bg-[#14b8a6]/15' : 'bg-white/[0.03] group-hover:bg-white/[0.06]'
-                    }`}>
-                      <link.icon
-                        size={16}
-                        className={`transition-all duration-300 ${isActive(link.to) ? 'text-[#14b8a6]' : 'text-gray-500 group-hover:text-gray-300'}`}
-                      />
+                  link.children ? (
+                    <div key={link.label} className="mb-1">
+                      <button
+                        type="button"
+                        onClick={() => setMobileAiOpen((prev) => !prev)}
+                        className={`group w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[14px] font-semibold transition-all duration-300 ${
+                          isLinkActive(link)
+                            ? 'text-white bg-gradient-to-r from-[#14b8a6]/10 to-transparent border-l-2 border-[#14b8a6]'
+                            : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
+                        }`}
+                      >
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                          isLinkActive(link) ? 'bg-[#14b8a6]/15' : 'bg-white/[0.03] group-hover:bg-white/[0.06]'
+                        }`}>
+                          <link.icon
+                            size={16}
+                            className={`transition-all duration-300 ${isLinkActive(link) ? 'text-[#14b8a6]' : 'text-gray-500 group-hover:text-gray-300'}`}
+                          />
+                        </div>
+                        <span className="flex-1 text-left">{link.label}</span>
+                        <ChevronDown size={15} className={`transition-all duration-300 ${mobileAiOpen ? 'rotate-180 text-[#14b8a6]' : 'text-gray-500'}`} />
+                      </button>
+
+                      {mobileAiOpen && (
+                        <div className="ml-3 mt-1 space-y-1 border-l border-[#1e3a42]/40 pl-3">
+                          {link.children.map((child) => (
+                            <Link
+                              key={child.to}
+                              to={child.to}
+                              onClick={(e) => {
+                                handleSafeNav(e, child.to);
+                                setMobileAiOpen(false);
+                              }}
+                              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 ${
+                                isActive(child.to)
+                                  ? 'text-white bg-[#14b8a6]/12'
+                                  : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
+                              }`}
+                            >
+                              <child.icon size={14} className={isActive(child.to) ? 'text-[#14b8a6]' : 'text-gray-500'} />
+                              {child.label}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <span className="flex-1">{link.label}</span>
-                    {isActive(link.to) && (
-                      <div className="w-2 h-2 rounded-full bg-[#14b8a6] shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
-                    )}
-                  </Link>
+                  ) : (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      onClick={(e) => handleSafeNav(e, link.to)}
+                      className={`group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[14px] font-semibold transition-all duration-300 mb-1 ${
+                        isLinkActive(link)
+                          ? 'text-white bg-gradient-to-r from-[#14b8a6]/10 to-transparent border-l-2 border-[#14b8a6]'
+                          : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
+                      }`}
+                    >
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                        isLinkActive(link) ? 'bg-[#14b8a6]/15' : 'bg-white/[0.03] group-hover:bg-white/[0.06]'
+                      }`}>
+                        <link.icon
+                          size={16}
+                          className={`transition-all duration-300 ${isLinkActive(link) ? 'text-[#14b8a6]' : 'text-gray-500 group-hover:text-gray-300'}`}
+                        />
+                      </div>
+                      <span className="flex-1">{link.label}</span>
+                      {isLinkActive(link) && (
+                        <div className="w-2 h-2 rounded-full bg-[#14b8a6] shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+                      )}
+                    </Link>
+                  )
                 ))}
 
                 {/* Auth section */}
