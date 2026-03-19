@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Job;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -54,6 +55,111 @@ class CVAnalyzerController extends Controller
             return response()->json([
                 'message' => 'CV analysis error',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function jobMatch(Request $request)
+    {
+        $request->validate([
+            'cv_analysis' => 'required|array',
+            'job_id' => 'nullable|integer|exists:jobs,id',
+            'job' => 'nullable|array',
+        ]);
+
+        $geminiKey = env('GEMINI_API_KEY');
+        if (!$geminiKey) {
+            return response()->json(['message' => 'Gemini API not configured'], 500);
+        }
+
+        $job = null;
+        if ($request->filled('job_id')) {
+            $job = Job::find($request->job_id);
+        } elseif ($request->filled('job')) {
+            $job = (object) $request->job;
+        }
+
+        if (!$job) {
+            return response()->json(['message' => 'Job not found for matching'], 422);
+        }
+
+        $cvAnalysis = $request->input('cv_analysis', []);
+
+        $systemPrompt = <<<'EOT'
+You are an expert career coach and hiring advisor.
+
+Analyze how well a candidate CV matches a specific job description.
+
+Return ONLY valid JSON in this exact shape:
+{
+  "overall_match": 0,
+  "skills_match": 0,
+  "experience_match": 0,
+  "education_match": 0,
+  "matching_skills": [""],
+  "missing_skills": [""],
+  "guidance": "2-4 sentences on how the candidate can become more suitable for this job.",
+  "recommendations": ["", "", ""]
+}
+
+Scoring rules:
+- All score fields are integers from 0 to 100.
+- Be strict and realistic.
+- Use job requirements and CV evidence only.
+EOT;
+
+        $jobPayload = [
+            'title' => $job->title ?? null,
+            'company' => $job->company ?? null,
+            'location' => $job->location ?? null,
+            'level' => $job->level ?? null,
+            'type' => $job->type ?? null,
+            'track' => $job->track ?? null,
+            'skills' => $job->skills ?? [],
+            'description' => $job->description ?? null,
+        ];
+
+        try {
+            $geminiResponse = Http::withHeader('Content-Type', 'application/json')
+                ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$geminiKey}", [
+                    'system_instruction' => [
+                        'parts' => [
+                            ['text' => $systemPrompt]
+                        ]
+                    ],
+                    'contents' => [
+                        [
+                            'parts' => [
+                                [
+                                    'text' => "CV analysis data:\n" . json_encode($cvAnalysis, JSON_PRETTY_PRINT)
+                                ],
+                                [
+                                    'text' => "Job data:\n" . json_encode($jobPayload, JSON_PRETTY_PRINT)
+                                ],
+                            ]
+                        ]
+                    ]
+                ]);
+
+            if (!$geminiResponse->successful()) {
+                return response()->json([
+                    'message' => 'Job match analysis failed',
+                    'error' => $geminiResponse->json('error.message') ?? 'Unknown error'
+                ], 500);
+            }
+
+            $matchText = $geminiResponse->json('candidates.0.content.parts.0.text', '');
+            $matchScore = $this->parseMatchScore($matchText);
+
+            return response()->json([
+                'success' => true,
+                'match_score' => $matchScore,
+                'raw_response' => $matchText,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'CV-job matching error',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -162,6 +268,36 @@ EOT;
         return [
             'error' => 'Could not parse analysis',
             'raw_text' => $jsonText
+        ];
+    }
+
+    private function parseMatchScore($jsonText)
+    {
+        if (preg_match('/\{[\s\S]*\}/', $jsonText, $matches)) {
+            $json = json_decode($matches[0], true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return [
+                    'overall_match' => (int) ($json['overall_match'] ?? 0),
+                    'skills_match' => (int) ($json['skills_match'] ?? 0),
+                    'experience_match' => (int) ($json['experience_match'] ?? 0),
+                    'education_match' => (int) ($json['education_match'] ?? 0),
+                    'matching_skills' => array_values($json['matching_skills'] ?? []),
+                    'missing_skills' => array_values($json['missing_skills'] ?? []),
+                    'guidance' => $json['guidance'] ?? '',
+                    'recommendations' => array_values($json['recommendations'] ?? []),
+                ];
+            }
+        }
+
+        return [
+            'overall_match' => 0,
+            'skills_match' => 0,
+            'experience_match' => 0,
+            'education_match' => 0,
+            'matching_skills' => [],
+            'missing_skills' => [],
+            'guidance' => 'Unable to generate match guidance at the moment.',
+            'recommendations' => [],
         ];
     }
 }
