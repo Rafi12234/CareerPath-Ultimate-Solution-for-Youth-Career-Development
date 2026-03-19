@@ -16,6 +16,7 @@ import CVAnalyzer from './pages/CVAnalyzer';
 import VoiceMockInterview from './pages/VoiceMockInterview';
 import AICareerRoadmap from './pages/AICareerRoadmap';
 import CoursePlayer from './pages/CoursePlayer';
+import JobApplicationForm from './pages/JobApplicationForm';
 
 function App() {
   const location = useLocation();
@@ -36,6 +37,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/jobs" element={<Jobs />} />
+            <Route path="/apply-job/:jobId" element={<JobApplicationForm />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/course-player/:courseId" element={<CoursePlayer />} />
             <Route path="/contact" element={<Contact />} />

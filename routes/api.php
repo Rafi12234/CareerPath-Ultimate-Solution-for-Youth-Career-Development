@@ -62,8 +62,12 @@ Route::put('/user-skills/{id}', [UserSkillController::class, 'update']);
 Route::delete('/user-skills/{id}', [UserSkillController::class, 'destroy']);
 
 // Job Applications
+Route::middleware('auth:sanctum')->get('/job-applications/init/{jobId}', [JobApplicationController::class, 'initializeApplication']);
+Route::middleware('auth:sanctum')->post('/job-applications/generate-cover-letter', [JobApplicationController::class, 'generateCoverLetterAI']);
 Route::get('/job-applications', [JobApplicationController::class, 'index']);
 Route::post('/job-applications', [JobApplicationController::class, 'store']);
+Route::get('/job-applications/{id}', [JobApplicationController::class, 'show']);
+Route::put('/job-applications/{id}', [JobApplicationController::class, 'update']);
 Route::delete('/job-applications/{id}', [JobApplicationController::class, 'destroy']);
 
 // Contacts
