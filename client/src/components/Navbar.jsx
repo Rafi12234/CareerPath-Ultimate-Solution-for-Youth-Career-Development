@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Menu, X, Bell, ChevronDown, LogOut, User, Briefcase,
   BookOpen, Home, MessageSquare, LayoutDashboard, Sparkles,
-  Settings, ArrowRight, Zap, Bot, FileText, Mic
+  Settings, ArrowRight, Zap, Bot, FileText, Mic, Compass
 } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
@@ -83,6 +83,7 @@ export default function Navbar() {
             { to: '/chatbot', label: 'AI Chat', icon: Bot },
             { to: '/cv-analyzer', label: 'CV Analyzer', icon: FileText },
             { to: '/voice-mock-interview', label: 'Voice Mock', icon: Mic },
+            { to: '/ai-career-roadmap', label: 'Career Roadmap', icon: Compass },
           ],
         },
         { to: '/contact', label: 'Contact', icon: MessageSquare },
