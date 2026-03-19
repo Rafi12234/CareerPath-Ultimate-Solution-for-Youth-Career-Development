@@ -30,10 +30,11 @@ export default function Navbar() {
 
   const handleSafeNav = (e, to) => {
     e.preventDefault();
-    // CoursePlayer can retain heavy fullscreen/overlay UI state during client-side transitions.
-    // Force a hard navigation only when exiting CoursePlayer to guarantee clean teardown.
+    // Some heavy pages can retain fullscreen/overlay UI state during client-side transitions.
+    // Force a hard navigation when exiting those routes to guarantee clean teardown.
     const isCoursePlayerRoute = location.pathname.startsWith('/course-player/');
-    if (isAuthPage || isCoursePlayerRoute) {
+    const isApplyJobRoute = location.pathname.startsWith('/apply-job/');
+    if (isAuthPage || isCoursePlayerRoute || isApplyJobRoute) {
       window.location.assign(to);
       return;
     }
