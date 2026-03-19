@@ -13,6 +13,7 @@ use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\CVAnalyzerController;
 use App\Http\Controllers\CareerRoadmapController;
 use App\Http\Controllers\CourseVideoController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -75,6 +76,10 @@ Route::get('/chatbot/history', [ChatbotController::class, 'history']);
 
 // Avatar upload
 Route::post('/upload-avatar', [AvatarController::class, 'upload']);
+
+// User profile
+Route::middleware('auth:sanctum')->get('/profile', [ProfileController::class, 'show']);
+Route::middleware('auth:sanctum')->put('/profile', [ProfileController::class, 'update']);
 
 // CV Analyzer
 Route::post('/cv-analyze', [CVAnalyzerController::class, 'analyze']);

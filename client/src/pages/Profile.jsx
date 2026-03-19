@@ -4,7 +4,8 @@ import {
   User, Plus, X, Save, Pencil, Trash2, BookOpen, Briefcase, Award,
   ChevronDown, Camera, Loader2, Sparkles, Shield, Target, Zap,
   Code2, Crown, Star, TrendingUp, CheckCircle, ArrowRight,
-  Layers, Heart, Eye, Clock, BarChart3, Hexagon, Activity
+  Layers, Heart, Eye, Clock, BarChart3, Hexagon, Activity,
+  Mail, Phone, MapPin, GraduationCap, Building2, FileText
 } from 'lucide-react';
 import api from '../utils/api';
 
@@ -16,6 +17,46 @@ const PROFICIENCY_META = {
   Expert: { color: '#10b981', bg: 'rgba(16,185,129,0.12)', rank: 3, icon: Zap, label: 'Skilled' },
   Professional: { color: '#a855f7', bg: 'rgba(168,85,247,0.12)', rank: 4, icon: Crown, label: 'Mastered' },
 };
+
+const EDUCATION_GROUPS = ['Science', 'Commerce', 'Arts'];
+const BANGLADESH_EDUCATION_BOARDS = ['Dhaka', 'Chattogram', 'Rajshahi', 'Jashore', 'Cumilla', 'Barishal', 'Sylhet', 'Dinajpur'];
+
+const buildProfileForm = (source = {}) => ({
+  name: source.name || '',
+  email: source.email || '',
+  phone: source.phone || '',
+  date_of_birth: source.date_of_birth ? String(source.date_of_birth).slice(0, 10) : '',
+  gender: source.gender || '',
+  marital_status: source.marital_status || '',
+  nationality: source.nationality || '',
+  present_address: source.present_address || '',
+  permanent_address: source.permanent_address || '',
+  school_name: source.school_name || '',
+  ssc_year: source.ssc_year ? String(source.ssc_year) : '',
+  ssc_result: source.ssc_result || '',
+  ssc_group: source.ssc_group || '',
+  ssc_board: source.ssc_board || '',
+  college_name: source.college_name || '',
+  hsc_year: source.hsc_year ? String(source.hsc_year) : '',
+  hsc_result: source.hsc_result || '',
+  hsc_group: source.hsc_group || '',
+  hsc_board: source.hsc_board || '',
+  university_name: source.university_name || '',
+  university_status: source.university_status || '',
+  current_study_year: source.current_study_year ? String(source.current_study_year) : '',
+  current_study_semester: source.current_study_semester ? String(source.current_study_semester) : '',
+  university_graduation_year: source.university_graduation_year ? String(source.university_graduation_year) : '',
+  university_cgpa: source.university_cgpa ? String(source.university_cgpa) : '',
+  years_of_experience: source.years_of_experience != null ? String(source.years_of_experience) : '',
+  is_fresher: source.is_fresher == null ? true : Boolean(source.is_fresher),
+  current_job_title: source.current_job_title || '',
+  current_company: source.current_company || '',
+  previous_job_title: source.previous_job_title || '',
+  previous_company: source.previous_company || '',
+  previous_job_start: source.previous_job_start ? String(source.previous_job_start).slice(0, 10) : '',
+  previous_job_end: source.previous_job_end ? String(source.previous_job_end).slice(0, 10) : '',
+  previous_job_description: source.previous_job_description || '',
+});
 
 const InjectStyles = () => (
   <style>{`
@@ -463,6 +504,9 @@ export default function Profile() {
   const { user, updateUser } = useAuth();
   const [skills, setSkills] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
+  const [profileForm, setProfileForm] = useState(buildProfileForm());
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef(null);
@@ -484,19 +528,78 @@ export default function Profile() {
   const [achieveRef, achieveVisible] = useInView();
 
   useEffect(() => {
-    if (user) fetchData();
+    if (user) {
+      setProfileForm(buildProfileForm(user));
+      fetchData();
+    }
   }, [user]);
 
   const fetchData = async () => {
     try {
-      const [skillsRes, enrollRes] = await Promise.all([
+      const [skillsRes, enrollRes, profileRes] = await Promise.all([
         api.get(`/user-skills?user_id=${user.id}`).catch(() => ({ data: [] })),
         api.get(`/enrollments?user_id=${user.id}`).catch(() => ({ data: [] })),
+        api.get('/profile').catch(() => ({ data: { user } })),
       ]);
       setSkills(Array.isArray(skillsRes.data) ? skillsRes.data : []);
       setEnrollments(Array.isArray(enrollRes.data) ? enrollRes.data : []);
+      setProfileForm(buildProfileForm(profileRes.data?.user || user));
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+  };
+
+  const handleProfileChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setProfileForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileMessage('');
+
+    try {
+      const payload = {
+        ...profileForm,
+        ssc_year: Number(profileForm.ssc_year),
+        hsc_year: Number(profileForm.hsc_year),
+        current_study_year: profileForm.current_study_year ? Number(profileForm.current_study_year) : null,
+        current_study_semester: profileForm.current_study_semester ? Number(profileForm.current_study_semester) : null,
+        university_graduation_year: profileForm.university_graduation_year ? Number(profileForm.university_graduation_year) : null,
+        university_cgpa: profileForm.university_cgpa ? Number(profileForm.university_cgpa) : null,
+        years_of_experience: profileForm.years_of_experience ? Number(profileForm.years_of_experience) : 0,
+        is_fresher: Boolean(profileForm.is_fresher),
+      };
+
+      if (payload.is_fresher) {
+        payload.years_of_experience = 0;
+        payload.current_job_title = '';
+        payload.current_company = '';
+        payload.previous_job_title = '';
+        payload.previous_company = '';
+        payload.previous_job_start = '';
+        payload.previous_job_end = '';
+        payload.previous_job_description = '';
+      }
+
+      const res = await api.put('/profile', payload);
+      if (res.data?.user) {
+        updateUser(res.data.user);
+        setProfileForm(buildProfileForm(res.data.user));
+      }
+      setProfileMessage('Profile information saved successfully.');
+      setTimeout(() => setProfileMessage(''), 3000);
+    } catch (err) {
+      const validationErrors = err?.response?.data?.errors;
+      if (validationErrors) {
+        const firstError = Object.values(validationErrors)[0]?.[0] || 'Validation failed';
+        setProfileMessage(firstError);
+      } else {
+        setProfileMessage('Failed to update profile. Please try again.');
+      }
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const handleAddSkill = async (e) => {
@@ -564,16 +667,47 @@ export default function Profile() {
   }, [skills]);
 
   const completionPct = useMemo(() => {
-    let score = 0;
-    if (user?.name) score += 15;
-    if (user?.email) score += 15;
-    if (user?.avatar) score += 20;
-    if (skills.length >= 1) score += 15;
-    if (skills.length >= 3) score += 10;
-    if (skills.length >= 5) score += 10;
-    if (enrollments.length >= 1) score += 15;
-    return Math.min(score, 100);
-  }, [user, skills, enrollments]);
+    const baseRequired = [
+      'name',
+      'email',
+      'phone',
+      'date_of_birth',
+      'gender',
+      'marital_status',
+      'nationality',
+      'present_address',
+      'permanent_address',
+      'school_name',
+      'ssc_year',
+      'ssc_result',
+      'ssc_group',
+      'ssc_board',
+      'college_name',
+      'hsc_year',
+      'hsc_result',
+      'hsc_group',
+      'hsc_board',
+      'university_name',
+      'university_status',
+      'university_cgpa',
+    ];
+
+    const universityConditional = profileForm.university_status === 'studying'
+      ? ['current_study_year', 'current_study_semester']
+      : ['university_graduation_year'];
+
+    const jobConditional = profileForm.is_fresher
+      ? []
+      : ['years_of_experience', 'current_job_title', 'current_company', 'previous_job_title', 'previous_company', 'previous_job_start', 'previous_job_end', 'previous_job_description'];
+
+    const requiredFields = [...baseRequired, ...universityConditional, ...jobConditional];
+    const filledCount = requiredFields.filter((key) => {
+      const val = profileForm[key];
+      return val !== null && val !== undefined && String(val).trim() !== '';
+    }).length;
+
+    return requiredFields.length ? Math.round((filledCount / requiredFields.length) * 100) : 0;
+  }, [profileForm]);
 
   const achievements = useMemo(() => [
     { icon: Code2, label: 'First Skill', earned: skills.length >= 1, color: '#14b8a6' },
@@ -731,6 +865,313 @@ export default function Profile() {
                       <SkillRadar skills={skills} />
                     </div>
                   </div>
+                </div>
+              </TiltCard>
+            </div>
+
+            {/* ═══════════════════════════════════
+                PROFILE DETAILS FORM
+               ═══════════════════════════════════ */}
+            <div className="mb-10 slide-up" style={{ animationDelay: '0.08s' }}>
+              <TiltCard intensity={2}>
+                <div className="glass glow-border shine rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-[2px]
+                    bg-gradient-to-r from-transparent via-[#14b8a6]/30 to-transparent" />
+
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4]
+                      flex items-center justify-center shadow-lg shadow-[#14b8a6]/20">
+                      <FileText size={18} className="text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Complete Personal Profile</h2>
+                      <p className="text-[11px] text-gray-600">All fields are required and saved in the database</p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSaveProfile} className="space-y-7">
+                    {/* Personal Information */}
+                    <div>
+                      <h3 className="text-sm font-bold text-[#2dd4bf] uppercase tracking-[0.18em] mb-4">Personal Information</h3>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Full Name</label>
+                          <div className="relative">
+                            <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+                            <input name="name" value={profileForm.name} onChange={handleProfileChange} required
+                              className="w-full pl-9 pr-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Email</label>
+                          <div className="relative">
+                            <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+                            <input type="email" name="email" value={profileForm.email} onChange={handleProfileChange} required
+                              className="w-full pl-9 pr-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Phone</label>
+                          <div className="relative">
+                            <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+                            <input name="phone" value={profileForm.phone} onChange={handleProfileChange} required
+                              className="w-full pl-9 pr-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Date of Birth</label>
+                          <input type="date" name="date_of_birth" value={profileForm.date_of_birth} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Gender</label>
+                          <select name="gender" value={profileForm.gender} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
+                            <option value="">Select gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Marital Status</label>
+                          <select name="marital_status" value={profileForm.marital_status} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
+                            <option value="">Select status</option>
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Divorced">Divorced</option>
+                            <option value="Widowed">Widowed</option>
+                          </select>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Nationality</label>
+                          <input name="nationality" value={profileForm.nationality} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Present Address</label>
+                          <div className="relative">
+                            <MapPin size={14} className="absolute left-3 top-3.5 text-gray-600" />
+                            <textarea name="present_address" value={profileForm.present_address} onChange={handleProfileChange} rows={2} required
+                              className="w-full pl-9 pr-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                            />
+                          </div>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Permanent Address</label>
+                          <div className="relative">
+                            <MapPin size={14} className="absolute left-3 top-3.5 text-gray-600" />
+                            <textarea name="permanent_address" value={profileForm.permanent_address} onChange={handleProfileChange} rows={2} required
+                              className="w-full pl-9 pr-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Academic Information */}
+                    <div>
+                      <h3 className="text-sm font-bold text-[#2dd4bf] uppercase tracking-[0.18em] mb-4">Academic Information</h3>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">School Name</label>
+                          <input name="school_name" value={profileForm.school_name} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">SSC Year</label>
+                          <input type="number" min="1950" max="2100" name="ssc_year" value={profileForm.ssc_year} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">SSC Result</label>
+                          <input name="ssc_result" value={profileForm.ssc_result} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">SSC Group</label>
+                          <select name="ssc_group" value={profileForm.ssc_group} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
+                            <option value="">Select group</option>
+                            {EDUCATION_GROUPS.map((group) => <option key={group} value={group}>{group}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">SSC Board</label>
+                          <select name="ssc_board" value={profileForm.ssc_board} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
+                            <option value="">Select board</option>
+                            {BANGLADESH_EDUCATION_BOARDS.map((board) => <option key={board} value={board}>{board}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">College Name</label>
+                          <input name="college_name" value={profileForm.college_name} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">HSC Year</label>
+                          <input type="number" min="1950" max="2100" name="hsc_year" value={profileForm.hsc_year} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">HSC Result</label>
+                          <input name="hsc_result" value={profileForm.hsc_result} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">HSC Group</label>
+                          <select name="hsc_group" value={profileForm.hsc_group} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
+                            <option value="">Select group</option>
+                            {EDUCATION_GROUPS.map((group) => <option key={group} value={group}>{group}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">HSC Board</label>
+                          <select name="hsc_board" value={profileForm.hsc_board} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
+                            <option value="">Select board</option>
+                            {BANGLADESH_EDUCATION_BOARDS.map((board) => <option key={board} value={board}>{board}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">University Name</label>
+                          <input name="university_name" value={profileForm.university_name} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">University Status</label>
+                          <select name="university_status" value={profileForm.university_status} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
+                            <option value="">Select status</option>
+                            <option value="studying">Currently Studying</option>
+                            <option value="graduated">Graduated</option>
+                          </select>
+                        </div>
+                        {profileForm.university_status === 'studying' && (
+                          <>
+                            <div>
+                              <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Current Year</label>
+                              <input type="number" min="1" max="8" name="current_study_year" value={profileForm.current_study_year} onChange={handleProfileChange} required
+                                className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Current Semester</label>
+                              <input type="number" min="1" max="16" name="current_study_semester" value={profileForm.current_study_semester} onChange={handleProfileChange} required
+                                className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                              />
+                            </div>
+                          </>
+                        )}
+                        {profileForm.university_status === 'graduated' && (
+                          <div>
+                            <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Graduation Year</label>
+                            <input type="number" min="1950" max="2100" name="university_graduation_year" value={profileForm.university_graduation_year} onChange={handleProfileChange} required
+                              className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">University CGPA</label>
+                          <input type="number" step="0.01" min="0" max="4" name="university_cgpa" value={profileForm.university_cgpa} onChange={handleProfileChange} required
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Job Experience */}
+                    <div>
+                      <h3 className="text-sm font-bold text-[#2dd4bf] uppercase tracking-[0.18em] mb-4">Job Experience Information</h3>
+                      <div className="mb-4 flex items-center gap-3">
+                        <input id="is_fresher" type="checkbox" name="is_fresher" checked={profileForm.is_fresher} onChange={handleProfileChange}
+                          className="w-4 h-4 rounded border-[#1e3a42] bg-[#0A1A22] text-[#14b8a6] focus:ring-[#14b8a6]/30" />
+                        <label htmlFor="is_fresher" className="text-sm text-gray-300">I am a Fresher (no previous job experience)</label>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Years of Experience</label>
+                          <input type="number" min="0" max="60" name="years_of_experience" value={profileForm.is_fresher ? '0' : profileForm.years_of_experience} onChange={handleProfileChange} required={!profileForm.is_fresher} disabled={profileForm.is_fresher}
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div className={profileForm.is_fresher ? 'opacity-50' : ''}>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Current Job Title</label>
+                          <div className="relative">
+                            <Briefcase size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+                            <input name="current_job_title" value={profileForm.current_job_title} onChange={handleProfileChange} required={!profileForm.is_fresher} disabled={profileForm.is_fresher}
+                              className="w-full pl-9 pr-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                            />
+                          </div>
+                        </div>
+                        <div className={profileForm.is_fresher ? 'opacity-50' : ''}>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Current Company</label>
+                          <div className="relative">
+                            <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+                            <input name="current_company" value={profileForm.current_company} onChange={handleProfileChange} required={!profileForm.is_fresher} disabled={profileForm.is_fresher}
+                              className="w-full pl-9 pr-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                            />
+                          </div>
+                        </div>
+                        <div className={profileForm.is_fresher ? 'opacity-50' : ''}>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Previous Job Title</label>
+                          <input name="previous_job_title" value={profileForm.previous_job_title} onChange={handleProfileChange} required={!profileForm.is_fresher} disabled={profileForm.is_fresher}
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div className={profileForm.is_fresher ? 'opacity-50' : ''}>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Previous Company</label>
+                          <input name="previous_company" value={profileForm.previous_company} onChange={handleProfileChange} required={!profileForm.is_fresher} disabled={profileForm.is_fresher}
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div className={profileForm.is_fresher ? 'opacity-50' : ''}>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Previous Job Start Date</label>
+                          <input type="date" name="previous_job_start" value={profileForm.previous_job_start} onChange={handleProfileChange} required={!profileForm.is_fresher} disabled={profileForm.is_fresher}
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div className={profileForm.is_fresher ? 'opacity-50' : ''}>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Previous Job End Date</label>
+                          <input type="date" name="previous_job_end" value={profileForm.previous_job_end} onChange={handleProfileChange} required={!profileForm.is_fresher} disabled={profileForm.is_fresher}
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div className={`sm:col-span-2 ${profileForm.is_fresher ? 'opacity-50' : ''}`}>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Previous Job Responsibilities</label>
+                          <textarea name="previous_job_description" value={profileForm.previous_job_description} onChange={handleProfileChange} rows={3} required={!profileForm.is_fresher} disabled={profileForm.is_fresher}
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <RippleButton type="submit" disabled={profileSaving}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] text-white text-sm font-bold rounded-xl cursor-pointer hover:shadow-lg hover:shadow-[#14b8a6]/20 disabled:opacity-60 transition-all duration-300">
+                        {profileSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                        {profileSaving ? 'Saving profile...' : 'Save Full Profile'}
+                      </RippleButton>
+                      {profileMessage && (
+                        <span className="text-sm text-gray-300">{profileMessage}</span>
+                      )}
+                    </div>
+                  </form>
                 </div>
               </TiltCard>
             </div>
