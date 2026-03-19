@@ -11,6 +11,7 @@ use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\CVAnalyzerController;
+use App\Http\Controllers\CareerRoadmapController;
 use App\Http\Controllers\CourseVideoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -77,6 +78,11 @@ Route::post('/upload-avatar', [AvatarController::class, 'upload']);
 
 // CV Analyzer
 Route::post('/cv-analyze', [CVAnalyzerController::class, 'analyze']);
+Route::post('/cv-job-match', [CVAnalyzerController::class, 'jobMatch']);
+
+// AI Career Roadmap
+Route::middleware('auth:sanctum')->post('/career-roadmap/generate', [CareerRoadmapController::class, 'generate']);
+Route::middleware('auth:sanctum')->get('/career-roadmap/history', [CareerRoadmapController::class, 'history']);
 
 // Original item routes (keep for backward compatibility)
 Route::get('/items', [UsersController::class, 'index']);
