@@ -6,7 +6,7 @@ import {
   Shield, Code2, Eye, ChevronRight, Crown, Layers, BarChart3, BookOpen,
   ArrowUpRight, Download, Share2, RefreshCw, Clock, MapPin, Mail, Phone,
   User as UserIcon, Calendar, Hash, Flame, Rocket, Wand2, ScanLine,
-  CircleDot, GraduationCap, Heart, FileSearch, BrainCircuit
+  CircleDot, GraduationCap, Heart, FileSearch, BrainCircuit, Building2
 } from 'lucide-react';
 import api from '../utils/api';
 
@@ -576,6 +576,16 @@ export default function CVAnalyzer() {
   const [activeTab, setActiveTab] = useState('overview');
   const fileInputRef = useRef(null);
 
+  // Job matching states
+  const [jobs, setJobs] = useState([]);
+  const [loadingJobs, setLoadingJobs] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [jobMatchScore, setJobMatchScore] = useState(null);
+  const [loadingJobMatch, setLoadingJobMatch] = useState(false);
+  const [showJobSelector, setShowJobSelector] = useState(false);
+  const [showJobChoiceModal, setShowJobChoiceModal] = useState(false);
+  const [wantsJobMatch, setWantsJobMatch] = useState(null);
+
   const [heroRef, heroVisible] = useInView();
 
   // Phase cycling during analysis
@@ -594,6 +604,26 @@ export default function CVAnalyzer() {
     return () => clearInterval(interval);
   }, [loading]);
 
+  // Fetch available jobs on mount
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoadingJobs(true);
+        const res = await api.get('/jobs');
+        const normalizedJobs = Array.isArray(res.data)
+          ? res.data
+          : (Array.isArray(res.data?.jobs) ? res.data.jobs : []);
+        setJobs(normalizedJobs);
+      } catch (err) {
+        console.log('Failed to load jobs:', err);
+        setJobs([]);
+      } finally {
+        setLoadingJobs(false);
+      }
+    };
+    fetchJobs();
+  }, []);
+
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
@@ -608,6 +638,10 @@ export default function CVAnalyzer() {
     }
     setFile(selectedFile);
     setError('');
+    setSelectedJob(null);
+    setJobMatchScore(null);
+    setWantsJobMatch(null);
+    setShowJobChoiceModal(true);
     if (selectedFile.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (ev) => setPreview(ev.target.result);
@@ -631,15 +665,34 @@ export default function CVAnalyzer() {
 
   const handleAnalyze = async () => {
     if (!file) { setError('Please select a file first'); return; }
+    if (wantsJobMatch === null) { setError('Please choose whether you want job matching or CV-only analysis.'); return; }
+    if (wantsJobMatch && !selectedJob) { setError('Please select a job for CV-job match analysis.'); return; }
     setLoading(true); setError('');
     try {
       const formData = new FormData();
       formData.append('cv_file', file);
       const res = await api.post('/cv-analyze', formData);
       if (res.data?.analysis) {
+        const analysisData = res.data.analysis;
+
+        if (wantsJobMatch && selectedJob) {
+          setLoadingJobMatch(true);
+          const matchRes = await api.post('/cv-job-match', {
+            cv_analysis: analysisData,
+            job_id: selectedJob.id,
+          });
+          if (matchRes.data?.match_score) {
+            setJobMatchScore(matchRes.data.match_score);
+          }
+          setLoadingJobMatch(false);
+        }
+
         setLoading(false);
         setShowSuccess(true);
-        setTimeout(() => { setShowSuccess(false); setAnalysis(res.data.analysis); }, 1800);
+        setTimeout(() => {
+          setShowSuccess(false);
+          setAnalysis(analysisData);
+        }, 1800);
       } else {
         setError('Analysis returned unexpected format');
         setLoading(false);
@@ -647,15 +700,126 @@ export default function CVAnalyzer() {
     } catch (err) {
       setError(err.response?.data?.message || 'CV analysis failed. Please try again.');
       setLoading(false);
+      setLoadingJobMatch(false);
     }
   };
 
   const removeFile = () => {
     setFile(null); setPreview(null); setError('');
+    setSelectedJob(null);
+    setJobMatchScore(null);
+    setWantsJobMatch(null);
+    setShowJobChoiceModal(false);
+    setShowJobSelector(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const resetAll = () => { setAnalysis(null); removeFile(); setActiveTab('overview'); };
+
+  const handleJobSelect = (job) => {
+    setSelectedJob(job);
+    setShowJobSelector(false);
+  };
+
+  const chooseCvOnly = () => {
+    setWantsJobMatch(false);
+    setShowJobChoiceModal(false);
+    setSelectedJob(null);
+  };
+
+  const chooseJobMatch = () => {
+    setWantsJobMatch(true);
+    setShowJobChoiceModal(false);
+    setShowJobSelector(true);
+  };
+
+  const JobChoiceModal = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(5,13,17,0.92)', backdropFilter: 'blur(12px)' }}>
+      <div className="w-full max-w-lg scale-in">
+        <div className="glass rounded-2xl p-6 sm:p-8">
+          <h3 className="text-xl font-black text-white mb-2">How do you want to analyze this CV?</h3>
+          <p className="text-sm text-gray-500 mb-6">
+            You can do CV-only analysis, or include a job from this platform for AI match score and guidance.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <RippleButton onClick={chooseCvOnly}
+              className="px-4 py-3 rounded-xl border border-[#1e3a42]/40 text-gray-300
+                hover:text-white hover:border-[#14b8a6]/30 hover:bg-[#14b8a6]/5 transition-all text-sm font-semibold">
+              Analyze CV Only
+            </RippleButton>
+            <RippleButton onClick={chooseJobMatch}
+              className="px-4 py-3 rounded-xl bg-gradient-to-r from-[#14b8a6] to-[#06b6d4]
+                text-white font-semibold hover:shadow-lg hover:shadow-[#14b8a6]/20 transition-all text-sm">
+              Select a Job
+            </RippleButton>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Job selector modal component
+  const JobSelectorModal = () => {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: 'rgba(5,13,17,0.92)', backdropFilter: 'blur(12px)' }}>
+        <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto scale-in">
+          <div className="glass rounded-2xl p-6 sm:p-8">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-black text-white flex items-center gap-2">
+                <Briefcase size={22} className="text-[#14b8a6]" />
+                Select a Job to Match
+              </h3>
+              <button onClick={() => setShowJobSelector(false)}
+                className="p-2 hover:bg-[#14b8a6]/10 rounded-lg transition-colors">
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* Jobs list */}
+            {loadingJobs ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 size={24} className="text-[#14b8a6] animate-spin" />
+              </div>
+            ) : jobs.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No jobs available</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {jobs.map((job, i) => (
+                  <button key={job.id} onClick={() => handleJobSelect(job)}
+                    disabled={loadingJobMatch}
+                    className="text-left p-4 border border-[#1e3a42]/50 rounded-xl
+                      hover:border-[#14b8a6]/40 hover:bg-[#14b8a6]/5 transition-all
+                      disabled:opacity-50 scale-in group" 
+                    style={{ animationDelay: `${i * 0.05}s` }}>
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#14b8a6]/20 to-[#06b6d4]/20
+                        flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Briefcase size={16} className="text-[#14b8a6]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-bold text-sm line-clamp-1">{job.title}</p>
+                        <p className="text-xs text-gray-500 line-clamp-1">{job.company}</p>
+                        {job.location && (
+                          <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                            <MapPin size={10} /> {job.location}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Results tab data
   const tabs = useMemo(() => {
@@ -694,7 +858,6 @@ export default function CVAnalyzer() {
       {/* Scanning overlay */}
       {loading && <ScanningOverlay phase={analyzePhase} />}
 
-      {/* Success animation */}
       {showSuccess && <SuccessAnimation onDone={() => {}} />}
 
       <div className="min-h-screen relative overflow-hidden"
@@ -872,20 +1035,49 @@ export default function CVAnalyzer() {
 
                     {/* Action buttons */}
                     {file && (
-                      <div className="mt-6 flex gap-3 scale-in">
-                        <RippleButton onClick={handleAnalyze} disabled={loading}
+                      <div className="mt-6 space-y-3 scale-in">
+                        <div className="flex items-center justify-between rounded-xl border border-[#1e3a42]/30 bg-[#071015]/40 px-4 py-3">
+                          <p className="text-xs text-gray-500">
+                            {wantsJobMatch === null && 'Choose CV-only or job match to continue'}
+                            {wantsJobMatch === false && 'Mode: CV-only analysis'}
+                            {wantsJobMatch === true && (selectedJob
+                              ? `Mode: CV + Job match (${selectedJob.title})`
+                              : 'Mode: CV + Job match (job not selected)')}
+                          </p>
+                          {wantsJobMatch !== null && (
+                            <button
+                              onClick={() => setShowJobChoiceModal(true)}
+                              className="text-[11px] font-semibold text-[#14b8a6] hover:text-[#2dd4bf] transition-colors"
+                            >
+                              Change
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="flex gap-3">
+                        <RippleButton onClick={handleAnalyze} disabled={loading || wantsJobMatch === null || (wantsJobMatch && !selectedJob)}
                           className="flex-1 flex items-center justify-center gap-2.5 px-6 py-3.5
                             bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] text-white font-bold rounded-xl
                             hover:shadow-xl hover:shadow-[#14b8a6]/20 hover:scale-[1.02] active:scale-[0.98]
                             disabled:opacity-50 transition-all duration-300 cursor-pointer text-sm">
-                          <Sparkles size={17} /> Analyze CV
+                          <Sparkles size={17} /> {wantsJobMatch ? 'Analyze CV + Job Match' : 'Analyze CV'}
                         </RippleButton>
+                        {wantsJobMatch && !selectedJob && (
+                          <RippleButton
+                            onClick={() => setShowJobSelector(true)}
+                            className="px-4 py-3.5 rounded-xl border border-[#14b8a6]/30 text-[#14b8a6]
+                              hover:bg-[#14b8a6]/10 transition-all text-sm font-semibold"
+                          >
+                            Select Job
+                          </RippleButton>
+                        )}
                         <button onClick={removeFile} disabled={loading}
                           className="px-5 py-3.5 border border-[#1e3a42]/40 rounded-xl text-gray-400
                             hover:text-white hover:border-[#14b8a6]/30 hover:bg-[#14b8a6]/5
                             transition-all duration-300 cursor-pointer disabled:opacity-50">
                           <X size={18} />
                         </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1102,6 +1294,106 @@ export default function CVAnalyzer() {
                         </div>
                       )}
                     </div>
+
+                    {/* Job Matching Section */}
+                    {wantsJobMatch && (
+                      <div className="card-wrapper">
+                        <div className="glass shine rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+                          <div className="absolute top-0 left-0 right-0 h-[2px]
+                            bg-gradient-to-r from-transparent via-[#a855f7]/30 to-transparent" />
+
+                          <h3 className="text-sm font-bold text-white mb-5 flex items-center gap-2 uppercase tracking-wider">
+                            <Briefcase size={14} className="text-[#a855f7]" /> CV-Job Match Result
+                          </h3>
+
+                          {selectedJob && (
+                            <div className="p-4 mb-4 bg-[#a855f7]/[0.03] border border-[#a855f7]/10 rounded-xl">
+                              <p className="text-white font-bold text-sm">{selectedJob.title}</p>
+                              <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                <Building2 size={10} /> {selectedJob.company}
+                              </p>
+                              {selectedJob.location && (
+                                <p className="text-xs text-gray-600 flex items-center gap-1 mt-1">
+                                  <MapPin size={10} /> {selectedJob.location}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {jobMatchScore ? (
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-center gap-8">
+                                <ScoreRing
+                                  score={jobMatchScore.overall_match || 0}
+                                  size={120}
+                                  sw={5}
+                                  label="Match %"
+                                  color={jobMatchScore.overall_match >= 80 ? '#10b981' : jobMatchScore.overall_match >= 60 ? '#a855f7' : '#f59e0b'}
+                                />
+                                <div className="flex-1 space-y-2">
+                                  {jobMatchScore.skills_match !== undefined && (
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span className="text-gray-400">Skills Match</span>
+                                      <span className="text-white font-bold">{jobMatchScore.skills_match}%</span>
+                                    </div>
+                                  )}
+                                  {jobMatchScore.experience_match !== undefined && (
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span className="text-gray-400">Experience Match</span>
+                                      <span className="text-white font-bold">{jobMatchScore.experience_match}%</span>
+                                    </div>
+                                  )}
+                                  {jobMatchScore.education_match !== undefined && (
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span className="text-gray-400">Education Match</span>
+                                      <span className="text-white font-bold">{jobMatchScore.education_match}%</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {jobMatchScore.missing_skills?.length > 0 && (
+                                <div className="p-4 bg-amber-500/[0.03] border border-amber-500/10 rounded-xl">
+                                  <p className="text-xs font-bold text-amber-400 uppercase mb-2">Missing Skills</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {jobMatchScore.missing_skills.map((skill, i) => (
+                                      <span key={i} className="px-2.5 py-1.5 bg-amber-500/10 text-amber-300 text-xs rounded-lg border border-amber-500/15">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {(jobMatchScore.guidance || jobMatchScore.how_to_improve) && (
+                                <div className="p-4 bg-[#14b8a6]/[0.03] border border-[#14b8a6]/10 rounded-xl">
+                                  <p className="text-xs font-bold text-[#14b8a6] uppercase mb-2">Guidance for This Job</p>
+                                  <p className="text-sm text-gray-300 leading-relaxed">
+                                    {jobMatchScore.guidance || jobMatchScore.how_to_improve}
+                                  </p>
+                                </div>
+                              )}
+
+                              {jobMatchScore.recommendations?.length > 0 && (
+                                <div className="p-4 bg-[#14b8a6]/[0.03] border border-[#14b8a6]/10 rounded-xl">
+                                  <p className="text-xs font-bold text-[#14b8a6] uppercase mb-2">Action Steps</p>
+                                  <ul className="space-y-1.5">
+                                    {jobMatchScore.recommendations.map((rec, i) => (
+                                      <li key={i} className="text-xs text-gray-400 flex items-start gap-2">
+                                        <ArrowRight size={10} className="text-[#14b8a6] mt-0.5 shrink-0" />
+                                        <span>{rec}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500">Job matching result is not available for this analysis.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1332,6 +1624,12 @@ export default function CVAnalyzer() {
           </div>
         </div>
       </div>
+
+      {/* Job choice modal */}
+      {showJobChoiceModal && <JobChoiceModal />}
+
+      {/* Job selector modal */}
+      {showJobSelector && <JobSelectorModal />}
     </>
   );
 }
