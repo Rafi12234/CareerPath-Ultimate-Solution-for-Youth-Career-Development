@@ -77,6 +77,7 @@ Route::post('/upload-avatar', [AvatarController::class, 'upload']);
 
 // CV Analyzer
 Route::post('/cv-analyze', [CVAnalyzerController::class, 'analyze']);
+Route::post('/cv-job-match', [CVAnalyzerController::class, 'jobMatch']);
 
 // Original item routes (keep for backward compatibility)
 Route::get('/items', [UsersController::class, 'index']);
