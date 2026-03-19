@@ -606,17 +606,11 @@ export default function Jobs() {
     catch {}
   };
 
-  const applyToJob = async (jobId) => {
+  const applyToJob = (jobId) => {
     if (!user) { navigate('/login'); return; }
     if (appliedJobs.has(jobId)) return;
-    setApplyingTo(jobId);
-    try {
-      await api.post('/job-applications', { user_id: user.id, job_id: jobId });
-      setAppliedJobs(p => new Set([...p, jobId]));
-    } catch (e) {
-      if (e.response?.status === 409) setAppliedJobs(p => new Set([...p, jobId]));
-      else alert('Failed to apply.');
-    } finally { setApplyingTo(null); }
+    // Navigate to the comprehensive application form instead of quick apply
+    navigate(`/apply-job/${jobId}`);
   };
 
   const toggleSave = (id) => setSavedJobs(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });

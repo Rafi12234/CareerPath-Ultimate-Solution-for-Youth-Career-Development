@@ -25,4 +25,14 @@ class Job extends Model
     protected $casts = [
         'skills' => 'array',
     ];
+
+    public function screeningQuestions()
+    {
+        return $this->hasMany(ScreeningQuestion::class)->orderBy('order');
+    }
+
+    public function applications()
+    {
+        return $this->hasMany(JobApplication::class);
+    }
 }
