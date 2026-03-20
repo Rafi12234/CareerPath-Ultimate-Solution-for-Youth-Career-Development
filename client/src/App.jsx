@@ -18,6 +18,11 @@ import AICareerRoadmap from './pages/AICareerRoadmap';
 import CoursePlayer from './pages/CoursePlayer';
 import JobApplicationForm from './pages/JobApplicationForm';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import AdminCoursesPage from './pages/AdminCoursesPage';
+import AdminJobsPage from './pages/AdminJobsPage';
+import AdminApplicationsPage from './pages/AdminApplicationsPage';
 
 function App() {
   const location = useLocation();
@@ -34,7 +39,11 @@ function App() {
         <div className="min-h-screen flex flex-col bg-[#03070A] text-gray-200">
           <main key={location.pathname} className="flex-1">
             <Routes>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+              <Route path="/admin/users" element={<AdminUsersPage />} />
+              <Route path="/admin/courses" element={<AdminCoursesPage />} />
+              <Route path="/admin/jobs" element={<AdminJobsPage />} />
+              <Route path="/admin/applications" element={<AdminApplicationsPage />} />
             </Routes>
           </main>
         </div>
