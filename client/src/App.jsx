@@ -17,9 +17,11 @@ import VoiceMockInterview from './pages/VoiceMockInterview';
 import AICareerRoadmap from './pages/AICareerRoadmap';
 import CoursePlayer from './pages/CoursePlayer';
 import JobApplicationForm from './pages/JobApplicationForm';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
     // Ensure each route opens from top; avoids blank view with reveal-on-scroll sections.
@@ -28,28 +30,38 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen flex flex-col bg-[#03070A] text-gray-200">
-        <Navbar />
-        <main key={location.pathname} className="flex-1">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/apply-job/:jobId" element={<JobApplicationForm />} />
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/course-player/:courseId" element={<CoursePlayer />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/chatbot" element={<Chatbot />} />
-            <Route path="/cv-analyzer" element={<CVAnalyzer />} />
-            <Route path="/voice-mock-interview" element={<VoiceMockInterview />} />
-            <Route path="/ai-career-roadmap" element={<AICareerRoadmap />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+      {isAdminRoute ? (
+        <div className="min-h-screen flex flex-col bg-[#03070A] text-gray-200">
+          <main key={location.pathname} className="flex-1">
+            <Routes>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            </Routes>
+          </main>
+        </div>
+      ) : (
+        <div className="min-h-screen flex flex-col bg-[#03070A] text-gray-200">
+          <Navbar />
+          <main key={location.pathname} className="flex-1">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/jobs" element={<Jobs />} />
+              <Route path="/apply-job/:jobId" element={<JobApplicationForm />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/course-player/:courseId" element={<CoursePlayer />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/chatbot" element={<Chatbot />} />
+              <Route path="/cv-analyzer" element={<CVAnalyzer />} />
+              <Route path="/voice-mock-interview" element={<VoiceMockInterview />} />
+              <Route path="/ai-career-roadmap" element={<AICareerRoadmap />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      )}
     </AuthProvider>
   );
 }

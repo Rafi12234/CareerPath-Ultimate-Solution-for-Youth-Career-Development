@@ -14,6 +14,8 @@ use App\Http\Controllers\CVAnalyzerController;
 use App\Http\Controllers\CareerRoadmapController;
 use App\Http\Controllers\CourseVideoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -100,3 +102,49 @@ Route::post('/items', [UsersController::class, 'store']);
 Route::put('/items/{id}', [UsersController::class, 'update']);
 Route::patch('/items/{id}', [UsersController::class, 'patch']);
 Route::delete('/items/{id}', [UsersController::class, 'destroy']);
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN ROUTES
+|--------------------------------------------------------------------------
+*/
+
+// Admin Authentication
+Route::post('/admin/login', [AdminAuthController::class, 'login']);
+
+// Admin Protected Routes (middleware will be added in production)
+Route::group([], function () {
+    Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
+    Route::get('/admin/me', [AdminAuthController::class, 'me']);
+
+    // Users Management
+    Route::get('/admin/users', [AdminController::class, 'getAllUsers']);
+    Route::get('/admin/users/{userId}', [AdminController::class, 'getUserProfile']);
+
+    // Courses Management
+    Route::get('/admin/courses', [AdminController::class, 'getAllCourses']);
+    Route::post('/admin/courses', [AdminController::class, 'createCourse']);
+    Route::get('/admin/courses/{courseId}', [AdminController::class, 'getCourseDetails']);
+    Route::put('/admin/courses/{courseId}', [AdminController::class, 'updateCourse']);
+    Route::delete('/admin/courses/{courseId}', [AdminController::class, 'deleteCourse']);
+
+    // Course Videos/Modules
+    Route::post('/admin/courses/{courseId}/videos', [AdminController::class, 'addVideoToModule']);
+    Route::put('/admin/videos/{videoId}', [AdminController::class, 'updateVideo']);
+    Route::delete('/admin/videos/{videoId}', [AdminController::class, 'deleteVideo']);
+
+    // Jobs Management
+    Route::get('/admin/jobs', [AdminController::class, 'getAllJobs']);
+    Route::post('/admin/jobs', [AdminController::class, 'createJob']);
+    Route::get('/admin/jobs/{jobId}', [AdminController::class, 'getJobApplications']);
+    Route::put('/admin/jobs/{jobId}', [AdminController::class, 'updateJob']);
+    Route::delete('/admin/jobs/{jobId}', [AdminController::class, 'deleteJob']);
+
+    // Job Applications Management
+    Route::get('/admin/applications', [AdminController::class, 'getAllApplications']);
+    Route::get('/admin/applications/status/{status}', [AdminController::class, 'getApplicationsByStatus']);
+    Route::put('/admin/applications/{applicationId}', [AdminController::class, 'updateApplicationStatus']);
+
+    // Dashboard Stats
+    Route::get('/admin/dashboard/stats', [AdminController::class, 'getDashboardStats']);
+});

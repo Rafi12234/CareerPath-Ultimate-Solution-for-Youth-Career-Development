@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, Eye, EyeOff, LogIn, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, ArrowRight, Shield, Users } from 'lucide-react';
+import api from '../utils/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -9,15 +10,27 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loginType, setLoginType] = useState('user'); // 'user' or 'admin'
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      window.location.assign('/dashboard');
+      if (loginType === 'admin') {
+        // Admin login
+        const res = await api.post('/admin/login', { email, password });
+        const { admin, token } = res.data;
+        localStorage.setItem('admin_token', token);
+        localStorage.setItem('admin_user', JSON.stringify(admin));
+        window.location.assign('/admin/dashboard');
+      } else {
+        // User login
+        await login(email, password);
+        window.location.assign('/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
     } finally {
@@ -44,6 +57,43 @@ export default function Login() {
             <p className="text-gray-500 text-sm mt-1.5">Sign in to your CareerPath account</p>
           </div>
 
+          {/* Login Type Toggle */}
+          <div className="mb-6 flex gap-3 p-1 bg-[#071015]/50 rounded-lg border border-[#1e3a42]/50">
+            <button
+              type="button"
+              onClick={() => setLoginType('user')}
+              className={`flex-1 py-2.5 px-4 rounded-md transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 ${
+                loginType === 'user'
+                  ? 'bg-[#14b8a6]/20 text-[#2dd4bf] border border-[#14b8a6]/30'
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              <Users size={16} />
+              User Login
+            </button>
+            <button
+              type="button"
+              onClick={() => setLoginType('admin')}
+              className={`flex-1 py-2.5 px-4 rounded-md transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 ${
+                loginType === 'admin'
+                  ? 'bg-[#14b8a6]/20 text-[#2dd4bf] border border-[#14b8a6]/30'
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              <Shield size={16} />
+              Admin Login
+            </button>
+          </div>
+
+          {/* Admin Credentials Info */}
+          {loginType === 'admin' && (
+            <div className="mb-6 p-3.5 bg-[#14b8a6]/10 border border-[#14b8a6]/20 rounded-xl">
+              <p className="text-[#2dd4bf] text-xs font-semibold mb-2">Demo Admin Credentials:</p>
+              <p className="text-gray-300 text-xs">Email: <span className="font-mono text-[#14b8a6]">admin123@gmail.com</span></p>
+              <p className="text-gray-300 text-xs">Password: <span className="font-mono text-[#14b8a6]">123456</span></p>
+            </div>
+          )}
+
           {error && (
             <div className="mb-6 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0" />
@@ -60,7 +110,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={loginType === 'admin' ? 'admin123@gmail.com' : 'you@example.com'}
                   required
                   className="w-full pl-10.5 pr-4 py-3 bg-[#071015]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
                   style={{ paddingLeft: '2.75rem' }}
@@ -76,7 +126,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={loginType === 'admin' ? '123456' : 'Enter your password'}
                   required
                   className="w-full pr-12 py-3 bg-[#071015]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200"
                   style={{ paddingLeft: '2.75rem' }}
@@ -102,19 +152,23 @@ export default function Login() {
                   Signing in...
                 </>
               ) : (
-                <>Sign In <ArrowRight size={16} /></>
+                <>
+                  {loginType === 'admin' ? 'Admin Sign In' : 'Sign In'} <ArrowRight size={16} />
+                </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-[#1e3a42]/50 text-center">
-            <p className="text-gray-500 text-sm">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-[#2dd4bf] hover:text-[#14b8a6] font-medium transition-colors">
-                Create one
-              </Link>
-            </p>
-          </div>
+          {loginType === 'user' && (
+            <div className="mt-6 pt-6 border-t border-[#1e3a42]/50 text-center">
+              <p className="text-gray-500 text-sm">
+                Don't have an account?{' '}
+                <Link to="/register" className="text-[#2dd4bf] hover:text-[#14b8a6] font-medium transition-colors">
+                  Create one
+                </Link>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
