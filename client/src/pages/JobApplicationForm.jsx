@@ -1099,6 +1099,9 @@ const CoverLetterStep = ({ form, updateForm, showAIModal, setShowAIModal, genera
 // Step 5: Screening Questions
 const ScreeningQuestionsStep = ({ screeningQuestions, form, updateScreeningResponse }) => {
   const [ref, visible] = useInView();
+  const getResponseValue = (questionId) => (
+    form.screening_responses.find((r) => r.question_id === questionId)?.response || ''
+  );
   
   return (
     <div ref={ref} className={`space-y-6 ${visible ? 'slide-in-step' : 'opacity-0'}`}>
@@ -1130,6 +1133,7 @@ const ScreeningQuestionsStep = ({ screeningQuestions, form, updateScreeningRespo
               
               {q.question_type === 'text' && (
                 <AnimatedTextarea
+                  value={getResponseValue(q.id)}
                   placeholder="Type your answer..."
                   onChange={(e) => updateScreeningResponse(q.id, e.target.value)}
                   rows={4}
@@ -1144,6 +1148,7 @@ const ScreeningQuestionsStep = ({ screeningQuestions, form, updateScreeningRespo
                         type="radio"
                         name={`q-${q.id}`}
                         value={opt}
+                        checked={getResponseValue(q.id) === opt}
                         onChange={(e) => updateScreeningResponse(q.id, e.target.value)}
                         className="radio-custom"
                       />
@@ -1161,6 +1166,7 @@ const ScreeningQuestionsStep = ({ screeningQuestions, form, updateScreeningRespo
                         type="radio"
                         name={`q-${q.id}`}
                         value={opt}
+                        checked={getResponseValue(q.id) === opt}
                         onChange={(e) => updateScreeningResponse(q.id, e.target.value)}
                         className="radio-custom"
                       />

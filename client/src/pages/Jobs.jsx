@@ -217,9 +217,27 @@ const InjectStyles = () => (
     }
     .featured-scroll::-webkit-scrollbar { display: none; }
 
+    .marquee-viewport {
+      width: 100%;
+      overflow: hidden;
+    }
+
     .marquee-track {
+      display: flex;
+      width: max-content;
+      min-width: 100%;
+      will-change: transform;
       animation: marquee 30s linear infinite;
     }
+
+    .marquee-group {
+      display: flex;
+      gap: 1rem;
+      flex-shrink: 0;
+      min-width: max-content;
+      padding-right: 1rem;
+    }
+
     .marquee-track:hover {
       animation-play-state: paused;
     }
@@ -254,9 +272,20 @@ const InjectStyles = () => (
       background-size: 24px 24px;
     }
 
-    .card-3d {
-      transform-style: preserve-3d;
-      perspective: 1000px;
+    .job-card {
+      transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+    }
+    .job-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(20,184,166,0.35);
+      box-shadow: 0 16px 40px -18px rgba(20,184,166,0.26), 0 0 0 1px rgba(20,184,166,0.14);
+    }
+    .job-title {
+      transition: color 0.25s ease, text-shadow 0.25s ease;
+    }
+    .job-card:hover .job-title {
+      color: #5eead4;
+      text-shadow: 0 0 18px rgba(20,184,166,0.2);
     }
 
     .modal-reveal { animation: modalReveal 0.45s cubic-bezier(0.16,1,0.3,1) both; }
@@ -320,30 +349,8 @@ function useMousePosition() {
 }
 
 /* ─── 3D Tilt Card Wrapper ─── */
-function TiltCard({ children, className = '', intensity = 8 }) {
-  const cardRef = useRef(null);
-  const [style, setStyle] = useState({});
-
-  const handleMove = (e) => {
-    const rect = cardRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setStyle({
-      transform: `perspective(1000px) rotateY(${x * intensity}deg) rotateX(${-y * intensity}deg) scale3d(1.01,1.01,1.01)`,
-      transition: 'transform 0.1s ease-out',
-    });
-  };
-
-  const handleLeave = () => {
-    setStyle({ transform: 'perspective(1000px) rotateY(0) rotateX(0) scale3d(1,1,1)', transition: 'transform 0.5s ease-out' });
-  };
-
-  return (
-    <div ref={cardRef} onMouseMove={handleMove} onMouseLeave={handleLeave} className={`card-3d ${className}`} style={style}>
-      {children}
-    </div>
-  );
+function TiltCard({ children, className = '' }) {
+  return <div className={className}>{children}</div>;
 }
 
 /* ─── Ripple Button ─── */
@@ -634,16 +641,24 @@ export default function Jobs() {
   const getMatchScore = (j) => getMatchDetails(j).total;
   const avgLevelLabel = avgProficiency >= 3.5 ? 'Professional' : avgProficiency >= 2.5 ? 'Expert' : avgProficiency >= 1.5 ? 'Intermediate' : avgProficiency > 0 ? 'Beginner' : 'N/A';
 
-  const filteredJobs = useMemo(() => jobs.filter(j => {
-    const ms = [j.title, j.company, ...(j.skills || [])].some(s => (s || '').toLowerCase().includes(search.toLowerCase()));
-    if (filter === 'all') return ms;
-    const sc = getMatchScore(j);
-    if (filter === 'excellent') return ms && sc >= 80;
-    if (filter === 'good') return ms && sc >= 60 && sc < 80;
-    if (filter === 'fair') return ms && sc < 60;
-    if (filter === 'saved') return ms && savedJobs.has(j.id);
-    return ms;
-  }), [jobs, search, filter, savedJobs, getMatchScore]);
+  const filteredJobs = useMemo(() => {
+    const filtered = jobs.filter(j => {
+      const ms = [j.title, j.company, ...(j.skills || [])].some(s => (s || '').toLowerCase().includes(search.toLowerCase()));
+      if (filter === 'all') return ms;
+      const sc = getMatchScore(j);
+      if (filter === 'excellent') return ms && sc >= 80;
+      if (filter === 'good') return ms && sc >= 60 && sc < 80;
+      if (filter === 'fair') return ms && sc < 60;
+      if (filter === 'saved') return ms && savedJobs.has(j.id);
+      return ms;
+    });
+
+    if (user) {
+      return [...filtered].sort((a, b) => getMatchScore(b) - getMatchScore(a));
+    }
+
+    return filtered;
+  }, [jobs, search, filter, savedJobs, getMatchScore, user]);
 
   const topMatches = useMemo(() =>
     [...jobs].sort((a, b) => getMatchScore(b) - getMatchScore(a)).slice(0, 6).filter(j => getMatchScore(j) > 0),
@@ -757,12 +772,23 @@ export default function Jobs() {
             <div className="relative mb-12 overflow-hidden py-3 border-y border-[#1e3a42]/20 fade-in" style={{ animationDelay: '0.6s' }}>
               <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#050D11] to-transparent z-10" />
               <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#050D11] to-transparent z-10" />
-              <div className="marquee-track flex gap-4 w-max">
-                {[...userSkills, ...userSkills, ...userSkills, ...userSkills].map((s, i) => (
-                  <span key={i} className={`shrink-0 px-3 py-1.5 border rounded-full text-xs font-medium whitespace-nowrap ${skillColors[i % skillColors.length]}`}>
-                    {s.skill_name} • {s.proficiency}
-                  </span>
-                ))}
+              <div className="marquee-viewport">
+                <div className="marquee-track">
+                  <div className="marquee-group">
+                    {userSkills.map((s, i) => (
+                      <span key={`marquee-a-${s.id ?? i}-${s.skill_name}`} className={`shrink-0 px-3 py-1.5 border rounded-full text-xs font-medium whitespace-nowrap ${skillColors[i % skillColors.length]}`}>
+                        {s.skill_name} • {s.proficiency}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="marquee-group" aria-hidden="true">
+                    {userSkills.map((s, i) => (
+                      <span key={`marquee-b-${s.id ?? i}-${s.skill_name}`} className={`shrink-0 px-3 py-1.5 border rounded-full text-xs font-medium whitespace-nowrap ${skillColors[i % skillColors.length]}`}>
+                        {s.skill_name} • {s.proficiency}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -926,7 +952,7 @@ export default function Jobs() {
                   return (
                     <div key={job.id} className="tilt-in" style={{ animationDelay: `${idx * 0.06}s` }}>
                       <TiltCard intensity={3}>
-                        <div className="glass-card glow-border shine-effect rounded-2xl relative overflow-hidden">
+                        <div className="glass-card glow-border shine-effect job-card rounded-2xl relative overflow-hidden">
                           {/* Top color accent */}
                           <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
                             background: `linear-gradient(90deg, transparent, ${scoreColor}60, transparent)`
@@ -954,7 +980,7 @@ export default function Jobs() {
                                 <div className="flex items-start justify-between gap-3 mb-3">
                                   <div>
                                     <div className="flex items-center gap-2 mb-1.5">
-                                      <h3 className="text-lg sm:text-xl font-bold text-white leading-snug hover:text-[#2dd4bf] transition-colors cursor-default">
+                                      <h3 className="job-title text-lg sm:text-xl font-bold text-white leading-snug cursor-default">
                                         {job.title}
                                       </h3>
                                       {user && (

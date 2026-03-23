@@ -507,6 +507,7 @@ export default function Profile() {
   const [profileForm, setProfileForm] = useState(buildProfileForm());
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
+  const [profileMessageType, setProfileMessageType] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef(null);
@@ -557,6 +558,7 @@ export default function Profile() {
     e.preventDefault();
     setProfileSaving(true);
     setProfileMessage('');
+    setProfileMessageType('');
 
     try {
       const payload = {
@@ -587,15 +589,26 @@ export default function Profile() {
         updateUser(res.data.user);
         setProfileForm(buildProfileForm(res.data.user));
       }
+      setProfileMessageType('success');
       setProfileMessage('Profile information saved successfully.');
-      setTimeout(() => setProfileMessage(''), 3000);
+      setTimeout(() => {
+        setProfileMessage('');
+        setProfileMessageType('');
+      }, 3000);
     } catch (err) {
+      console.error('Profile update error:', err.response?.data);
       const validationErrors = err?.response?.data?.errors;
+      const errorMessage = err?.response?.data?.message;
+      setProfileMessageType('error');
       if (validationErrors) {
         const firstError = Object.values(validationErrors)[0]?.[0] || 'Validation failed';
         setProfileMessage(firstError);
+      } else if (errorMessage) {
+        setProfileMessage(errorMessage);
+      } else if (err.response?.status === 401) {
+        setProfileMessage('Session expired. Please login again.');
       } else {
-        setProfileMessage('Failed to update profile. Please try again.');
+        setProfileMessage(err?.response?.data?.error || 'Failed to update profile. Please try again.');
       }
     } finally {
       setProfileSaving(false);
@@ -889,7 +902,7 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  <form onSubmit={handleSaveProfile} className="space-y-7">
+                  <form onSubmit={handleSaveProfile} noValidate className="space-y-7">
                     {/* Personal Information */}
                     <div>
                       <h3 className="text-sm font-bold text-[#2dd4bf] uppercase tracking-[0.18em] mb-4">Personal Information</h3>
@@ -1161,15 +1174,22 @@ export default function Profile() {
                       </div>
                     </div>
 
+                    {profileMessage && (
+                      <div className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
+                        profileMessageType === 'success'
+                          ? 'border-emerald-400/40 bg-emerald-500/12 text-emerald-200'
+                          : 'border-rose-400/40 bg-rose-500/12 text-rose-200'
+                      }`}>
+                        {profileMessage}
+                      </div>
+                    )}
+
                     <div className="flex flex-wrap items-center gap-3 pt-2">
                       <RippleButton type="submit" disabled={profileSaving}
                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] text-white text-sm font-bold rounded-xl cursor-pointer hover:shadow-lg hover:shadow-[#14b8a6]/20 disabled:opacity-60 transition-all duration-300">
                         {profileSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                         {profileSaving ? 'Saving profile...' : 'Save Full Profile'}
                       </RippleButton>
-                      {profileMessage && (
-                        <span className="text-sm text-gray-300">{profileMessage}</span>
-                      )}
                     </div>
                   </form>
                 </div>

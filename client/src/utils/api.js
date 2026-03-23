@@ -10,8 +10,13 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  // Check for admin token first, then user token
-  const token = localStorage.getItem('admin_token') || localStorage.getItem('auth_token');
+  const userToken = localStorage.getItem('auth_token');
+  const adminToken = localStorage.getItem('admin_token');
+  const url = String(config.url || '');
+  const isAdminRoute = url.startsWith('/admin');
+
+  // Use only the token that matches the API namespace to avoid wrong-token 401s.
+  const token = isAdminRoute ? adminToken : userToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -25,10 +30,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
-    }
+    // Don't automatically clear token on 401 - let components handle auth errors
+    // Token should only be cleared on explicit logout
     return Promise.reject(error);
   }
 );

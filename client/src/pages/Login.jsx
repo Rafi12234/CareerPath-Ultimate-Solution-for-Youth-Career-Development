@@ -23,12 +23,16 @@ export default function Login() {
         // Admin login
         const res = await api.post('/admin/login', { email, password });
         const { admin, token } = res.data;
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
         localStorage.setItem('admin_token', token);
         localStorage.setItem('admin_user', JSON.stringify(admin));
         window.location.assign('/admin/dashboard');
       } else {
         // User login
         await login(email, password);
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
         window.location.assign('/dashboard');
       }
     } catch (err) {
