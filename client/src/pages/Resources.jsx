@@ -10,14 +10,9 @@ import {
 } from 'lucide-react';
 import api from '../utils/api';
 
-const courseImages = [
-  'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop',
-  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&h=250&fit=crop',
-  'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop',
-  'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=250&fit=crop',
-  'https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=400&h=250&fit=crop',
-  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop',
-];
+const FALLBACK_COURSE_IMAGE = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop';
+
+const getCourseImage = (course) => course?.cover_image || FALLBACK_COURSE_IMAGE;
 
 const topicMeta = {
   'AI': { color: '#a855f7', icon: Sparkles, gradient: 'from-purple-500/20 to-violet-500/10' },
@@ -392,7 +387,7 @@ function StatCard({ icon: Icon, label, value, color, delay = 0 }) {
 /* ─── Featured Course Card ─── */
 function FeaturedCard({ course, index, enrolled, onEnroll, onUnenroll, onDetails, actionLoading }) {
   const meta = getTopicMeta(course.topic);
-  const img = courseImages[index % courseImages.length];
+  const img = getCourseImage(course);
   const Icon = meta.icon;
 
   return (
@@ -765,7 +760,7 @@ export default function Resources() {
                   {filteredCourses.map((course, idx) => {
                     const enrolled = isEnrolled(course.id);
                     const meta = getTopicMeta(course.topic);
-                    const img = courseImages[course.id % courseImages.length];
+                    const img = getCourseImage(course);
                     const Icon = meta.icon;
                     const isSaved = savedCourses.has(course.id);
                     const wasJustEnrolled = justEnrolled === course.id;
@@ -894,7 +889,7 @@ export default function Resources() {
                   {filteredCourses.map((course, idx) => {
                     const enrolled = isEnrolled(course.id);
                     const meta = getTopicMeta(course.topic);
-                    const img = courseImages[course.id % courseImages.length];
+                    const img = getCourseImage(course);
                     const Icon = meta.icon;
 
                     return (
@@ -988,7 +983,7 @@ export default function Resources() {
         {selectedCourse && (() => {
           const enrolled = isEnrolled(selectedCourse.id);
           const meta = getTopicMeta(selectedCourse.topic);
-          const modalImg = courseImages[courses.findIndex(c => c.id === selectedCourse.id) % courseImages.length] || courseImages[0];
+          const modalImg = getCourseImage(selectedCourse);
           const Icon = meta.icon;
 
           return (
