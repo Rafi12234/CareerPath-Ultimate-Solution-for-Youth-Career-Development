@@ -16,6 +16,7 @@ class Course extends Model
         'instructor',
         'duration',
         'level',
+        'cover_image',
     ];
 
     public function enrollments()

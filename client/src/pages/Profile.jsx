@@ -25,6 +25,9 @@ const buildProfileForm = (source = {}) => ({
   name: source.name || '',
   email: source.email || '',
   phone: source.phone || '',
+  location: source.location || '',
+  bio: source.bio || '',
+  headline: source.headline || '',
   date_of_birth: source.date_of_birth ? String(source.date_of_birth).slice(0, 10) : '',
   gender: source.gender || '',
   marital_status: source.marital_status || '',
@@ -36,6 +39,8 @@ const buildProfileForm = (source = {}) => ({
   ssc_result: source.ssc_result || '',
   ssc_group: source.ssc_group || '',
   ssc_board: source.ssc_board || '',
+  education_board: source.education_board || '',
+  education_group: source.education_group || '',
   college_name: source.college_name || '',
   hsc_year: source.hsc_year ? String(source.hsc_year) : '',
   hsc_result: source.hsc_result || '',
@@ -967,6 +972,27 @@ export default function Profile() {
                             className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
                           />
                         </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Location</label>
+                          <div className="relative">
+                            <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+                            <input name="location" value={profileForm.location} onChange={handleProfileChange}
+                              className="w-full pl-9 pr-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Professional Headline</label>
+                          <input name="headline" value={profileForm.headline} onChange={handleProfileChange} placeholder="e.g., Full Stack Developer"
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Professional Bio</label>
+                          <textarea name="bio" value={profileForm.bio} onChange={handleProfileChange} rows={3} placeholder="Tell us about yourself..."
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40"
+                          />
+                        </div>
                         <div className="sm:col-span-2">
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Present Address</label>
                           <div className="relative">
@@ -1024,6 +1050,22 @@ export default function Profile() {
                             className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
                             <option value="">Select board</option>
                             {BANGLADESH_EDUCATION_BOARDS.map((board) => <option key={board} value={board}>{board}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Education Board</label>
+                          <select name="education_board" value={profileForm.education_board} onChange={handleProfileChange}
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
+                            <option value="">Select board</option>
+                            {BANGLADESH_EDUCATION_BOARDS.map((board) => <option key={board} value={board}>{board}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Education Group</label>
+                          <select name="education_group" value={profileForm.education_group} onChange={handleProfileChange}
+                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
+                            <option value="">Select group</option>
+                            {EDUCATION_GROUPS.map((group) => <option key={group} value={group}>{group}</option>)}
                           </select>
                         </div>
                         <div>
