@@ -8,6 +8,8 @@ use App\Models\CourseVideo;
 use App\Models\Job;
 use App\Models\JobApplication;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
@@ -98,13 +100,14 @@ class AdminController extends Controller
             'instructor' => 'required|string|max:255',
             'duration' => 'required|string|max:255',
             'level' => 'required|in:Beginner,Intermediate,Advanced',
+            'cover_image' => 'nullable|url|max:2048',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $course = Course::create($request->validated());
+        $course = Course::create($validator->validated());
 
         return response()->json([
             'message' => 'Course created successfully',
@@ -129,13 +132,14 @@ class AdminController extends Controller
             'instructor' => 'string|max:255',
             'duration' => 'string|max:255',
             'level' => 'in:Beginner,Intermediate,Advanced',
+            'cover_image' => 'nullable|url|max:2048',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $course->update($request->validated());
+        $course->update($validator->validated());
 
         return response()->json([
             'message' => 'Course updated successfully',
@@ -173,6 +177,71 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => 'Course details retrieved',
+            'data' => $course,
+        ], 200);
+    }
+
+    /**
+     * Upload/update course cover image to Cloudinary and persist URL.
+     */
+    public function uploadCourseCoverImage(Request $request, $courseId)
+    {
+        $course = Course::find($courseId);
+        if (!$course) {
+            return response()->json(['error' => 'Course not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $file = $request->file('cover_image');
+        $cloudName = env('CLOUDINARY_CLOUD_NAME');
+        $apiKey = env('CLOUDINARY_API_KEY');
+        $apiSecret = env('CLOUDINARY_API_SECRET');
+
+        if (!$cloudName || !$apiKey || !$apiSecret) {
+            return response()->json(['message' => 'Cloudinary not configured'], 500);
+        }
+
+        $timestamp = time();
+        $params = [
+            'folder' => 'careerpath_course_covers',
+            'timestamp' => $timestamp,
+        ];
+
+        ksort($params);
+        $signatureString = collect($params)
+            ->map(fn($v, $k) => "{$k}={$v}")
+            ->implode('&');
+        $signatureString .= $apiSecret;
+        $signature = sha1($signatureString);
+
+        $response = Http::attach(
+            'file',
+            file_get_contents($file->getRealPath()),
+            $file->getClientOriginalName()
+        )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
+            'api_key' => $apiKey,
+            'timestamp' => $timestamp,
+            'signature' => $signature,
+            'folder' => 'careerpath_course_covers',
+        ]);
+
+        if (!$response->successful()) {
+            return response()->json(['message' => 'Failed to upload course cover image'], 500);
+        }
+
+        $imageUrl = $response->json('secure_url');
+        $course->cover_image = $imageUrl;
+        $course->save();
+
+        return response()->json([
+            'message' => 'Course cover image uploaded successfully',
             'data' => $course,
         ], 200);
     }
@@ -219,6 +288,167 @@ class AdminController extends Controller
     }
 
     /**
+     * Upload video/module to Cloudinary and persist URL to database
+     */
+    public function uploadCourseVideo(Request $request, $courseId)
+    {
+        $course = Course::find($courseId);
+        if (!$course) {
+            return response()->json(['error' => 'Course not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'video_file' => 'required|file|mimes:mp4,avi,mov,mkv,webm|max:512000', // 500MB max
+            'title' => 'required|string|max:255',
+            'duration' => 'required|string|max:50',
+            'sequence' => 'required|integer|min:1',
+            'description' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $file = $request->file('video_file');
+        $cloudName = env('CLOUDINARY_CLOUD_NAME');
+        $apiKey = env('CLOUDINARY_API_KEY');
+        $apiSecret = env('CLOUDINARY_API_SECRET');
+
+        if (!$cloudName || !$apiKey || !$apiSecret) {
+            return response()->json(['message' => 'Cloudinary not configured'], 500);
+        }
+
+        $timestamp = time();
+        $params = [
+            'folder' => 'careerpath_course_videos',
+            'timestamp' => $timestamp,
+        ];
+
+        ksort($params);
+        $signatureString = collect($params)
+            ->map(fn($v, $k) => "{$k}={$v}")
+            ->implode('&');
+        $signatureString .= $apiSecret;
+        $signature = sha1($signatureString);
+
+        $response = Http::timeout(180)->attach(
+            'file',
+            file_get_contents($file->getRealPath()),
+            $file->getClientOriginalName()
+        )->post("https://api.cloudinary.com/v1_1/{$cloudName}/video/upload", [
+            'api_key' => $apiKey,
+            'timestamp' => $timestamp,
+            'signature' => $signature,
+            'folder' => 'careerpath_course_videos',
+        ]);
+
+        if (!$response->successful()) {
+            $cloudinaryMessage = $response->json('error.message') ?: $response->body();
+            Log::error('Cloudinary upload failed', [
+                'status' => $response->status(),
+                'message' => $cloudinaryMessage,
+            ]);
+            return response()->json([
+                'message' => 'Failed to upload video to Cloudinary',
+                'details' => $cloudinaryMessage,
+            ], 500);
+        }
+
+        $videoUrl = $response->json('secure_url');
+
+        // Get the highest sequence for this course
+        $maxSequence = CourseVideo::where('course_id', $courseId)->max('sequence') ?? 0;
+        $newSequence = $request->sequence > $maxSequence ? $request->sequence : $maxSequence + 1;
+
+        $video = CourseVideo::create([
+            'course_id' => $courseId,
+            'title' => $request->title,
+            'url' => $videoUrl,
+            'duration' => $request->duration,
+            'sequence' => $newSequence,
+            'description' => $request->description ?? null,
+        ]);
+
+        return response()->json([
+            'message' => 'Video uploaded to Cloudinary and added to course successfully',
+            'data' => $video,
+        ], 201);
+    }
+
+    /**
+     * Replace existing module video file in Cloudinary and update URL in same DB row
+     */
+    public function replaceVideoFile(Request $request, $videoId)
+    {
+        $video = CourseVideo::find($videoId);
+        if (!$video) {
+            return response()->json(['error' => 'Video not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'video_file' => 'required|file|mimes:mp4,avi,mov,mkv,webm|max:512000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $file = $request->file('video_file');
+        $cloudName = env('CLOUDINARY_CLOUD_NAME');
+        $apiKey = env('CLOUDINARY_API_KEY');
+        $apiSecret = env('CLOUDINARY_API_SECRET');
+
+        if (!$cloudName || !$apiKey || !$apiSecret) {
+            return response()->json(['message' => 'Cloudinary not configured'], 500);
+        }
+
+        $timestamp = time();
+        $params = [
+            'folder' => 'careerpath_course_videos',
+            'timestamp' => $timestamp,
+        ];
+
+        ksort($params);
+        $signatureString = collect($params)
+            ->map(fn($v, $k) => "{$k}={$v}")
+            ->implode('&');
+        $signatureString .= $apiSecret;
+        $signature = sha1($signatureString);
+
+        $response = Http::timeout(180)->attach(
+            'file',
+            file_get_contents($file->getRealPath()),
+            $file->getClientOriginalName()
+        )->post("https://api.cloudinary.com/v1_1/{$cloudName}/video/upload", [
+            'api_key' => $apiKey,
+            'timestamp' => $timestamp,
+            'signature' => $signature,
+            'folder' => 'careerpath_course_videos',
+        ]);
+
+        if (!$response->successful()) {
+            $cloudinaryMessage = $response->json('error.message') ?: $response->body();
+            Log::error('Cloudinary replace upload failed', [
+                'status' => $response->status(),
+                'message' => $cloudinaryMessage,
+            ]);
+            return response()->json([
+                'message' => 'Failed to upload video to Cloudinary',
+                'details' => $cloudinaryMessage,
+            ], 500);
+        }
+
+        $video->update([
+            'url' => $response->json('secure_url'),
+        ]);
+
+        return response()->json([
+            'message' => 'Video replaced successfully',
+            'data' => $video,
+        ], 200);
+    }
+
+    /**
      * Update video/module
      */
     public function updateVideo(Request $request, $videoId)
@@ -229,10 +459,10 @@ class AdminController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'title' => 'string|max:255',
-            'url' => 'url',
-            'duration' => 'string|max:50',
-            'sequence' => 'integer|min:1',
+            'title' => 'nullable|string|max:255',
+            'url' => 'nullable|url',
+            'duration' => 'nullable|string|max:50',
+            'sequence' => 'nullable|integer|min:1',
             'description' => 'nullable|string',
         ]);
 
@@ -240,10 +470,33 @@ class AdminController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $video->update($request->validated());
+        $data = $validator->validated();
+        if ($request->exists('url') && $request->input('url') === null) {
+            $data['url'] = null;
+        }
+
+        $video->update($data);
 
         return response()->json([
             'message' => 'Video updated successfully',
+            'data' => $video,
+        ], 200);
+    }
+
+    /**
+     * Remove only the video URL from a module row (keeps title/description/sequence)
+     */
+    public function removeVideoLink($videoId)
+    {
+        $video = CourseVideo::find($videoId);
+        if (!$video) {
+            return response()->json(['error' => 'Video not found'], 404);
+        }
+
+        $video->update(['url' => null]);
+
+        return response()->json([
+            'message' => 'Video link removed successfully',
             'data' => $video,
         ], 200);
     }
