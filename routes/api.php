@@ -126,10 +126,14 @@ Route::group([], function () {
     Route::post('/admin/courses', [AdminController::class, 'createCourse']);
     Route::get('/admin/courses/{courseId}', [AdminController::class, 'getCourseDetails']);
     Route::put('/admin/courses/{courseId}', [AdminController::class, 'updateCourse']);
+    Route::post('/admin/courses/{courseId}/cover-image', [AdminController::class, 'uploadCourseCoverImage']);
     Route::delete('/admin/courses/{courseId}', [AdminController::class, 'deleteCourse']);
 
     // Course Videos/Modules
     Route::post('/admin/courses/{courseId}/videos', [AdminController::class, 'addVideoToModule']);
+    Route::post('/admin/courses/{courseId}/upload-video', [AdminController::class, 'uploadCourseVideo']);
+    Route::post('/admin/videos/{videoId}/replace-video', [AdminController::class, 'replaceVideoFile']);
+    Route::delete('/admin/videos/{videoId}/video-link', [AdminController::class, 'removeVideoLink']);
     Route::put('/admin/videos/{videoId}', [AdminController::class, 'updateVideo']);
     Route::delete('/admin/videos/{videoId}', [AdminController::class, 'deleteVideo']);
 

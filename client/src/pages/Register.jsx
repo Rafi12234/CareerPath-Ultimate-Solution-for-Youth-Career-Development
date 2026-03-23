@@ -11,12 +11,30 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [emailHint, setEmailHint] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatar, setAvatar] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const fileInputRef = useRef(null);
   const { register, updateUser } = useAuth();
+
+  const normalizeEmailInput = (value) => value.trim().toLowerCase();
+
+  const extractErrorMessage = (err) => {
+    const responseData = err?.response?.data;
+    if (!responseData) return 'Unable to reach server. Please try again.';
+
+    if (responseData?.errors && typeof responseData.errors === 'object') {
+      const firstErrorKey = Object.keys(responseData.errors)[0];
+      const firstErrorValue = responseData.errors[firstErrorKey];
+      if (Array.isArray(firstErrorValue) && firstErrorValue[0]) {
+        return firstErrorValue[0];
+      }
+    }
+
+    return responseData?.message || 'Registration failed. Please try again.';
+  };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -39,6 +57,13 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setEmailHint('');
+    const normalizedEmail = normalizeEmailInput(email);
+
+    if (normalizedEmail.includes('@gamil.com')) {
+      setEmailHint('Did you mean gmail.com?');
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -49,7 +74,7 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      const userData = await register(name, email, password);
+      const userData = await register(name, normalizedEmail, password);
 
       // Upload avatar if selected
       if (avatar && userData?.id) {
@@ -71,7 +96,7 @@ export default function Register() {
 
       window.location.assign('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setError(extractErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -116,6 +141,19 @@ export default function Register() {
             <div className="mb-6 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0" />
               <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          {emailHint && (
+            <div className="mb-6 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between gap-2">
+              <p className="text-amber-300 text-sm">{emailHint}</p>
+              <button
+                type="button"
+                onClick={() => setEmail((prev) => prev.replace('@gamil.com', '@gmail.com'))}
+                className="text-xs font-semibold text-amber-200 hover:text-white transition"
+              >
+                Fix Email
+              </button>
             </div>
           )}
 
