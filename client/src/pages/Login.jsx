@@ -9,19 +9,44 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [emailHint, setEmailHint] = useState('');
   const [loading, setLoading] = useState(false);
   const [loginType, setLoginType] = useState('user'); // 'user' or 'admin'
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const normalizeEmailInput = (value) => value.trim().toLowerCase();
+
+  const extractErrorMessage = (err) => {
+    const responseData = err?.response?.data;
+    if (!responseData) return 'Unable to reach server. Please try again.';
+
+    if (responseData?.errors && typeof responseData.errors === 'object') {
+      const firstErrorKey = Object.keys(responseData.errors)[0];
+      const firstErrorValue = responseData.errors[firstErrorKey];
+      if (Array.isArray(firstErrorValue) && firstErrorValue[0]) {
+        return firstErrorValue[0];
+      }
+    }
+
+    return responseData?.message || 'Login failed. Please check your credentials.';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setEmailHint('');
     setLoading(true);
+    const normalizedEmail = normalizeEmailInput(email);
+
+    if (normalizedEmail.includes('@gamil.com')) {
+      setEmailHint('Did you mean gmail.com?');
+    }
+
     try {
       if (loginType === 'admin') {
         // Admin login
-        const res = await api.post('/admin/login', { email, password });
+        const res = await api.post('/admin/login', { email: normalizedEmail, password });
         const { admin, token } = res.data;
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
@@ -30,13 +55,13 @@ export default function Login() {
         window.location.assign('/admin/dashboard');
       } else {
         // User login
-        await login(email, password);
+        await login(normalizedEmail, password);
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
         window.location.assign('/dashboard');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+      setError(extractErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -102,6 +127,19 @@ export default function Login() {
             <div className="mb-6 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0" />
               <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          {emailHint && (
+            <div className="mb-6 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between gap-2">
+              <p className="text-amber-300 text-sm">{emailHint}</p>
+              <button
+                type="button"
+                onClick={() => setEmail((prev) => prev.replace('@gamil.com', '@gmail.com'))}
+                className="text-xs font-semibold text-amber-200 hover:text-white transition"
+              >
+                Fix Email
+              </button>
             </div>
           )}
 
