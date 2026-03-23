@@ -212,16 +212,40 @@ export default function AdminUsersPage() {
                           <p className="text-white font-medium flex items-center gap-2"><Phone size={14} /> {selectedUser.phone || 'N/A'}</p>
                         </div>
                         <div>
+                          <p className="text-gray-400 text-sm">Date of Birth</p>
+                          <p className="text-white font-medium">{selectedUser.date_of_birth ? new Date(selectedUser.date_of_birth).toLocaleDateString() : 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Gender</p>
+                          <p className="text-white font-medium">{selectedUser.gender || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Marital Status</p>
+                          <p className="text-white font-medium">{selectedUser.marital_status || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Nationality</p>
+                          <p className="text-white font-medium">{selectedUser.nationality || 'N/A'}</p>
+                        </div>
+                        <div>
                           <p className="text-gray-400 text-sm">Location</p>
                           <p className="text-white font-medium flex items-center gap-2"><MapPin size={14} /> {selectedUser.location || 'N/A'}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400 text-sm">Bio</p>
+                          <p className="text-gray-400 text-sm">Professional Headline</p>
+                          <p className="text-white font-medium">{selectedUser.headline || 'N/A'}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="text-gray-400 text-sm">Professional Bio</p>
                           <p className="text-white font-medium">{selectedUser.bio || 'N/A'}</p>
                         </div>
-                        <div>
-                          <p className="text-gray-400 text-sm">Headline</p>
-                          <p className="text-white font-medium">{selectedUser.headline || 'N/A'}</p>
+                        <div className="md:col-span-2">
+                          <p className="text-gray-400 text-sm">Present Address</p>
+                          <p className="text-white font-medium">{selectedUser.present_address || 'N/A'}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="text-gray-400 text-sm">Permanent Address</p>
+                          <p className="text-white font-medium">{selectedUser.permanent_address || 'N/A'}</p>
                         </div>
                       </div>
                     </div>
@@ -238,15 +262,146 @@ export default function AdminUsersPage() {
                           <p className="text-gray-400 text-sm">Education Group</p>
                           <p className="text-white font-medium">{selectedUser.education_group || 'N/A'}</p>
                         </div>
+
+                        {/* SSC Information */}
+                        <div className="md:col-span-2">
+                          <p className="text-gray-300 font-semibold text-sm mb-2">Secondary School Certificate (SSC)</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">School Name</p>
+                          <p className="text-white font-medium">{selectedUser.school_name || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">SSC Year</p>
+                          <p className="text-white font-medium">{selectedUser.ssc_year || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">SSC Result</p>
+                          <p className="text-white font-medium">{selectedUser.ssc_result || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">SSC Group</p>
+                          <p className="text-white font-medium">{selectedUser.ssc_group || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">SSC Board</p>
+                          <p className="text-white font-medium">{selectedUser.ssc_board || 'N/A'}</p>
+                        </div>
+
+                        {/* HSC Information */}
+                        <div className="md:col-span-2">
+                          <p className="text-gray-300 font-semibold text-sm mb-2">Higher Secondary Certificate (HSC)</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">College Name</p>
+                          <p className="text-white font-medium">{selectedUser.college_name || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">HSC Year</p>
+                          <p className="text-white font-medium">{selectedUser.hsc_year || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">HSC Result</p>
+                          <p className="text-white font-medium">{selectedUser.hsc_result || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">HSC Group</p>
+                          <p className="text-white font-medium">{selectedUser.hsc_group || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">HSC Board</p>
+                          <p className="text-white font-medium">{selectedUser.hsc_board || 'N/A'}</p>
+                        </div>
+
+                        {/* University Information */}
+                        <div className="md:col-span-2">
+                          <p className="text-gray-300 font-semibold text-sm mb-2">University Education</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">University Name</p>
+                          <p className="text-white font-medium">{selectedUser.university_name || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">University Status</p>
+                          <p className="text-white font-medium">{selectedUser.university_status || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Current Study Year</p>
+                          <p className="text-white font-medium">{selectedUser.current_study_year || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Current Study Semester</p>
+                          <p className="text-white font-medium">{selectedUser.current_study_semester || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Graduation Year</p>
+                          <p className="text-white font-medium">{selectedUser.university_graduation_year || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">CGPA</p>
+                          <p className="text-white font-medium">{selectedUser.university_cgpa || 'N/A'}</p>
+                        </div>
                       </div>
                     </div>
 
                     {/* Professional Information */}
                     <div className="bg-[#0F2635]/40 rounded-lg p-4 border border-[#1e3a42]/30">
                       <h3 className="text-lg font-semibold text-[#14b8a6] mb-4">Professional Information</h3>
-                      <div>
-                        <p className="text-gray-400 text-sm">Years of Experience</p>
-                        <p className="text-white font-medium">{selectedUser.years_of_experience || '0'} years</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-gray-400 text-sm">Fresher Status</p>
+                          <p className="text-white font-medium">
+                            <span className={`px-2 py-1 rounded text-sm ${selectedUser.is_fresher ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                              {selectedUser.is_fresher ? 'Fresher' : 'Experienced'}
+                            </span>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-sm">Years of Experience</p>
+                          <p className="text-white font-medium">{selectedUser.years_of_experience || '0'} years</p>
+                        </div>
+
+                        {!selectedUser.is_fresher && (
+                          <>
+                            {/* Current Job */}
+                            <div className="md:col-span-2">
+                              <p className="text-gray-300 font-semibold text-sm mb-2">Current Employment</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-sm">Current Job Title</p>
+                              <p className="text-white font-medium">{selectedUser.current_job_title || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-sm">Current Company</p>
+                              <p className="text-white font-medium">{selectedUser.current_company || 'N/A'}</p>
+                            </div>
+
+                            {/* Previous Job */}
+                            <div className="md:col-span-2">
+                              <p className="text-gray-300 font-semibold text-sm mb-2">Previous Employment</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-sm">Previous Job Title</p>
+                              <p className="text-white font-medium">{selectedUser.previous_job_title || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-sm">Previous Company</p>
+                              <p className="text-white font-medium">{selectedUser.previous_company || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-sm">Previous Job Start Date</p>
+                              <p className="text-white font-medium">{selectedUser.previous_job_start ? new Date(selectedUser.previous_job_start).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-sm">Previous Job End Date</p>
+                              <p className="text-white font-medium">{selectedUser.previous_job_end ? new Date(selectedUser.previous_job_end).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <div className="md:col-span-2">
+                              <p className="text-gray-400 text-sm">Previous Job Description</p>
+                              <p className="text-white font-medium">{selectedUser.previous_job_description || 'N/A'}</p>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
 
