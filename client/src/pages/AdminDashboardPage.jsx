@@ -465,8 +465,9 @@ function Sparkline({ data, color = '#14b8a6', width = 100, height = 32 }) {
    STAT CARD
    ═══════════════════════════════════════ */
 function StatCard({ icon: Icon, label, value, color, trend, trendValue, delay = 0, visible, sparkData }) {
-  const animVal = useAnimatedNumber(visible ? (value || 0) : 0);
-  const isPositive = trend === 'up';
+  const animVal = useAnimatedNumber(value || 0);
+  const isPositive = trend !== 'down';
+  const isFlat = trend === 'flat';
 
   return (
     <div className="glass-card glow-border shine-effect rounded-2xl p-5 group cursor-default card-entrance glass-card-lift relative overflow-hidden"
@@ -485,8 +486,8 @@ function StatCard({ icon: Icon, label, value, color, trend, trendValue, delay = 
           </div>
           {trendValue && (
             <div className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border
-              ${isPositive ? 'bg-emerald-500/8 text-emerald-400 border-emerald-500/15' : 'bg-red-500/8 text-red-400 border-red-500/15'}`}>
-              {isPositive ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}{trendValue}
+              ${isFlat ? 'bg-gray-500/8 text-gray-400 border-gray-500/15' : isPositive ? 'bg-emerald-500/8 text-emerald-400 border-emerald-500/15' : 'bg-red-500/8 text-red-400 border-red-500/15'}`}>
+              {isFlat ? <Activity size={10} /> : isPositive ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}{trendValue}
             </div>
           )}
         </div>
@@ -713,24 +714,33 @@ export default function AdminDashboardPage() {
 
   const showToast = (msg, type = 'success') => setToast({ message: msg, type });
 
+  const fetchStats = async ({ showLoading = false, showErrorToast = true } = {}) => {
+    try {
+      if (showLoading) setLoading(true);
+      const res = await api.get('/admin/dashboard/stats');
+      setStats(res.data?.data || res.data);
+    } catch {
+      if (showErrorToast) showToast('Failed to load stats', 'error');
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const admin = localStorage.getItem('admin_user');
     if (!admin) { navigate('/login'); return; }
-    fetchStats();
-  }, [navigate]);
+    fetchStats({ showLoading: true, showErrorToast: true });
 
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get('/admin/dashboard/stats');
-      setStats(res.data?.data || res.data);
-    } catch { showToast('Failed to load stats', 'error'); }
-    finally { setLoading(false); }
-  };
+    const poll = setInterval(() => {
+      fetchStats({ showLoading: false, showErrorToast: false });
+    }, 30000);
+
+    return () => clearInterval(poll);
+  }, [navigate]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchStats();
+    await fetchStats({ showLoading: false, showErrorToast: true });
     setTimeout(() => setRefreshing(false), 600);
     showToast('Dashboard refreshed', 'info');
   };
@@ -741,26 +751,58 @@ export default function AdminDashboardPage() {
     window.location.assign('/login');
   };
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/admin/dashboard' },
-    { id: 'users', label: 'Users', icon: Users, path: '/admin/users', badge: '24' },
-    { id: 'courses', label: 'Courses', icon: GraduationCap, path: '/admin/courses' },
-    { id: 'jobs', label: 'Jobs', icon: Briefcase, path: '/admin/jobs' },
-    { id: 'applications', label: 'Applications', icon: Award, path: '/admin/applications', badge: 'New' },
-  ];
+    { id: 'users', label: 'Users', icon: Users, path: '/admin/users', badge: stats?.total_users ? String(stats.total_users) : null },
+    { id: 'courses', label: 'Courses', icon: GraduationCap, path: '/admin/courses', badge: stats?.total_courses ? String(stats.total_courses) : null },
+    { id: 'jobs', label: 'Jobs', icon: Briefcase, path: '/admin/jobs', badge: stats?.total_jobs ? String(stats.total_jobs) : null },
+    { id: 'applications', label: 'Applications', icon: Award, path: '/admin/applications', badge: stats?.applications_by_status?.pending ? `Pending ${stats.applications_by_status.pending}` : null },
+  ], [stats]);
 
-  const activities = [
-    { icon: Users, title: 'New user registered', description: 'John Doe created an account', time: '2m ago', color: '#3b82f6' },
-    { icon: FileText, title: 'Application submitted', description: 'Frontend Developer position', time: '15m ago', color: '#8b5cf6' },
-    { icon: BookOpen, title: 'Course enrollment', description: 'React Masterclass — 3 new', time: '1h ago', color: '#10b981' },
-    { icon: Briefcase, title: 'New job posted', description: 'Senior Backend Developer', time: '2h ago', color: '#f59e0b' },
-    { icon: CheckCircle, title: 'Application accepted', description: 'UI/UX Designer role', time: '3h ago', color: '#14b8a6' },
-  ];
+  const relativeTime = (iso) => {
+    if (!iso) return 'just now';
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
 
-  const sparkUsers = [12, 18, 15, 22, 28, 25, 32, 30, 35, 40, 38, 45];
-  const sparkCourses = [5, 8, 6, 10, 9, 12, 11, 14, 13, 15, 16, 18];
-  const sparkJobs = [3, 5, 4, 7, 8, 6, 9, 10, 8, 12, 11, 14];
-  const sparkApps = [8, 12, 15, 18, 14, 20, 22, 25, 28, 24, 30, 35];
+  const activities = useMemo(() => {
+    const iconMap = {
+      user: { icon: Users, color: '#3b82f6' },
+      course: { icon: BookOpen, color: '#10b981' },
+      job: { icon: Briefcase, color: '#f59e0b' },
+      application: { icon: FileText, color: '#8b5cf6' },
+    };
+
+    return (stats?.recent_activity || []).map((item) => {
+      const byType = iconMap[item.type] || iconMap.application;
+      const statusColor = item.status === 'accepted'
+        ? '#10b981'
+        : item.status === 'rejected'
+          ? '#ef4444'
+          : item.status === 'shortlisted'
+            ? '#8b5cf6'
+            : byType.color;
+
+      return {
+        icon: byType.icon,
+        title: item.title,
+        description: item.description,
+        time: relativeTime(item.timestamp),
+        color: statusColor,
+      };
+    });
+  }, [stats]);
+
+  const sparkUsers = stats?.trends?.users?.series || [];
+  const sparkCourses = stats?.trends?.courses?.series || [];
+  const sparkJobs = stats?.trends?.jobs?.series || [];
+  const sparkApps = stats?.trends?.applications?.series || [];
 
   const appStatusItems = useMemo(() => {
     if (!stats?.applications_by_status) return [];
@@ -935,11 +977,11 @@ export default function AdminDashboardPage() {
               <>
                 {/* Stats Grid */}
                 <div ref={statsRef} className="grid grid-cols-2 lg:grid-cols-5 gap-3 mt-6 mb-6">
-                  <StatCard icon={Users} label="Total Users" value={stats.total_users} color="#3b82f6" trend="up" trendValue="+12%" delay={0} visible={statsVisible} sparkData={sparkUsers} />
-                  <StatCard icon={BookOpen} label="Courses" value={stats.total_courses} color="#8b5cf6" trend="up" trendValue="+8%" delay={0.08} visible={statsVisible} sparkData={sparkCourses} />
-                  <StatCard icon={Briefcase} label="Jobs" value={stats.total_jobs} color="#10b981" trend="up" trendValue="+15%" delay={0.16} visible={statsVisible} sparkData={sparkJobs} />
-                  <StatCard icon={FileText} label="Applications" value={stats.total_applications} color="#f59e0b" trend="up" trendValue="+23%" delay={0.24} visible={statsVisible} sparkData={sparkApps} />
-                  <StatCard icon={AlertCircle} label="Pending" value={stats.applications_by_status?.pending} color="#ef4444" trend="down" trendValue="-5%" delay={0.32} visible={statsVisible} />
+                  <StatCard icon={Users} label="Total Users" value={stats.total_users} color="#3b82f6" trend={stats?.trends?.users?.growth?.direction} trendValue={stats?.trends?.users?.growth?.value} delay={0} visible={statsVisible} sparkData={sparkUsers} />
+                  <StatCard icon={BookOpen} label="Courses" value={stats.total_courses} color="#8b5cf6" trend={stats?.trends?.courses?.growth?.direction} trendValue={stats?.trends?.courses?.growth?.value} delay={0.08} visible={statsVisible} sparkData={sparkCourses} />
+                  <StatCard icon={Briefcase} label="Jobs" value={stats.total_jobs} color="#10b981" trend={stats?.trends?.jobs?.growth?.direction} trendValue={stats?.trends?.jobs?.growth?.value} delay={0.16} visible={statsVisible} sparkData={sparkJobs} />
+                  <StatCard icon={FileText} label="Applications" value={stats.total_applications} color="#f59e0b" trend={stats?.trends?.applications?.growth?.direction} trendValue={stats?.trends?.applications?.growth?.value} delay={0.24} visible={statsVisible} sparkData={sparkApps} />
+                  <StatCard icon={AlertCircle} label="Pending" value={stats.applications_by_status?.pending} color="#ef4444" trend={stats?.trends?.pending_applications?.growth?.direction} trendValue={stats?.trends?.pending_applications?.growth?.value} delay={0.32} visible={statsVisible} />
                 </div>
 
                 {/* Main Content Grid */}
@@ -1007,8 +1049,8 @@ export default function AdminDashboardPage() {
 
                     {/* Platform metrics */}
                     <div className="grid grid-cols-2 gap-2 mt-5 pt-4 border-t border-[#1e3a42]/20">
-                      <MetricMini icon={TrendingUp} label="Engagement" value="87%" change="+12%" positive color="#10b981" delay={0.3} />
-                      <MetricMini icon={Star} label="Satisfaction" value="4.8/5" change="+0.3" positive color="#f59e0b" delay={0.36} />
+                      <MetricMini icon={TrendingUp} label="Accepted Rate" value={`${stats?.platform_overview?.accepted_rate || 0}%`} change={stats?.trends?.applications?.growth?.value || '0%'} positive={stats?.trends?.applications?.growth?.direction !== 'down'} color="#10b981" delay={0.3} />
+                      <MetricMini icon={Star} label="Pending Rate" value={`${stats?.platform_overview?.pending_rate || 0}%`} change={stats?.trends?.pending_applications?.growth?.value || '0%'} positive={stats?.trends?.pending_applications?.growth?.direction !== 'down'} color="#f59e0b" delay={0.36} />
                     </div>
                   </div>
 
@@ -1026,9 +1068,13 @@ export default function AdminDashboardPage() {
                       </button>
                     </div>
                     <div className="max-h-[360px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
-                      {activities.map((a, i) => (
-                        <ActivityItem key={i} {...a} delay={0.3 + i * 0.06} isLast={i === activities.length - 1} />
-                      ))}
+                      {activities.length > 0 ? (
+                        activities.map((a, i) => (
+                          <ActivityItem key={i} {...a} delay={0.3 + i * 0.06} isLast={i === activities.length - 1} />
+                        ))
+                      ) : (
+                        <p className="text-xs text-gray-500">No recent activity found in database.</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1060,10 +1106,10 @@ export default function AdminDashboardPage() {
                       <h2 className="text-sm font-bold text-white">Platform Overview</h2>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <MetricMini icon={Clock} label="Avg. Session" value="24m" change="+5m" positive color="#3b82f6" delay={0.45} />
-                      <MetricMini icon={Globe} label="Active Users" value="2.4K" change="-2%" positive={false} color="#8b5cf6" delay={0.5} />
-                      <MetricMini icon={Eye} label="Page Views" value="12.8K" change="+18%" positive color="#14b8a6" delay={0.55} />
-                      <MetricMini icon={Target} label="Conversion" value="3.2%" change="+0.8%" positive color="#f59e0b" delay={0.6} />
+                      <MetricMini icon={Clock} label="Apps per Job" value={`${stats?.platform_overview?.avg_applications_per_job || 0}`} change={stats?.trends?.applications?.growth?.value || '0%'} positive={stats?.trends?.applications?.growth?.direction !== 'down'} color="#3b82f6" delay={0.45} />
+                      <MetricMini icon={Globe} label="New Users (7d)" value={`${stats?.platform_overview?.new_users_last_7_days || 0}`} change={stats?.trends?.users?.growth?.value || '0%'} positive={stats?.trends?.users?.growth?.direction !== 'down'} color="#8b5cf6" delay={0.5} />
+                      <MetricMini icon={Eye} label="New Apps (7d)" value={`${stats?.platform_overview?.new_applications_last_7_days || 0}`} change={stats?.trends?.applications?.growth?.value || '0%'} positive={stats?.trends?.applications?.growth?.direction !== 'down'} color="#14b8a6" delay={0.55} />
+                      <MetricMini icon={Target} label="Total Pending" value={`${stats?.applications_by_status?.pending || 0}`} change={stats?.trends?.pending_applications?.growth?.value || '0%'} positive={stats?.trends?.pending_applications?.growth?.direction !== 'down'} color="#f59e0b" delay={0.6} />
                     </div>
                   </div>
                 </div>
@@ -1075,9 +1121,9 @@ export default function AdminDashboardPage() {
                     <span>All systems operational</span>
                   </div>
                   <span className="text-gray-700">·</span>
-                  <span>Updated: {new Date().toLocaleTimeString()}</span>
+                  <span>Updated: {stats?.generated_at ? new Date(stats.generated_at).toLocaleTimeString() : 'N/A'}</span>
                   <span className="text-gray-700">·</span>
-                  <span>v2.1.0</span>
+                  <span>Auto-refresh: 30s</span>
                 </div>
               </>
             ) : (

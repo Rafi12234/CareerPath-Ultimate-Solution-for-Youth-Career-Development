@@ -147,6 +147,7 @@ Route::group([], function () {
     // Job Applications Management
     Route::get('/admin/applications', [AdminController::class, 'getAllApplications']);
     Route::get('/admin/applications/status/{status}', [AdminController::class, 'getApplicationsByStatus']);
+    Route::post('/admin/applications/{applicationId}/ai-analysis', [AdminController::class, 'analyzeApplicationWithAI']);
     Route::put('/admin/applications/{applicationId}', [AdminController::class, 'updateApplicationStatus']);
 
     // Dashboard Stats
