@@ -452,6 +452,7 @@ function FeaturedCard({ course, index, enrolled, onEnroll, onUnenroll, onDetails
    MAIN RESOURCES
    ═══════════════════════════════════════ */
 export default function Resources() {
+  const COURSES_PER_PAGE = 6;
   const { user } = useAuth();
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
@@ -462,6 +463,7 @@ export default function Resources() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [topicFilter, setTopicFilter] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
+  const [currentPage, setCurrentPage] = useState(1);
   const [savedCourses, setSavedCourses] = useState(new Set());
   const [searchFocused, setSearchFocused] = useState(false);
   const [justEnrolled, setJustEnrolled] = useState(null);
@@ -527,6 +529,26 @@ export default function Resources() {
     const matchTopic = topicFilter === 'all' || c.topic === topicFilter;
     return matchSearch && matchTopic;
   }), [courses, search, topicFilter]);
+
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredCourses.length / COURSES_PER_PAGE));
+  }, [filteredCourses.length]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, topicFilter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const paginatedCourses = useMemo(() => {
+    const start = (currentPage - 1) * COURSES_PER_PAGE;
+    return filteredCourses.slice(start, start + COURSES_PER_PAGE);
+  }, [filteredCourses, currentPage]);
+
+  const pageStartIndex = filteredCourses.length === 0 ? 0 : (currentPage - 1) * COURSES_PER_PAGE + 1;
+  const pageEndIndex = Math.min(currentPage * COURSES_PER_PAGE, filteredCourses.length);
 
   const enrolledCount = enrollments.length;
   const totalStudents = courses.reduce((sum, c) => sum + (c.enrollment_count || 0), 0);
@@ -757,7 +779,7 @@ export default function Resources() {
               ) : viewMode === 'grid' ? (
                 /* ── GRID VIEW ── */
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {filteredCourses.map((course, idx) => {
+                  {paginatedCourses.map((course, idx) => {
                     const enrolled = isEnrolled(course.id);
                     const meta = getTopicMeta(course.topic);
                     const img = getCourseImage(course);
@@ -886,7 +908,7 @@ export default function Resources() {
               ) : (
                 /* ── LIST VIEW ── */
                 <div className="space-y-3 view-toggle">
-                  {filteredCourses.map((course, idx) => {
+                  {paginatedCourses.map((course, idx) => {
                     const enrolled = isEnrolled(course.id);
                     const meta = getTopicMeta(course.topic);
                     const img = getCourseImage(course);
@@ -962,6 +984,42 @@ export default function Resources() {
                 </div>
               )}
 
+              {!loading && filteredCourses.length > 0 && totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8 fade-in">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 rounded-lg border border-[#1e3a42]/40 text-xs font-semibold text-gray-400
+                      hover:text-white hover:border-[#14b8a6]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  >
+                    Prev
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-9 h-9 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                        currentPage === page
+                          ? 'bg-[#14b8a6]/15 text-[#2dd4bf] border-[#14b8a6]/30'
+                          : 'bg-transparent text-gray-500 border-[#1e3a42]/40 hover:text-white hover:border-[#14b8a6]/30'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 rounded-lg border border-[#1e3a42]/40 text-xs font-semibold text-gray-400
+                      hover:text-white hover:border-[#14b8a6]/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+
               {/* Results footer */}
               {!loading && filteredCourses.length > 0 && (
                 <div className="text-center mt-10 fade-in">
@@ -969,7 +1027,8 @@ export default function Resources() {
                     border border-[#1e3a42]/30 rounded-full">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#14b8a6] animate-pulse" />
                     <span className="text-xs text-gray-500">
-                      Showing <span className="text-white font-bold">{filteredCourses.length}</span> of{' '}
+                      Showing <span className="text-white font-bold">{pageStartIndex}-{pageEndIndex}</span> of{' '}
+                      <span className="text-white font-bold">{filteredCourses.length}</span> filtered,{' '}
                       <span className="text-white font-bold">{courses.length}</span> courses
                     </span>
                   </div>
