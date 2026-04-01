@@ -9,6 +9,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\UserSkillController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\MockInterviewController;
 use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\CVAnalyzerController;
 use App\Http\Controllers\CareerRoadmapController;
@@ -79,6 +80,11 @@ Route::post('/contacts', [ContactController::class, 'store']);
 // Chatbot
 Route::post('/chatbot', [ChatbotController::class, 'chat']);
 Route::get('/chatbot/history', [ChatbotController::class, 'history']);
+
+// Mock Interview
+Route::middleware('auth:sanctum')->post('/mock-interview/chat', [MockInterviewController::class, 'chat']);
+Route::middleware('auth:sanctum')->post('/mock-interview/turns', [MockInterviewController::class, 'storeTurn']);
+Route::middleware('auth:sanctum')->get('/mock-interview/history', [MockInterviewController::class, 'history']);
 
 // Avatar upload
 Route::post('/upload-avatar', [AvatarController::class, 'upload']);
