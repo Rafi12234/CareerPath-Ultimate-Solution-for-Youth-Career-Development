@@ -105,4 +105,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(JobApplication::class);
     }
+
+    public function mockInterviewTurns()
+    {
+        return $this->hasMany(MockInterviewTurn::class);
+    }
 }
