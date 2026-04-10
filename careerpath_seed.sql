@@ -24,6 +24,7 @@ DROP TABLE IF EXISTS user_skills;
 DROP TABLE IF EXISTS enrollments;
 DROP TABLE IF EXISTS contacts;
 DROP TABLE IF EXISTS chat_messages;
+DROP TABLE IF EXISTS user_sessions;
 DROP TABLE IF EXISTS personal_access_tokens;
 DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS courses;
@@ -41,9 +42,11 @@ CREATE TABLE users (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
+    role VARCHAR(50) NOT NULL DEFAULT 'user',
     email_verified_at TIMESTAMP NULL,
     password VARCHAR(255) NOT NULL,
     avatar VARCHAR(500) NULL,
+    profile_completed TINYINT(1) NOT NULL DEFAULT 0,
     remember_token VARCHAR(100) NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL
@@ -56,6 +59,23 @@ CREATE TABLE password_reset_tokens (
     email VARCHAR(255) PRIMARY KEY,
     token VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NULL
+);
+
+-- ============================================================
+-- 2b. user_sessions  (JWT session tracking)
+-- ============================================================
+CREATE TABLE user_sessions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    jti CHAR(36) NOT NULL UNIQUE,
+    device_name VARCHAR(255) NULL,
+    issued_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    revoked_at TIMESTAMP NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    INDEX idx_user_sessions_user_expiry (user_id, expires_at),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- ============================================================
@@ -248,10 +268,11 @@ CREATE TABLE video_completions (
 -- Password for all seeded users is: password123
 -- (bcrypt hash of "password123")
 -- ============================================================
-INSERT INTO users (name, email, password, created_at, updated_at) VALUES
-('Alice Johnson', 'alice@example.com', '$2y$12$B/67T1Tqi5E1GZS8diwCF.qfwRL4A/9REmU3q1q1Nobio9Zv2SGPa', NOW(), NOW()),
-('Bob Rahman', 'bob@example.com', '$2y$12$B/67T1Tqi5E1GZS8diwCF.qfwRL4A/9REmU3q1q1Nobio9Zv2SGPa', NOW(), NOW()),
-('Fatema Akter', 'fatema@example.com', '$2y$12$B/67T1Tqi5E1GZS8diwCF.qfwRL4A/9REmU3q1q1Nobio9Zv2SGPa', NOW(), NOW());
+INSERT INTO users (name, email, role, password, created_at, updated_at) VALUES
+('Administrator', 'admin@gmail.com', 'admin', '$2y$12$YHMt7sAwSKp9tckCvt1A9OW79iXt77rrxSMkVyffhmIZhVWIO31pq', NOW(), NOW()),
+('Alice Johnson', 'alice@example.com', 'user', '$2y$12$B/67T1Tqi5E1GZS8diwCF.qfwRL4A/9REmU3q1q1Nobio9Zv2SGPa', NOW(), NOW()),
+('Bob Rahman', 'bob@example.com', 'user', '$2y$12$B/67T1Tqi5E1GZS8diwCF.qfwRL4A/9REmU3q1q1Nobio9Zv2SGPa', NOW(), NOW()),
+('Fatema Akter', 'fatema@example.com', 'user', '$2y$12$B/67T1Tqi5E1GZS8diwCF.qfwRL4A/9REmU3q1q1Nobio9Zv2SGPa', NOW(), NOW());
 
 -- ============================================================
 -- Seed: posts
