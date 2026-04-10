@@ -116,8 +116,9 @@ CareerPath is an interactive platform designed to guide students and job-seekers
    - **JSON Web Tokens (JWT)** are used to manage user sessions securely. After a user successfully logs in, a JWT token is issued, which they can use for authenticated requests. This token is stored securely on the client side (typically in localStorage or cookies).
    - JWT tokens ensure that each request from the client to the server is authenticated, providing a seamless and secure experience.
 
-2. **Email Verification**:  
-   - Users must register with a valid email address, and they will receive an email with a verification link to confirm their identity. This verification process helps ensure that the email provided is correct and belongs to the user.
+2. **Profile Completion After Authentication**:  
+  - After successful registration or login, users who have not completed their profile are redirected to the profile form.
+  - All required profile information is then saved in the main `users` table.
 
 3. **Role-based Access Control (RBAC)**:  
    - The platform implements **role-based access control** to ensure that users have appropriate permissions based on their roles.
@@ -134,22 +135,23 @@ CareerPath is an interactive platform designed to guide students and job-seekers
    - Tokens are refreshed automatically before expiration to ensure a seamless user experience.
    - Session timeouts are implemented for added security, automatically logging out users after a specified period of inactivity.
 
-6. **OAuth Integration (Future Enhancement)**:  
-   - In the future, CareerPath may integrate **OAuth** to support additional authentication methods (e.g., Google or LinkedIn login) for increased flexibility.
+6. **Account-Based Authentication**:  
+  - CareerPath uses email and password authentication with JWT session handling.
 
 #### **User Authentication Flow:**
 
 1. **Sign-Up**:  
-   - The user registers by providing their email, creating a password, and filling out basic details.
-   - Upon successful registration, the system sends a verification email to the provided email address.
+  - The user registers by providing their name, email, and password.
+  - After registration, the user is logged in and can continue to complete their profile.
    
-2. **Email Verification**:  
-   - The user clicks the verification link in their email to confirm their identity.
-   - Once verified, the user can log in to the platform using their email and password.
+2. **Account Creation**:  
+  - The user creates an account with email, password, and basic profile details.
+  - Once the account is created, the user can log in using email and password.
 
 3. **Login**:  
-   - After email verification, the user can log in using their credentials (email and password).
+  - The user can log in using credentials (email and password).
    - Upon successful login, the user receives a JWT token, which is used for further authentication in subsequent requests.
+  - If profile data is incomplete, the user is redirected to the profile page.
 
 4. **Accessing Platform Features**:  
    - The system checks the JWT token in the user's request headers to authenticate them before allowing access to protected features like job matching, course recommendations, and AI-powered tools.
@@ -157,26 +159,30 @@ CareerPath is an interactive platform designed to guide students and job-seekers
 ---
 ### **Milestones**
 
-**The project will be completed in the following stages:**
+**The project was built in the following stages:**
 
-#### **Milestone 1: Setup & Authentication**
+#### **Milestone 1: Foundation & Platform Setup**
 
 - **Project Setup**:
   - Setting up the initial project structure for both frontend and backend.
   - Integrating the development environments for **React.js** (frontend) and **PHP Laravel** (backend).
   
 - **Database Design**:
-  - Designing the database schema to store user profiles, job listings, course information, and other platform-related data in **MySQL**.
+  - Designing the database schema to store user profiles, job listings, course information, chat history, roadmap history, and other platform data in **MySQL**.
+
+- **Docker Environment**:
+  - Containerizing the application stack for the backend, frontend, and database.
+  - Wiring the backend and frontend to the same environment for repeatable local development and deployment.
   
 - **User Authentication**:
   - Implementing **JWT-based authentication** for secure login and session management.
-  - Setting up **email verification** to ensure only valid users can register and log in.
+  - Adding database-backed admin access with protected server-side routes.
 
 - **Basic UI Layout**:
   - Designing the initial basic UI layout for the platform, including the login, registration, and dashboard pages.
   - Ensuring responsiveness for both desktop and mobile views.
   
-#### **Milestone 2: Core Features Development**
+#### **Milestone 2: Core User Experience**
 
 - **Job Matching System**:
   - Implementing the core job matching system where users' profiles are analyzed based on their skills and experience.
@@ -189,10 +195,15 @@ CareerPath is an interactive platform designed to guide students and job-seekers
 - **Course Enrollment Page**:
   - Developing a course discovery and enrollment system where users can explore and sign up for various career-building courses.
 
-- **Role-Based Access Control (RBAC)**:
-  - Setting up different roles (User, Admin) to manage access control across the platform, ensuring secure and appropriate access.
+- **Conversation History**:
+  - Persisting chatbot conversations and career roadmap history so users can revisit previous results.
+  - Keeping history tied to authenticated users through the backend API.
 
-#### **Milestone 3: AI & Finalization**
+- **User Profile Workflow**:
+  - Connecting profile data, skills, and applications to the main user journey.
+  - Ensuring the dashboard and related pages reflect saved data instead of temporary client state.
+
+#### **Milestone 3: AI, Admin, and Release Hardening**
 
 - **AI-Powered Features**:
   - Implementing the **AI CV Analyzer** to analyze user-uploaded CVs, providing insights and suggestions for improvement.
@@ -201,6 +212,8 @@ CareerPath is an interactive platform designed to guide students and job-seekers
 
 - **Admin Panel Development**:
   - Creating the **Admin Panel** for managing user data, job listings, content, and platform performance analytics.
+  - Protecting admin routes and loading admin accounts from the database.
+  - Enforcing role-based access control on the backend instead of relying on client-side checks.
   
 - **Testing & QA**:
   - Conducting extensive testing to ensure the platform works smoothly across different devices and browsers.

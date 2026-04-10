@@ -30,18 +30,40 @@ class CVAnalyzerController extends Controller
             // Prepare Gemini request based on file type
             $geminiPayload = $this->buildGeminiPayload($fileContent, $mimeType, $fileName);
 
-            // Call Gemini API
-            $geminiResponse = Http::withHeader('Content-Type', 'application/json')
-                ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$geminiKey}", $geminiPayload);
+            // Some Gemini models reject PDF inline_data. Try model fallbacks for file analysis.
+            $modelsToTry = $mimeType === 'application/pdf'
+                ? ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.5-flash']
+                : ['gemini-2.5-flash', 'gemini-1.5-flash'];
 
-            if (!$geminiResponse->successful()) {
-                return response()->json([
-                    'message' => 'CV analysis failed',
-                    'error' => $geminiResponse->json('error.message') ?? 'Unknown error'
-                ], 500);
+            $analysisText = null;
+            $lastError = 'Unknown error';
+
+            foreach ($modelsToTry as $model) {
+                $geminiResponse = Http::withHeader('Content-Type', 'application/json')
+                    ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$geminiKey}", $geminiPayload);
+
+                if ($geminiResponse->successful()) {
+                    $candidateText = $geminiResponse->json('candidates.0.content.parts.0.text');
+                    if (is_string($candidateText) && trim($candidateText) !== '') {
+                        $analysisText = $candidateText;
+                        break;
+                    }
+
+                    $lastError = "Model {$model} returned empty analysis text";
+                } else {
+                    $apiError = $geminiResponse->json('error.message')
+                        ?? $geminiResponse->json('error.status')
+                        ?? 'Unknown error';
+                    $lastError = "Model {$model} failed: {$apiError}";
+                }
             }
 
-            $analysisText = $geminiResponse->json('candidates.0.content.parts.0.text');
+            if (!$analysisText) {
+                return response()->json([
+                    'message' => 'CV analysis failed',
+                    'error' => $lastError,
+                ], 500);
+            }
 
             // Parse Gemini response
             $analysis = $this->parseAnalysis($analysisText);

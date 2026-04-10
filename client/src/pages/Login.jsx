@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Mail, Lock, Eye, EyeOff, LogIn, ArrowRight, Shield, Users,
-  Sparkles, Zap, Globe, CheckCircle, KeyRound, ShieldCheck,
+  Zap, Globe, CheckCircle, KeyRound, ShieldCheck,
   Layers, Fingerprint, TrendingUp, Award, Star, Activity,
   ChevronRight, Code2, Cpu, ArrowUpRight
 } from 'lucide-react';
@@ -467,9 +467,13 @@ export default function Login() {
         localStorage.setItem('admin_user', JSON.stringify(admin));
         window.location.assign('/admin/dashboard');
       } else {
-        await login(norm, password);
+        const userData = await login(norm, password);
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
+        if (!userData?.profile_completed) {
+          window.location.assign('/profile');
+          return;
+        }
         window.location.assign('/dashboard');
       }
     } catch (err) {
@@ -749,7 +753,7 @@ export default function Login() {
                     ))}
                   </div>
 
-                  {/* ── admin creds ── */}
+                  {/* ── admin access note ── */}
                   <div
                     className="transition-all duration-500 overflow-hidden"
                     style={{
@@ -760,22 +764,13 @@ export default function Login() {
                   >
                     <div className="p-3.5 bg-[#14b8a6]/[.06] border border-[#14b8a6]/15 rounded-xl">
                       <div className="flex items-center gap-2 mb-2">
-                        <Sparkles size={12} className="text-[#14b8a6]" />
+                        <ShieldCheck size={12} className="text-[#14b8a6]" />
                         <p className="text-[#2dd4bf] text-[11px] font-bold uppercase tracking-wider">
-                          Demo Credentials
+                          Authorized Admin Access
                         </p>
                       </div>
-                      <p className="text-gray-400 text-xs">
-                        Email:{' '}
-                        <span className="font-mono text-[#14b8a6] bg-[#14b8a6]/[.08] px-1.5 py-0.5 rounded">
-                          admin123@gmail.com
-                        </span>
-                      </p>
-                      <p className="text-gray-400 text-xs mt-1">
-                        Password:{' '}
-                        <span className="font-mono text-[#14b8a6] bg-[#14b8a6]/[.08] px-1.5 py-0.5 rounded">
-                          123456
-                        </span>
+                      <p className="text-gray-400 text-xs leading-relaxed">
+                        Admin accounts are loaded from the database and protected by role-based access checks.
                       </p>
                     </div>
                   </div>
@@ -927,6 +922,7 @@ export default function Login() {
                         )}
                       </RippleBtn>
                     </div>
+
                   </form>
 
                   {/* ── security strip ── */}

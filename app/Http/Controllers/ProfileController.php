@@ -77,6 +77,7 @@ class ProfileController extends Controller
         }
 
         $user->fill($validated);
+        $user->profile_completed = true;
         $user->save();
 
         return response()->json([
