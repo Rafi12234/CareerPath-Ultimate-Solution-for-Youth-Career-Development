@@ -2,15 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserSession;
 use App\Models\User;
+use App\Services\JwtService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Throwable;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly JwtService $jwtService)
+    {
+    }
+
     private function normalizeEmail(string $email): string
     {
         $normalized = strtolower(trim($email));
@@ -20,6 +27,27 @@ class AuthController extends Controller
         }
 
         return $normalized;
+    }
+
+    private function issueTokenForUser(User $user, Request $request): array
+    {
+        $jti = (string) Str::uuid();
+        $issued = $this->jwtService->createToken((int) $user->id, $jti);
+
+        UserSession::create([
+            'user_id' => $user->id,
+            'jti' => $jti,
+            'device_name' => (string) $request->userAgent(),
+            'issued_at' => now(),
+            'expires_at' => $issued['expires_at'],
+        ]);
+
+        UserSession::where('expires_at', '<=', now())->delete();
+
+        return [
+            'token' => $issued['token'],
+            'expires_at' => $issued['expires_at'],
+        ];
     }
 
     public function register(Request $request)
@@ -54,13 +82,16 @@ class AuthController extends Controller
                 'name' => $payload['name'],
                 'email' => $payload['email'],
                 'password' => Hash::make($payload['password']),
+                'email_verified_at' => now(),
+                'profile_completed' => false,
             ]);
 
-            $token = $user->createToken('auth-token')->plainTextToken;
+            $issued = $this->issueTokenForUser($user, $request);
 
             return response()->json([
                 'user' => $user,
-                'token' => $token,
+                'token' => $issued['token'],
+                'token_expires_at' => $issued['expires_at'],
             ], 201);
         } catch (Throwable $e) {
             Log::error('Register endpoint failed', [
@@ -108,11 +139,12 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            $token = $user->createToken('auth-token')->plainTextToken;
+            $issued = $this->issueTokenForUser($user, $request);
 
             return response()->json([
                 'user' => $user,
-                'token' => $token,
+                'token' => $issued['token'],
+                'token_expires_at' => $issued['expires_at'],
             ]);
         } catch (Throwable $e) {
             Log::error('Login endpoint failed', [
@@ -128,9 +160,14 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // If using Sanctum tokens, revoke
-        if ($request->user()) {
-            $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $jti = $request->attributes->get('jwt_jti');
+
+        if ($user && is_string($jti)) {
+            UserSession::where('user_id', $user->id)
+                ->where('jti', $jti)
+                ->whereNull('revoked_at')
+                ->update(['revoked_at' => now()]);
         }
 
         return response()->json(['message' => 'Logged out successfully']);
