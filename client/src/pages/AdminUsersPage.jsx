@@ -481,6 +481,13 @@ function EducationCard({ title, icon: Icon, data, color = '#14b8a6' }) {
    ═══════════════════════════════════════ */
 export default function AdminUsersPage() {
   const navigate = useNavigate();
+  const adminUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('admin_user') || 'null');
+    } catch {
+      return null;
+    }
+  }, []);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarHovered, setSidebarHovered] = useState(null);
   const [users, setUsers] = useState([]);
@@ -582,7 +589,7 @@ export default function AdminUsersPage() {
               })}
             </nav>
             <div className="p-3 border-t border-[#1e3a42]/30">
-              {sidebarOpen && <div className="flex items-center gap-3 px-3 py-2.5 bg-[#1e3a42]/10 rounded-xl mb-2 border border-[#1e3a42]/20 fade-in"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">A</div><div className="flex-1 min-w-0"><p className="text-xs font-bold text-white truncate">Super Admin</p><p className="text-[10px] text-gray-600 truncate">admin@nexus.io</p></div><button className="p-1.5 rounded-lg hover:bg-[#1e3a42]/30 text-gray-500 hover:text-white transition-all hover:rotate-90 duration-300 cursor-pointer"><Settings size={13} /></button></div>}
+              {sidebarOpen && <div className="flex items-center gap-3 px-3 py-2.5 bg-[#1e3a42]/10 rounded-xl mb-2 border border-[#1e3a42]/20 fade-in"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">A</div><div className="flex-1 min-w-0"><p className="text-xs font-bold text-white truncate">{adminUser?.name || 'Administrator'}</p><p className="text-[10px] text-gray-600 truncate">{adminUser?.email || 'No email loaded'}</p></div><button onClick={() => navigate('/admin/settings')} className="p-1.5 rounded-lg hover:bg-[#1e3a42]/30 text-gray-500 hover:text-white transition-all hover:rotate-90 duration-300 cursor-pointer"><Settings size={13} /></button></div>}
               <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400/70 hover:text-red-400 hover:bg-red-500/8 transition-all cursor-pointer group border border-transparent hover:border-red-500/15"><div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-red-500/10 transition-all"><LogOut size={16} /></div><span className={`text-sm font-semibold transition-all duration-500 ${sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>Logout</span></button>
             </div>
           </div>
