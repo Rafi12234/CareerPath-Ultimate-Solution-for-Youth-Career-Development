@@ -2,13 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\UserSession;
+use App\Services\JwtService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Throwable;
 
 class AdminAuthController extends Controller
 {
+    public function __construct(private readonly JwtService $jwtService)
+    {
+    }
+
     private function normalizeEmail(string $email): string
     {
         $normalized = strtolower(trim($email));
@@ -20,10 +29,29 @@ class AdminAuthController extends Controller
         return $normalized;
     }
 
+    private function issueTokenForUser(User $user, Request $request): array
+    {
+        $jti = (string) Str::uuid();
+        $issued = $this->jwtService->createToken((int) $user->id, $jti);
+
+        UserSession::create([
+            'user_id' => $user->id,
+            'jti' => $jti,
+            'device_name' => (string) $request->userAgent(),
+            'issued_at' => now(),
+            'expires_at' => $issued['expires_at'],
+        ]);
+
+        UserSession::where('expires_at', '<=', now())->delete();
+
+        return [
+            'token' => $issued['token'],
+            'expires_at' => $issued['expires_at'],
+        ];
+    }
+
     /**
-     * Admin login - with hardcoded credentials for now
-     * Email: admin123@gmail.com
-     * Password: 123456
+     * Admin login using the database-backed admin account.
      */
     public function login(Request $request)
     {
@@ -48,36 +76,33 @@ class AdminAuthController extends Controller
         }
 
         try {
-            // Hardcoded admin credentials
-            $adminEmail = 'admin123@gmail.com';
-            $adminPassword = '123456';
+            $admin = User::where('email', $payload['email'])
+                ->where('role', 'admin')
+                ->first();
 
-            // Check if provided credentials match admin credentials
-            if ($payload['email'] === $adminEmail && $payload['password'] === $adminPassword) {
-                // Create a token for the admin
-                // In production, you should use a proper admin table/model
-                $token = \Illuminate\Support\Str::random(80);
-                
-                // Return admin response with token
+            if (!$admin || !Hash::check($payload['password'], $admin->password)) {
                 return response()->json([
-                    'message' => 'Admin login successful',
-                    'admin' => [
-                        'id' => 'admin_001',
-                        'name' => 'Administrator',
-                        'email' => $adminEmail,
-                        'role' => 'admin',
+                    'message' => 'The provided credentials are invalid for admin login.',
+                    'errors' => [
+                        'email' => ['The provided credentials are invalid for admin login.'],
                     ],
-                    'token' => base64_encode($adminEmail . ':' . $token),
-                    'type' => 'bearer',
-                ], 200);
+                ], 422);
             }
 
+            $issued = $this->issueTokenForUser($admin, $request);
+
             return response()->json([
-                'message' => 'The provided credentials are invalid for admin login.',
-                'errors' => [
-                    'email' => ['The provided credentials are invalid for admin login.'],
+                'message' => 'Admin login successful',
+                'admin' => [
+                    'id' => $admin->id,
+                    'name' => $admin->name,
+                    'email' => $admin->email,
+                    'role' => $admin->role,
                 ],
-            ], 422);
+                'token' => $issued['token'],
+                'token_expires_at' => $issued['expires_at'],
+                'type' => 'bearer',
+            ], 200);
         } catch (Throwable $e) {
             Log::error('Admin login endpoint failed', [
                 'email' => $payload['email'] ?? null,
@@ -95,6 +120,16 @@ class AdminAuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $user = $request->user();
+        $jti = $request->attributes->get('jwt_jti');
+
+        if ($user && is_string($jti)) {
+            UserSession::where('user_id', $user->id)
+                ->where('jti', $jti)
+                ->whereNull('revoked_at')
+                ->update(['revoked_at' => now()]);
+        }
+
         return response()->json([
             'message' => 'Admin logged out successfully',
         ], 200);
@@ -105,17 +140,67 @@ class AdminAuthController extends Controller
      */
     public function me(Request $request)
     {
-        $token = $request->bearerToken();
-        
-        if (!$token) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        return response()->json([
+            'id' => $request->user()->id,
+            'name' => $request->user()->name,
+            'email' => $request->user()->email,
+            'role' => $request->user()->role,
+        ], 200);
+    }
+
+    /**
+     * Update admin email and/or password.
+     */
+    public function updateCredentials(Request $request)
+    {
+        $admin = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string|min:6',
+            'email' => 'nullable|email|unique:users,email,' . $admin->id,
+            'new_password' => 'nullable|string|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => $validator->errors(),
+            ], 422);
         }
 
+        if (!$request->filled('email') && !$request->filled('new_password')) {
+            return response()->json([
+                'message' => 'Please provide a new email and/or new password.',
+            ], 422);
+        }
+
+        if (!Hash::check((string) $request->input('current_password'), (string) $admin->password)) {
+            return response()->json([
+                'message' => 'Current password is incorrect.',
+                'errors' => [
+                    'current_password' => ['Current password is incorrect.'],
+                ],
+            ], 422);
+        }
+
+        if ($request->filled('email')) {
+            $admin->email = $this->normalizeEmail((string) $request->input('email'));
+        }
+
+        if ($request->filled('new_password')) {
+            $admin->password = Hash::make((string) $request->input('new_password'));
+        }
+
+        $admin->save();
+
         return response()->json([
-            'id' => 'admin_001',
-            'name' => 'Administrator',
-            'email' => 'admin123@gmail.com',
-            'role' => 'admin',
+            'message' => 'Admin account updated successfully.',
+            'admin' => [
+                'id' => $admin->id,
+                'name' => $admin->name,
+                'email' => $admin->email,
+                'role' => $admin->role,
+            ],
         ], 200);
     }
 }
