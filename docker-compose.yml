@@ -58,6 +58,9 @@ services:
       SESSION_DRIVER: file
       CACHE_DRIVER: file
       QUEUE_CONNECTION: sync
+      JWT_SECRET: ${JWT_SECRET:-careerpath-jwt-secret-change-me}
+      JWT_TTL_MINUTES: ${JWT_TTL_MINUTES:-10080}
+      JWT_ISSUER: ${JWT_ISSUER:-http://localhost:8000}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
