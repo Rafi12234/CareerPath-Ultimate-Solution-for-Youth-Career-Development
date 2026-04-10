@@ -610,7 +610,7 @@ export default function Register() {
         }
       }
 
-      window.location.assign('/dashboard');
+      window.location.assign('/profile');
     } catch (err) {
       setError(extractErrorMessage(err));
     } finally {
@@ -1034,6 +1034,7 @@ export default function Register() {
                             )}
                           </RippleBtn>
                         </div>
+
                       </div>
                     )}
                   </form>
