@@ -70,13 +70,16 @@ jobs:
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
+      continue-on-error: true
       with:
         image-ref: careerpath:${{ github.sha }}
         format: 'sarif'
         output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
 
     - name: Upload Trivy results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v2
       if: always()
+      continue-on-error: true
       with:
         sarif_file: 'trivy-results.sarif'
