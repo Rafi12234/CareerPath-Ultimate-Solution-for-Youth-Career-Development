@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
+import JobApplicationForm from './pages/JobApplicationForm';
 import Resources from './pages/Resources';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
@@ -51,6 +52,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/jobs" element={<Jobs />} />
+            <Route path="/apply-job/:jobId" element={<JobApplicationForm />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/course-player/:courseId" element={<CoursePlayer />} />
             <Route path="/contact" element={<Contact />} />
