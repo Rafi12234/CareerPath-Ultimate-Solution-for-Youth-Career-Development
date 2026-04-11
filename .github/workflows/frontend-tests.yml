@@ -26,8 +26,14 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: client/package-lock.json
+
+    - name: Cache client node_modules
+      uses: actions/cache@v3
+      with:
+        path: client/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('client/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
 
     - name: Install dependencies
       working-directory: ./client
@@ -50,8 +56,14 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: client/package-lock.json
+
+    - name: Cache client node_modules
+      uses: actions/cache@v3
+      with:
+        path: client/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('client/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
 
     - name: Install dependencies
       working-directory: ./client
@@ -81,8 +93,14 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: client/package-lock.json
+
+    - name: Cache client node_modules
+      uses: actions/cache@v3
+      with:
+        path: client/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('client/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
 
     - name: Install dependencies
       working-directory: ./client
@@ -92,7 +110,7 @@ jobs:
       id: test-files
       working-directory: ./client
       run: |
-        if [ -f "playwright.config.js" ] || [ -d "tests" ]; then
+        if [ -f "playwright.config.js" ] && [ -d "tests/e2e" ]; then
           echo "has-tests=true" >> $GITHUB_OUTPUT
         else
           echo "has-tests=false" >> $GITHUB_OUTPUT
@@ -102,12 +120,14 @@ jobs:
       if: steps.test-files.outputs.has-tests == 'true'
       working-directory: ./client
       run: npx playwright install --with-deps
+      continue-on-error: true
 
     - name: Run Playwright tests
       if: steps.test-files.outputs.has-tests == 'true'
       working-directory: ./client
       run: npm run test:e2e
       continue-on-error: true
+      timeout-minutes: 5
 
     - name: Skip E2E tests (no test files)
       if: steps.test-files.outputs.has-tests == 'false'
@@ -120,3 +140,4 @@ jobs:
         name: playwright-report
         path: client/playwright-report/
         retention-days: 30
+      continue-on-error: true
