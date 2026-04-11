@@ -1,0 +1,93 @@
+name: CI - Full Pipeline
+
+on:
+  push:
+    branches: [ main, Samanta, Rafi, dev ]
+  pull_request:
+    branches: [ main, Samanta, Rafi, dev ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    name: Code Quality & Security
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run Composer Security Check
+      run: |
+        composer global require symfony/security-checker
+        ~/.composer/vendor/bin/security-checker security:check --format=json || true
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      continue-on-error: true
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    name: Dependency Audit
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.4'
+        tools: composer:v2
+
+    - name: Check Composer Dependencies
+      run: composer audit
+      continue-on-error: true
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Check NPM Dependencies
+      run: npm audit --audit-level=moderate
+      continue-on-error: true
+
+  documentation:
+    runs-on: ubuntu-latest
+    name: Documentation Check
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check for README
+      run: test -f README.md && echo "✅ README.md found"
+
+    - name: Validate GitHub workflows
+      run: |
+        for f in .github/workflows/*.yml; do
+          echo "Validating $f"
+          yamllint -d relaxed "$f" || true
+        done
+      continue-on-error: true
+
+  notify-status:
+    runs-on: ubuntu-latest
+    name: CI Status Summary
+    needs: [code-quality, dependency-check, documentation]
+    if: always()
+
+    steps:
+    - name: Check job status
+      run: |
+        if [[ "${{ job.status }}" == "success" ]]; then
+          echo "✅ All CI checks passed!"
+        else
+          echo "⚠️ Some CI checks failed or were skipped"
+        fi

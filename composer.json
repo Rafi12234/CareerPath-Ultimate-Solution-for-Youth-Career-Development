@@ -46,7 +46,11 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
-        ]
+        ],
+        "phpunit": "phpunit",
+        "test": "@phpunit",
+        "test:coverage": "phpunit --coverage-html coverage",
+        "pint": "pint"
     },
     "extra": {
         "laravel": {

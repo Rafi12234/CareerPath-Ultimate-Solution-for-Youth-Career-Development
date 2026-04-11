@@ -1,0 +1,129 @@
+name: Backend Tests - Laravel & PHP
+
+on:
+  push:
+    branches: [ main, Samanta, Rafi, dev ]
+    paths:
+      - 'app/**'
+      - 'routes/**'
+      - 'tests/**'
+      - 'config/**'
+      - 'composer.json'
+      - 'composer.lock'
+      - '.github/workflows/backend-tests.yml'
+  pull_request:
+    branches: [ main, Samanta, Rafi, dev ]
+    paths:
+      - 'app/**'
+      - 'routes/**'
+      - 'tests/**'
+      - 'config/**'
+      - 'composer.json'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: careerpath_test
+          MYSQL_USER: careerpath_user
+          MYSQL_PASSWORD: careerpath_pass
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        ports:
+          - 3306:3306
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.4'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, exif, iconv
+        coverage: xdebug
+        tools: composer:v2
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install Composer dependencies
+      run: composer install -q --no-ansi --no-interaction --no-scripts --prefer-dist --no-dev
+
+    - name: Copy .env.example to .env
+      run: cp .env.example .env
+
+    - name: Generate app key
+      run: php artisan key:generate
+
+    - name: Run migrations
+      run: php artisan migrate --force
+      env:
+        DB_CONNECTION: mysql
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_DATABASE: careerpath_test
+        DB_USERNAME: careerpath_user
+        DB_PASSWORD: careerpath_pass
+
+    - name: Run PHPUnit Tests
+      run: composer run-script --dev phpunit
+      env:
+        DB_CONNECTION: mysql
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_DATABASE: careerpath_test
+        DB_USERNAME: careerpath_user
+        DB_PASSWORD: careerpath_pass
+
+    - name: Upload coverage to Codecov
+      if: always()
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: backend
+        fail_ci_if_error: false
+
+  code-quality:
+    runs-on: ubuntu-latest
+    name: Code Quality - Laravel Pint
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.4'
+        extensions: dom, curl, libxml, mbstring, zip
+        tools: composer:v2
+
+    - name: Cache Composer packages
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install Composer dependencies
+      run: composer install -q --no-ansi --no-interaction --no-scripts --prefer-dist
+
+    - name: Run Laravel Pint (Code Formatting)
+      run: composer pint -- --test
+      continue-on-error: true
