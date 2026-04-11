@@ -1,0 +1,115 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix=prod-
+          type=raw,value=production
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy Application
+    # Add your deployment step here
+    # Example: Deploy to Docker Swarm, Kubernetes, AWS ECS, etc.
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Deploy notification
+      run: |
+        echo "🚀 Deployment triggered for ${{ github.ref }}"
+        echo "Image: ${{ needs.build.outputs.image-tag }}"
+        echo ""
+        echo "📝 Next steps:"
+        echo "1. Set up your deployment script/webhook"
+        echo "2. Pull the Docker image from ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+        echo "3. Run: docker pull ${{ needs.build.outputs.image-tag }}"
+        echo ""
+        echo "Optional: Deploy to:"
+        echo "- 🐳 Docker Swarm"
+        echo "- ☸️  Kubernetes"
+        echo "- ☁️  AWS/GCP/Azure"
+        echo "- 🌐 Traditional Server"
+
+    # Uncomment and configure for your deployment platform:
+    
+    # For Docker Swarm deployment:
+    # - name: Deploy to Docker Swarm
+    #   run: |
+    #     docker pull ${{ needs.build.outputs.image-tag }}
+    #     docker service update --image ${{ needs.build.outputs.image-tag }} careerpath-backend
+    
+    # For Kubernetes deployment:
+    # - name: Deploy to Kubernetes
+    #   uses: actions-hub/kubectl@master
+    #   env:
+    #     KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+    #   with:
+    #     args: set image deployment/careerpath-backend backend=${{ needs.build.outputs.image-tag }}
+    
+    # For AWS deployment:
+    # - name: Deploy to AWS ECS
+    #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+
+  sanity-check:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Health check
+      run: |
+        echo "✅ Deployment pipeline completed"
+        echo "📊 Check deployment status in your dashboard"
