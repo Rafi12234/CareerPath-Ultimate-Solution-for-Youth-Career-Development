@@ -2,20 +2,11 @@ services:
   - type: web
     name: careerpath-backend
     env: docker
-    region: oregon
-    plan: standard
-    healthCheckPath: /api/health
-    
-    # GitHub repository settings
-    repo: https://github.com/Rafi12234/CareerPath-Ultimate-Solution-for-Youth-Career-Development
-    branch: main
-    
-    # Build configuration
+    region: singapore
+    plan: starter
     dockerfilePath: ./Dockerfile
-    docker:
-      command: sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
-    
-    # Environment variables - IMPORTANT: Set these in Render Dashboard, not here!
+    healthCheckPath: /api/courses
+    autoDeploy: true
     envVars:
       - key: APP_NAME
         value: CareerPath
@@ -23,33 +14,37 @@ services:
         value: production
       - key: APP_DEBUG
         value: "false"
-      - key: PORT
-        value: "8000"
-      - key: LOG_CHANNEL
-        value: stderr
-      
-    # Auto-deploy configuration
-    autoDeploy: true
-    
-    # Health check
-    healthCheck:
-      path: /api/health
-      pollInterval: 30
-    
-    # Scaling
-    numInstances: 1
-    
-    # Cron jobs (optional)
-    # cronJobs:
-    #   - name: database-backup
-    #     schedule: "0 2 * * *"
-    #     command: php artisan backup:run
-
-databases:
-  # Database is managed separately in Azure MySQL
-  # This section is informational only
-  - name: careerpath-db
-    provider: mysql
-    version: "8.0"
-    # NOTE: Create manually in Azure due to cross-cloud deployment
-    # Connection string: mysql://careerpath_user@careerpath-db-server.mysql.database.azure.com/careerpath
+      - key: APP_URL
+        value: https://careerpath-backend.onrender.com
+      - key: APP_KEY
+        value: CHANGE_ME_LARAVEL_APP_KEY
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        value: careerpath-mysql-shajedulkabir106-f79a.b.aivencloud.com
+      - key: DB_PORT
+        value: "18232"
+      - key: DB_DATABASE
+        value: careerpath
+      - key: DB_USERNAME
+        value: avnadmin
+      - key: DB_PASSWORD
+        value: CHANGE_ME_AIVEN_DB_PASSWORD
+      - key: MYSQL_ATTR_SSL_CA
+        value: /var/www/html/ca.pem
+      - key: JWT_SECRET
+        value: CHANGE_ME_JWT_SECRET
+      - key: JWT_TTL_MINUTES
+        value: "10080"
+      - key: JWT_ISSUER
+        value: https://careerpath-backend.onrender.com
+      - key: GEMINI_API_KEY
+        value: ""
+      - key: CLOUDINARY_CLOUD_NAME
+        value: ""
+      - key: CLOUDINARY_API_KEY
+        value: ""
+      - key: CLOUDINARY_API_SECRET
+        value: ""
+      - key: FILESTACK_API_KEY
+        value: ""

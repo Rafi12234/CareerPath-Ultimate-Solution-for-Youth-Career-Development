@@ -17,3 +17,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Local-only DB migration artifacts
+ca.pem
+careerpath_full.sql
