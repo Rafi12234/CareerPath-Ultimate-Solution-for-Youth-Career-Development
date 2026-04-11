@@ -1,0 +1,55 @@
+services:
+  - type: web
+    name: careerpath-backend
+    env: docker
+    region: oregon
+    plan: standard
+    healthCheckPath: /api/health
+    
+    # GitHub repository settings
+    repo: https://github.com/Rafi12234/CareerPath-Ultimate-Solution-for-Youth-Career-Development
+    branch: main
+    
+    # Build configuration
+    dockerfilePath: ./Dockerfile
+    docker:
+      command: sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+    
+    # Environment variables - IMPORTANT: Set these in Render Dashboard, not here!
+    envVars:
+      - key: APP_NAME
+        value: CareerPath
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: PORT
+        value: "8000"
+      - key: LOG_CHANNEL
+        value: stderr
+      
+    # Auto-deploy configuration
+    autoDeploy: true
+    
+    # Health check
+    healthCheck:
+      path: /api/health
+      pollInterval: 30
+    
+    # Scaling
+    numInstances: 1
+    
+    # Cron jobs (optional)
+    # cronJobs:
+    #   - name: database-backup
+    #     schedule: "0 2 * * *"
+    #     command: php artisan backup:run
+
+databases:
+  # Database is managed separately in Azure MySQL
+  # This section is informational only
+  - name: careerpath-db
+    provider: mysql
+    version: "8.0"
+    # NOTE: Create manually in Azure due to cross-cloud deployment
+    # Connection string: mysql://careerpath_user@careerpath-db-server.mysql.database.azure.com/careerpath
