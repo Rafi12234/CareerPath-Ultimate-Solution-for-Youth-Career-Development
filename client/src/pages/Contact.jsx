@@ -1,189 +1,130 @@
-import { useState } from 'react';
-import { Send, MapPin, Phone, Mail, MessageSquare, CheckCircle } from 'lucide-react';
-import api from '../utils/api';
+import { useState } from "react";
+import api from "../utils/api";
 
 export default function Contact() {
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
+    setSuccess(false);
+
     try {
-      await api.post('/contacts', form);
+      await api.post("/contacts", form);
       setSuccess(true);
-      setForm({ name: '', email: '', subject: '', message: '' });
-      setTimeout(() => setSuccess(false), 5000);
+      setForm({ name: "", email: "", subject: "", message: "" });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send message. Please try again.');
+      setError(err.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
-  const contactInfo = [
-    { icon: MapPin, label: 'Address', value: 'Dhaka, Bangladesh', color: 'text-[#2dd4bf]', bg: 'bg-[#14b8a6]/12' },
-    { icon: Phone, label: 'Phone', value: '+880 1700 000000', color: 'text-[#06b6d4]', bg: 'bg-[#06b6d4]/12' },
-    { icon: Mail, label: 'Email', value: 'support@careerpath.dev', color: 'text-emerald-400', bg: 'bg-emerald-500/12' },
-    { icon: MessageSquare, label: 'Live Chat', value: 'Available 9AM â€“ 6PM (BST)', color: 'text-amber-400', bg: 'bg-amber-500/12' },
-  ];
-
-  const inputClass = "w-full px-4 py-3 bg-[#071015]/70 border border-[#1e3a42] rounded-xl text-white placeholder-gray-600 focus:border-[#14b8a6]/50 focus:ring-1 focus:ring-[#14b8a6]/20 transition-all duration-200";
-
   return (
-    <div className="hero-cinematic min-h-screen pt-24 pb-16 page-enter">
-      {/* Cinematic background haze */}
-      <div className="hero-haze">
-        <div className="haze-orb haze-orb--center" />
-        <div className="haze-orb haze-orb--right" />
-        <div className="haze-orb haze-orb--left" />
-      </div>
+    <div style={styles.container}>
+      <h2>Contact Us</h2>
+      <p>Send us a message and we will reply soon.</p>
 
-      <div className="relative z-10 max-w-[1100px] mx-auto px-6 sm:px-8 lg:px-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">Get in Touch</h1>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
-            Have questions or feedback? We'd love to hear from you.
-          </p>
-        </div>
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <input
+          name="name"
+          placeholder="Your Name"
+          value={form.name}
+          onChange={handleChange}
+          required
+          style={styles.input}
+        />
 
-        <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
-          {/* Contact Info */}
-          <div className="lg:col-span-2 space-y-5">
-            <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-6">
-              <h2 className="text-lg font-bold text-white mb-2">Contact Information</h2>
-              <p className="text-gray-500 text-sm mb-6">
-                Reach out through any of these channels or fill out the form.
-              </p>
+        <input
+          name="email"
+          type="email"
+          placeholder="Your Email"
+          value={form.email}
+          onChange={handleChange}
+          required
+          style={styles.input}
+        />
 
-              <div className="space-y-4">
-                {contactInfo.map((item) => (
-                  <div key={item.label} className="flex items-start gap-3.5">
-                    <div className={`w-10 h-10 ${item.bg} rounded-xl flex items-center justify-center shrink-0`}>
-                      <item.icon size={17} className={item.color} />
-                    </div>
-                    <div>
-                      <h4 className="text-white text-sm font-semibold">{item.label}</h4>
-                      <p className="text-gray-500 text-sm">{item.value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <input
+          name="subject"
+          placeholder="Subject"
+          value={form.subject}
+          onChange={handleChange}
+          required
+          style={styles.input}
+        />
 
-            {/* Map placeholder */}
-            <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl overflow-hidden h-44 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-[#14b8a6]/12 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <MapPin size={20} className="text-[#2dd4bf]" />
-                </div>
-                <p className="text-gray-600 text-sm">Interactive Map</p>
-                <p className="text-gray-700 text-xs mt-0.5">Dhaka, Bangladesh</p>
-              </div>
-            </div>
-          </div>
+        <textarea
+          name="message"
+          placeholder="Your Message"
+          value={form.message}
+          onChange={handleChange}
+          required
+          rows="5"
+          style={styles.textarea}
+        />
 
-          {/* Form */}
-          <div className="lg:col-span-3">
-            <div className="bg-[#0A1A22]/80 border border-[#1e3a42]/60 rounded-2xl p-6 sm:p-8">
-              <h2 className="text-lg font-bold text-white mb-6">Send a Message</h2>
+        <button type="submit" disabled={loading} style={styles.button}>
+          {loading ? "Sending..." : "Send Message"}
+        </button>
+      </form>
 
-              {success && (
-                <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3">
-                  <CheckCircle size={18} className="text-emerald-400 shrink-0" />
-                  <p className="text-emerald-400 text-sm font-medium">Message sent successfully! We'll get back to you soon.</p>
-                </div>
-              )}
-
-              {error && (
-                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0" />
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      required
-                      placeholder="John Doe"
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      required
-                      placeholder="john@example.com"
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Subject</label>
-                  <input
-                    type="text"
-                    name="subject"
-                    value={form.subject}
-                    onChange={handleChange}
-                    required
-                    placeholder="How can we help?"
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Message</label>
-                  <textarea
-                    name="message"
-                    value={form.message}
-                    onChange={handleChange}
-                    required
-                    rows={5}
-                    placeholder="Tell us what you need..."
-                    className={`${inputClass} resize-none`}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 bg-linear-to-r from-[#14b8a6] to-[#06b6d4] rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-[#14b8a6]/20 hover:shadow-[#14b8a6]/30 disabled:opacity-50"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send size={16} />
-                      Send Message
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+      {success && <p style={styles.success}>Message sent successfully!</p>}
+      {error && <p style={styles.error}>{error}</p>}
     </div>
   );
 }
+
+/* Basic inline styles */
+const styles = {
+  container: {
+    maxWidth: "500px",
+    margin: "50px auto",
+    padding: "20px",
+    fontFamily: "Arial",
+    textAlign: "center",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+    marginTop: "20px",
+  },
+  input: {
+    padding: "10px",
+    fontSize: "14px",
+  },
+  textarea: {
+    padding: "10px",
+    fontSize: "14px",
+  },
+  button: {
+    padding: "10px",
+    background: "#14b8a6",
+    color: "white",
+    border: "none",
+    cursor: "pointer",
+  },
+  success: {
+    color: "green",
+    marginTop: "10px",
+  },
+  error: {
+    color: "red",
+    marginTop: "10px",
+  },
+};
