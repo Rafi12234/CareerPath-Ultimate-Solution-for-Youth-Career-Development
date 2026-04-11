@@ -8,21 +8,29 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
+import JobApplicationForm from './pages/JobApplicationForm';
 import Resources from './pages/Resources';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import Chatbot from './pages/Chatbot';
 import CVAnalyzer from './pages/CVAnalyzer';
-import VoiceMockInterview from './pages/VoiceMockInterview';
-import AICareerRoadmap from './pages/AICareerRoadmap';
 import CoursePlayer from './pages/CoursePlayer';
-import JobApplicationForm from './pages/JobApplicationForm';
-import AdminDashboard from './pages/AdminDashboard';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminCoursesPage from './pages/AdminCoursesPage';
 import AdminJobsPage from './pages/AdminJobsPage';
 import AdminApplicationsPage from './pages/AdminApplicationsPage';
+import AdminSettingsPage from './pages/AdminSettingsPage';
+
+function AdminRoute({ children }) {
+  const token = localStorage.getItem('admin_token');
+  const admin = localStorage.getItem('admin_user');
+  if (!token || !admin) {
+    window.location.assign('/login');
+    return null;
+  }
+  return children;
+}
 
 function App() {
   const location = useLocation();
@@ -35,42 +43,32 @@ function App() {
 
   return (
     <AuthProvider>
-      {isAdminRoute ? (
-        <div className="min-h-screen flex flex-col bg-[#03070A] text-gray-200">
-          <main key={location.pathname} className="flex-1">
-            <Routes>
-              <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-              <Route path="/admin/users" element={<AdminUsersPage />} />
-              <Route path="/admin/courses" element={<AdminCoursesPage />} />
-              <Route path="/admin/jobs" element={<AdminJobsPage />} />
-              <Route path="/admin/applications" element={<AdminApplicationsPage />} />
-            </Routes>
-          </main>
-        </div>
-      ) : (
-        <div className="min-h-screen flex flex-col bg-[#03070A] text-gray-200">
-          <Navbar />
-          <main key={location.pathname} className="flex-1">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/apply-job/:jobId" element={<JobApplicationForm />} />
-              <Route path="/resources" element={<Resources />} />
-              <Route path="/course-player/:courseId" element={<CoursePlayer />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/chatbot" element={<Chatbot />} />
-              <Route path="/cv-analyzer" element={<CVAnalyzer />} />
-              <Route path="/voice-mock-interview" element={<VoiceMockInterview />} />
-              <Route path="/ai-career-roadmap" element={<AICareerRoadmap />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      )}
+      <div className="min-h-screen flex flex-col bg-[#03070A] text-gray-200">
+        {!isAdminRoute && <Navbar />}
+        <main key={location.pathname} className="flex-1">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/apply-job/:jobId" element={<JobApplicationForm />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/course-player/:courseId" element={<CoursePlayer />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/cv-analyzer" element={<CVAnalyzer />} />
+            <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+            <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+            <Route path="/admin/courses" element={<AdminRoute><AdminCoursesPage /></AdminRoute>} />
+            <Route path="/admin/jobs" element={<AdminRoute><AdminJobsPage /></AdminRoute>} />
+            <Route path="/admin/applications" element={<AdminRoute><AdminApplicationsPage /></AdminRoute>} />
+            <Route path="/admin/settings" element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
+          </Routes>
+        </main>
+        {!isAdminRoute && <Footer />}
+      </div>
     </AuthProvider>
   );
 }
