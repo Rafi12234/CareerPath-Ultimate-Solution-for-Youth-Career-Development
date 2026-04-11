@@ -8,6 +8,7 @@ import {
   Mail, Phone, MapPin, GraduationCap, Building2, FileText
 } from 'lucide-react';
 import api from '../utils/api';
+import CustomDropdown from '../components/CustomDropdown';
 
 const PROFICIENCY_LEVELS = ['Beginner', 'Intermediate', 'Expert', 'Professional'];
 
@@ -315,15 +316,21 @@ function RippleButton({ children, onClick, disabled, className, ...props }) {
 
 /* ─── Particles ─── */
 function Particles() {
-  const particles = useMemo(() =>
-    Array.from({ length: 25 }, (_, i) => ({
+  const particles = useMemo(() => {
+    // Use seed-based randomization for consistent particles
+    const seeded = (seed) => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+    return Array.from({ length: 25 }, (_, i) => ({
       id: i,
-      left: Math.random() * 100,
-      size: Math.random() * 3 + 1,
-      delay: Math.random() * 12,
-      duration: Math.random() * 18 + 14,
-      opacity: Math.random() * 0.25 + 0.08,
-    })), []);
+      left: seeded(i * 12.9898) * 100,
+      size: seeded(i * 78.233) * 3 + 1,
+      delay: seeded(i * 43.614) * 12,
+      duration: seeded(i * 94.673) * 18 + 14,
+      opacity: seeded(i * 11.9898) * 0.25 + 0.08,
+    }));
+  }, []);
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
       {particles.map(p => (
@@ -451,6 +458,7 @@ function CompletionRing({ pct }) {
 }
 
 /* ─── Achievement Badge ─── */
+// eslint-disable-next-line
 function AchievementBadge({ icon: Icon, label, value, color, earned }) {
   return (
     <div className={`achievement-badge flex flex-col items-center gap-2 p-4 rounded-2xl border cursor-default
@@ -463,10 +471,10 @@ function AchievementBadge({ icon: Icon, label, value, color, earned }) {
         style={{ background: earned ? `${color}15` : '#0F3A42' }}>
         <Icon size={22} style={{ color: earned ? color : '#374151' }} />
       </div>
-      <span className="text-[10px] font-bold uppercase tracking-wider text-center"
+      <div className="text-sm font-bold uppercase tracking-wider text-center"
         style={{ color: earned ? color : '#4b5563' }}>
         {label}
-      </span>
+      </div>
       {value !== undefined && (
         <span className="text-xs font-black tabular-nums" style={{ color: earned ? '#fff' : '#4b5563' }}>
           {value}
@@ -533,14 +541,7 @@ export default function Profile() {
   const [statsRef, statsVisible] = useInView();
   const [achieveRef, achieveVisible] = useInView();
 
-  useEffect(() => {
-    if (user) {
-      setProfileForm(buildProfileForm(user));
-      fetchData();
-    }
-  }, [user]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [skillsRes, enrollRes, profileRes] = await Promise.all([
         api.get(`/user-skills?user_id=${user.id}`).catch(() => ({ data: [] })),
@@ -552,7 +553,19 @@ export default function Profile() {
       setProfileForm(buildProfileForm(profileRes.data?.user || user));
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      setProfileForm(buildProfileForm(user));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user, fetchData]);
 
   const handleProfileChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -947,24 +960,26 @@ export default function Profile() {
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Gender</label>
-                          <select name="gender" value={profileForm.gender} onChange={handleProfileChange} required
-                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
-                            <option value="">Select gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                          </select>
+                          <CustomDropdown
+                            name="gender"
+                            value={profileForm.gender}
+                            onChange={handleProfileChange}
+                            options={['Male', 'Female', 'Other']}
+                            placeholder="Select gender"
+                            icon={User}
+                            required
+                          />
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Marital Status</label>
-                          <select name="marital_status" value={profileForm.marital_status} onChange={handleProfileChange} required
-                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
-                            <option value="">Select status</option>
-                            <option value="Single">Single</option>
-                            <option value="Married">Married</option>
-                            <option value="Divorced">Divorced</option>
-                            <option value="Widowed">Widowed</option>
-                          </select>
+                          <CustomDropdown
+                            name="marital_status"
+                            value={profileForm.marital_status}
+                            onChange={handleProfileChange}
+                            options={['Single', 'Married', 'Divorced', 'Widowed']}
+                            placeholder="Select status"
+                            required
+                          />
                         </div>
                         <div className="sm:col-span-2">
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Nationality</label>
@@ -1038,35 +1053,45 @@ export default function Profile() {
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">SSC Group</label>
-                          <select name="ssc_group" value={profileForm.ssc_group} onChange={handleProfileChange} required
-                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
-                            <option value="">Select group</option>
-                            {EDUCATION_GROUPS.map((group) => <option key={group} value={group}>{group}</option>)}
-                          </select>
+                          <CustomDropdown
+                            name="ssc_group"
+                            value={profileForm.ssc_group}
+                            onChange={handleProfileChange}
+                            options={EDUCATION_GROUPS}
+                            placeholder="Select group"
+                            required
+                          />
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">SSC Board</label>
-                          <select name="ssc_board" value={profileForm.ssc_board} onChange={handleProfileChange} required
-                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
-                            <option value="">Select board</option>
-                            {BANGLADESH_EDUCATION_BOARDS.map((board) => <option key={board} value={board}>{board}</option>)}
-                          </select>
+                          <CustomDropdown
+                            name="ssc_board"
+                            value={profileForm.ssc_board}
+                            onChange={handleProfileChange}
+                            options={BANGLADESH_EDUCATION_BOARDS}
+                            placeholder="Select board"
+                            required
+                          />
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Education Board</label>
-                          <select name="education_board" value={profileForm.education_board} onChange={handleProfileChange}
-                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
-                            <option value="">Select board</option>
-                            {BANGLADESH_EDUCATION_BOARDS.map((board) => <option key={board} value={board}>{board}</option>)}
-                          </select>
+                          <CustomDropdown
+                            name="education_board"
+                            value={profileForm.education_board}
+                            onChange={handleProfileChange}
+                            options={BANGLADESH_EDUCATION_BOARDS}
+                            placeholder="Select board"
+                          />
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">Education Group</label>
-                          <select name="education_group" value={profileForm.education_group} onChange={handleProfileChange}
-                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
-                            <option value="">Select group</option>
-                            {EDUCATION_GROUPS.map((group) => <option key={group} value={group}>{group}</option>)}
-                          </select>
+                          <CustomDropdown
+                            name="education_group"
+                            value={profileForm.education_group}
+                            onChange={handleProfileChange}
+                            options={EDUCATION_GROUPS}
+                            placeholder="Select group"
+                          />
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">College Name</label>
@@ -1088,19 +1113,25 @@ export default function Profile() {
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">HSC Group</label>
-                          <select name="hsc_group" value={profileForm.hsc_group} onChange={handleProfileChange} required
-                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
-                            <option value="">Select group</option>
-                            {EDUCATION_GROUPS.map((group) => <option key={group} value={group}>{group}</option>)}
-                          </select>
+                          <CustomDropdown
+                            name="hsc_group"
+                            value={profileForm.hsc_group}
+                            onChange={handleProfileChange}
+                            options={EDUCATION_GROUPS}
+                            placeholder="Select group"
+                            required
+                          />
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">HSC Board</label>
-                          <select name="hsc_board" value={profileForm.hsc_board} onChange={handleProfileChange} required
-                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
-                            <option value="">Select board</option>
-                            {BANGLADESH_EDUCATION_BOARDS.map((board) => <option key={board} value={board}>{board}</option>)}
-                          </select>
+                          <CustomDropdown
+                            name="hsc_board"
+                            value={profileForm.hsc_board}
+                            onChange={handleProfileChange}
+                            options={BANGLADESH_EDUCATION_BOARDS}
+                            placeholder="Select board"
+                            required
+                          />
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">University Name</label>
@@ -1110,12 +1141,17 @@ export default function Profile() {
                         </div>
                         <div>
                           <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">University Status</label>
-                          <select name="university_status" value={profileForm.university_status} onChange={handleProfileChange} required
-                            className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl text-white text-sm focus:outline-none focus:border-[#14b8a6]/40">
-                            <option value="">Select status</option>
-                            <option value="studying">Currently Studying</option>
-                            <option value="graduated">Graduated</option>
-                          </select>
+                          <CustomDropdown
+                            name="university_status"
+                            value={profileForm.university_status}
+                            onChange={handleProfileChange}
+                            options={[
+                              { value: 'studying', label: 'Currently Studying' },
+                              { value: 'graduated', label: 'Graduated' }
+                            ]}
+                            placeholder="Select status"
+                            required
+                          />
                         </div>
                         {profileForm.university_status === 'studying' && (
                           <>
@@ -1347,16 +1383,13 @@ export default function Profile() {
                             <label className="block text-[10px] text-gray-500 mb-2 uppercase tracking-[0.15em] font-bold">
                               Proficiency Level
                             </label>
-                            <div className="relative">
-                              <select value={newProficiency} onChange={(e) => setNewProficiency(e.target.value)}
-                                className="w-full px-4 py-3 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-xl
-                                  text-white text-sm appearance-none cursor-pointer
-                                  focus:outline-none focus:border-[#14b8a6]/40 focus:ring-2 focus:ring-[#14b8a6]/10
-                                  transition-all duration-300">
-                                {PROFICIENCY_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}
-                              </select>
-                              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-                            </div>
+                            <CustomDropdown
+                              name="proficiency"
+                              value={newProficiency}
+                              onChange={(e) => setNewProficiency(e.target.value)}
+                              options={PROFICIENCY_LEVELS}
+                              placeholder="Select level"
+                            />
                           </div>
                         </div>
 
@@ -1470,13 +1503,13 @@ export default function Profile() {
                                           focus:ring-2 focus:ring-[#14b8a6]/10 transition-all" />
                                     </div>
                                     <div className="relative">
-                                      <select value={editProficiency} onChange={(e) => setEditProficiency(e.target.value)}
-                                        className="px-4 py-2.5 bg-[#0A1A22]/80 border border-[#1e3a42]/50
-                                          rounded-xl text-white text-sm appearance-none pr-9 cursor-pointer
-                                          focus:outline-none focus:border-[#14b8a6]/40 transition-all">
-                                        {PROFICIENCY_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}
-                                      </select>
-                                      <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                                      <CustomDropdown
+                                        name="proficiency"
+                                        value={editProficiency}
+                                        onChange={(e) => setEditProficiency(e.target.value)}
+                                        options={PROFICIENCY_LEVELS}
+                                        placeholder="Select level"
+                                      />
                                     </div>
                                     <div className="flex gap-2">
                                       <RippleButton onClick={() => handleUpdateSkill(skill.id)} disabled={saving}
