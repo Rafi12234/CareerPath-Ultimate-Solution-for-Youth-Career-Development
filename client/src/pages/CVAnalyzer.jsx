@@ -698,7 +698,13 @@ export default function CVAnalyzer() {
         setLoading(false);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'CV analysis failed. Please try again.');
+      const backendMessage = err.response?.data?.message;
+      const backendError = err.response?.data?.error;
+      setError(
+        backendError
+          ? `${backendMessage || 'CV analysis failed'}: ${backendError}`
+          : (backendMessage || 'CV analysis failed. Please try again.')
+      );
       setLoading(false);
       setLoadingJobMatch(false);
     }
@@ -1633,5 +1639,3 @@ export default function CVAnalyzer() {
     </>
   );
 }
-
-

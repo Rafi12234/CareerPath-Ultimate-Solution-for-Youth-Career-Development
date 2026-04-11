@@ -6,18 +6,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         "id",
         'name',
         'email',
+        'role',
         'password',
         'avatar',
+        'profile_completed',
         'phone',
         'date_of_birth',
         'gender',
@@ -74,6 +75,8 @@ class User extends Authenticatable
         'current_study_semester' => 'integer',
         'university_graduation_year' => 'integer',
         'is_fresher' => 'boolean',
+        'profile_completed' => 'boolean',
+        'email_verified_at' => 'datetime',
     ];
 
     /**
@@ -104,5 +107,10 @@ class User extends Authenticatable
     public function applications()
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    public function mockInterviewTurns()
+    {
+        return $this->hasMany(MockInterviewTurn::class);
     }
 }

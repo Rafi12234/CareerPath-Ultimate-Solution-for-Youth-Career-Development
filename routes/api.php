@@ -9,6 +9,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\UserSkillController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\MockInterviewController;
 use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\CVAnalyzerController;
 use App\Http\Controllers\CareerRoadmapController;
@@ -28,7 +29,7 @@ use Illuminate\Support\Facades\Route;
 // Auth routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout']);
+Route::middleware('jwt.auth')->post('/logout', [AuthController::class, 'logout']);
 
 // Courses
 Route::get('/courses', [CourseController::class, 'index']);
@@ -50,7 +51,7 @@ Route::post('/enrollments', [EnrollmentController::class, 'store']);
 Route::delete('/enrollments/{id}', [EnrollmentController::class, 'destroy']);
 
 // Course Videos (protected routes - require authentication)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('jwt.auth')->group(function () {
     Route::get('/course-videos/{courseId}', [CourseVideoController::class, 'getVideosByEnrollment']);
     Route::get('/course-progress/{courseId}', [CourseVideoController::class, 'getCourseProgress']);
     Route::get('/next-video/{courseId}', [CourseVideoController::class, 'getNextVideo']);
@@ -64,8 +65,8 @@ Route::put('/user-skills/{id}', [UserSkillController::class, 'update']);
 Route::delete('/user-skills/{id}', [UserSkillController::class, 'destroy']);
 
 // Job Applications
-Route::middleware('auth:sanctum')->get('/job-applications/init/{jobId}', [JobApplicationController::class, 'initializeApplication']);
-Route::middleware('auth:sanctum')->post('/job-applications/generate-cover-letter', [JobApplicationController::class, 'generateCoverLetterAI']);
+Route::middleware('jwt.auth')->get('/job-applications/init/{jobId}', [JobApplicationController::class, 'initializeApplication']);
+Route::middleware('jwt.auth')->post('/job-applications/generate-cover-letter', [JobApplicationController::class, 'generateCoverLetterAI']);
 Route::get('/job-applications', [JobApplicationController::class, 'index']);
 Route::post('/job-applications', [JobApplicationController::class, 'store']);
 Route::get('/job-applications/{id}', [JobApplicationController::class, 'show']);
@@ -80,20 +81,25 @@ Route::post('/contacts', [ContactController::class, 'store']);
 Route::post('/chatbot', [ChatbotController::class, 'chat']);
 Route::get('/chatbot/history', [ChatbotController::class, 'history']);
 
+// Mock Interview
+Route::middleware('jwt.auth')->post('/mock-interview/chat', [MockInterviewController::class, 'chat']);
+Route::middleware('jwt.auth')->post('/mock-interview/turns', [MockInterviewController::class, 'storeTurn']);
+Route::middleware('jwt.auth')->get('/mock-interview/history', [MockInterviewController::class, 'history']);
+
 // Avatar upload
 Route::post('/upload-avatar', [AvatarController::class, 'upload']);
 
 // User profile
-Route::middleware('auth:sanctum')->get('/profile', [ProfileController::class, 'show']);
-Route::middleware('auth:sanctum')->put('/profile', [ProfileController::class, 'update']);
+Route::middleware('jwt.auth')->get('/profile', [ProfileController::class, 'show']);
+Route::middleware('jwt.auth')->put('/profile', [ProfileController::class, 'update']);
 
 // CV Analyzer
 Route::post('/cv-analyze', [CVAnalyzerController::class, 'analyze']);
 Route::post('/cv-job-match', [CVAnalyzerController::class, 'jobMatch']);
 
 // AI Career Roadmap
-Route::middleware('auth:sanctum')->post('/career-roadmap/generate', [CareerRoadmapController::class, 'generate']);
-Route::middleware('auth:sanctum')->get('/career-roadmap/history', [CareerRoadmapController::class, 'history']);
+Route::middleware('jwt.auth')->post('/career-roadmap/generate', [CareerRoadmapController::class, 'generate']);
+Route::middleware('jwt.auth')->get('/career-roadmap/history', [CareerRoadmapController::class, 'history']);
 
 // Original item routes (keep for backward compatibility)
 Route::get('/items', [UsersController::class, 'index']);
@@ -112,10 +118,11 @@ Route::delete('/items/{id}', [UsersController::class, 'destroy']);
 // Admin Authentication
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
 
-// Admin Protected Routes (middleware will be added in production)
-Route::group([], function () {
+// Admin Protected Routes
+Route::middleware(['jwt.auth', 'admin.auth'])->group(function () {
     Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
     Route::get('/admin/me', [AdminAuthController::class, 'me']);
+    Route::put('/admin/account', [AdminAuthController::class, 'updateCredentials']);
 
     // Users Management
     Route::get('/admin/users', [AdminController::class, 'getAllUsers']);

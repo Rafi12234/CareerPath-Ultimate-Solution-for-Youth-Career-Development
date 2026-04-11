@@ -19,6 +19,7 @@ export default function VoiceMockInterview() {
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState('Pick a topic and start your 2-minute mock interview.');
   const [turns, setTurns] = useState([]);
+  const [historyTurns, setHistoryTurns] = useState([]);
   const [unsupportedSpeech, setUnsupportedSpeech] = useState(false);
 
   const micStreamRef = useRef(null);
@@ -30,6 +31,7 @@ export default function VoiceMockInterview() {
   const processingRef = useRef(false);
   const timeLeftRef = useRef(DEMO_DURATION_SECONDS);
   const isMutedRef = useRef(false);
+  const turnNumberRef = useRef(1);
 
   const formattedTime = useMemo(() => {
     const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
@@ -65,8 +67,34 @@ export default function VoiceMockInterview() {
   };
 
   const askAi = async (message) => {
-    const response = await api.post('/chatbot', { message });
+    const response = await api.post('/mock-interview/chat', { message });
     return response?.data?.reply?.trim() || 'Could you explain that a little more?';
+  };
+
+  const loadInterviewHistory = async () => {
+    if (!user) {
+      setHistoryTurns([]);
+      return;
+    }
+
+    try {
+      const response = await api.get('/mock-interview/history');
+      setHistoryTurns(response?.data?.history || []);
+    } catch {
+      setHistoryTurns([]);
+    }
+  };
+
+  const saveInterviewTurn = async (payload) => {
+    try {
+      const response = await api.post('/mock-interview/turns', payload);
+      const savedTurn = response?.data?.turn;
+      if (savedTurn) {
+        setHistoryTurns((prev) => [...prev, savedTurn]);
+      }
+    } catch {
+      // Keep the live interview working even if history persistence fails.
+    }
   };
 
   const parseJsonFromText = (text) => {
@@ -193,6 +221,8 @@ export default function VoiceMockInterview() {
   const handleUserAnswer = async (answerText) => {
     if (!runningRef.current || !answerText.trim()) return;
 
+    const askedQuestion = currentQuestionRef.current || 'N/A';
+
     try {
       recognitionRef.current?.stop();
     } catch {
@@ -204,6 +234,14 @@ export default function VoiceMockInterview() {
     turnsRef.current = [...turnsRef.current, userTurn];
 
     if (timeLeftRef.current <= 8) {
+      await saveInterviewTurn({
+        topic: topicInput.trim() || 'General job and skills interview',
+        turn_number: turnNumberRef.current,
+        question: askedQuestion,
+        answer: answerText.trim(),
+        feedback: 'Interview ended before AI feedback was generated.',
+      });
+      turnNumberRef.current += 1;
       await endInterview();
       return;
     }
@@ -231,8 +269,6 @@ export default function VoiceMockInterview() {
       const reason = parsed?.reason || 'Decent attempt. You can improve clarity and detail.';
       const nextQuestion = parsed?.next_question || 'Please explain your answer with one practical example.';
 
-      currentQuestionRef.current = nextQuestion;
-
       const verdictLabel = verdict === 'RIGHT'
         ? 'Right'
         : verdict === 'WRONG'
@@ -246,6 +282,17 @@ export default function VoiceMockInterview() {
 
       setTurns((prev) => [...prev, feedbackTurn]);
       turnsRef.current = [...turnsRef.current, feedbackTurn];
+
+      await saveInterviewTurn({
+        topic: topicInput.trim() || 'General job and skills interview',
+        turn_number: turnNumberRef.current,
+        question: askedQuestion,
+        answer: answerText.trim(),
+        feedback: feedbackTurn.text,
+      });
+      turnNumberRef.current += 1;
+
+      currentQuestionRef.current = nextQuestion;
 
       await speak(feedbackTurn.text);
 
@@ -275,6 +322,7 @@ export default function VoiceMockInterview() {
 
     setTurns([]);
     turnsRef.current = [];
+    turnNumberRef.current = 1;
     setTimeLeft(DEMO_DURATION_SECONDS);
     timeLeftRef.current = DEMO_DURATION_SECONDS;
     setRunning(true);
@@ -381,6 +429,10 @@ export default function VoiceMockInterview() {
 
     return () => clearInterval(timer);
   }, [running]);
+
+  useEffect(() => {
+    loadInterviewHistory();
+  }, [user]);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -645,6 +697,53 @@ export default function VoiceMockInterview() {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <h2 className="text-sm font-semibold text-white">Saved Mock Interview History</h2>
+            <span className="text-[11px] text-gray-500">Stored separately from chatbot conversations</span>
+          </div>
+
+          {historyTurns.length === 0 ? (
+            <div className="text-sm text-gray-500 border border-white/[0.06] rounded-xl p-4 bg-white/[0.02]">
+              No saved mock interview history yet.
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+              {historyTurns.map((turn) => (
+                <div
+                  key={turn.id}
+                  className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-sm"
+                >
+                  <div className="flex flex-wrap items-center gap-2 mb-2 text-[11px] uppercase tracking-wider text-gray-500">
+                    <span>Topic: {turn.topic || 'General interview'}</span>
+                    <span>Turn #{turn.turn_number}</span>
+                    <span>{turn.created_at ? new Date(turn.created_at).toLocaleString() : ''}</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="rounded-lg bg-[#14b8a6]/[0.08] border border-[#14b8a6]/20 p-3 text-[#d1fffa]">
+                      <p className="text-[11px] uppercase tracking-wider opacity-70 mb-1 font-semibold">AI Question</p>
+                      <p className="leading-relaxed">{turn.question}</p>
+                    </div>
+
+                    <div className="rounded-lg bg-white/[0.03] border border-white/[0.08] p-3 text-gray-200">
+                      <p className="text-[11px] uppercase tracking-wider opacity-70 mb-1 font-semibold">User Response</p>
+                      <p className="leading-relaxed">{turn.answer}</p>
+                    </div>
+
+                    {turn.feedback && (
+                      <div className="rounded-lg bg-amber-500/[0.08] border border-amber-500/20 p-3 text-amber-100">
+                        <p className="text-[11px] uppercase tracking-wider opacity-70 mb-1 font-semibold">AI Feedback</p>
+                        <p className="leading-relaxed">{turn.feedback}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
