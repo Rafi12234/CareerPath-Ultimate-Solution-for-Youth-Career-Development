@@ -17,11 +17,19 @@ if [ -z "${RENDER:-}" ] && [ ! -f /var/www/html/.env ]; then
     cp /var/www/html/.env.docker /var/www/html/.env
 fi
 
-# Generate Laravel app key if not set
-if ! grep -q "^APP_KEY=base64:" /var/www/html/.env; then
-    echo "🔑 Generating Laravel app key..."
-    cd /var/www/html
-    php artisan key:generate
+# On Render, APP_KEY must be supplied through environment variables.
+# The local Docker flow can still generate a key into .env when needed.
+if [ -z "${APP_KEY:-}" ]; then
+    if [ -f /var/www/html/.env ] && ! grep -q "^APP_KEY=base64:" /var/www/html/.env; then
+        echo "🔑 Generating Laravel app key..."
+        cd /var/www/html
+        php artisan key:generate --force
+    elif [ ! -f /var/www/html/.env ]; then
+        echo "❌ APP_KEY is missing and no .env file exists. Set APP_KEY in Render environment variables."
+        exit 1
+    fi
+else
+    echo "🔐 Using APP_KEY from environment variables."
 fi
 
 # Run database migrations
