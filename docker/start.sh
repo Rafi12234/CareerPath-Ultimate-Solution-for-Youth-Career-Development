@@ -9,8 +9,10 @@ PORT_VALUE="${PORT:-8000}"
 # Render assigns PORT dynamically; patch the Nginx listen port before startup.
 sed -i "s/__PORT__/${PORT_VALUE}/g" /etc/nginx/sites-available/default
 
-# Create .env file if it doesn't exist
-if [ ! -f /var/www/html/.env ]; then
+# Create .env file only for local Docker runs.
+# Render injects environment variables directly, so copying .env.docker there
+# would overwrite the real Aiven settings.
+if [ -z "${RENDER:-}" ] && [ ! -f /var/www/html/.env ]; then
     echo "📝 Creating .env file..."
     cp /var/www/html/.env.docker /var/www/html/.env
 fi

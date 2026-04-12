@@ -3,7 +3,7 @@ services:
     name: careerpath-backend
     env: docker
     region: singapore
-    plan: starter
+    plan: free
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/courses
     autoDeploy: true
