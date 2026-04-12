@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://careerpath-ultimate-solution-for-youth-78qz.onrender.com/api/:path*"
+      "destination": "https://careerpath-ultimate-solution-for-youth-jinr.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
