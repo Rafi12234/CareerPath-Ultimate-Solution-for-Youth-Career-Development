@@ -4,11 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\Job;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class JobController extends Controller
 {
     public function index(Request $request)
     {
+        $hasFilters =
+            (($request->has('search') && trim((string) $request->search) !== '') ||
+            ($request->has('level') && $request->level !== 'all') ||
+            ($request->has('type') && $request->type !== 'all') ||
+            ($request->has('track') && $request->track !== 'all'));
+
+        if (!$hasFilters) {
+            $jobs = Cache::remember('jobs:index:v1', now()->addMinutes(5), function () {
+                return Job::query()->latest()->get();
+            });
+
+            return response()->json($jobs);
+        }
+
         $query = Job::query();
 
         if ($request->has('search')) {
@@ -50,6 +65,7 @@ class JobController extends Controller
         ]);
 
         $job = Job::create($request->all());
+        Cache::forget('jobs:index:v1');
         return response()->json($job, 201);
     }
 
@@ -57,12 +73,14 @@ class JobController extends Controller
     {
         $job = Job::findOrFail($id);
         $job->update($request->all());
+        Cache::forget('jobs:index:v1');
         return response()->json($job);
     }
 
     public function destroy($id)
     {
         Job::findOrFail($id)->delete();
+        Cache::forget('jobs:index:v1');
         return response()->json(['message' => 'Job deleted']);
     }
 }
