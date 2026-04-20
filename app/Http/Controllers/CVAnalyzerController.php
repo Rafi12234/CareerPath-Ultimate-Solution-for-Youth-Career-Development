@@ -4,10 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Job;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class CVAnalyzerController extends Controller
 {
+    private const QUOTA_COOLDOWN_SECONDS = 90;
+    private const ANALYZE_LOCK_SECONDS = 15;
+    private const HIGH_DEMAND_RETRY_DELAY = 3; // seconds
+    private const MAX_HIGH_DEMAND_RETRIES = 2;
+
     private function isQuotaError(?string $errorMessage): bool
     {
         if (!$errorMessage) {
@@ -19,6 +25,18 @@ class CVAnalyzerController extends Controller
             || str_contains($message, 'resource_exhausted')
             || str_contains($message, 'request limit per minute')
             || str_contains($message, 'rate limit');
+    }
+
+    private function isHighDemandError(?string $errorMessage): bool
+    {
+        if (!$errorMessage) {
+            return false;
+        }
+
+        $message = strtolower($errorMessage);
+        return str_contains($message, 'high demand')
+            || str_contains($message, 'service unavailable')
+            || str_contains($message, 'temporarily unavailable');
     }
 
     public function analyze(Request $request)
@@ -34,6 +52,27 @@ class CVAnalyzerController extends Controller
             return response()->json(['message' => 'Gemini API not configured'], 500);
         }
 
+        $cooldownKey = 'gemini:cv:quota:cooldown';
+        $cooldownUntil = Cache::get($cooldownKey);
+        if ($cooldownUntil && now()->timestamp < (int) $cooldownUntil) {
+            $retryAfter = max(1, (int) $cooldownUntil - now()->timestamp);
+            return response()->json([
+                'message' => 'CV analysis temporarily unavailable due to Gemini quota limits. Please try again shortly.',
+                'error' => 'Gemini quota cooldown is active.',
+                'retry_after_seconds' => $retryAfter,
+            ], 429);
+        }
+
+        $requestOwner = $request->user() ? ('user:' . $request->user()->id) : ('ip:' . $request->ip());
+        $inFlightKey = 'gemini:cv:inflight:' . $requestOwner;
+        if (!Cache::add($inFlightKey, true, self::ANALYZE_LOCK_SECONDS)) {
+            return response()->json([
+                'message' => 'CV analysis already in progress. Please wait a few seconds before trying again.',
+                'error' => 'Duplicate analysis request blocked.',
+                'retry_after_seconds' => self::ANALYZE_LOCK_SECONDS,
+            ], 429);
+        }
+
         try {
             // Read file content
             $fileContent = file_get_contents($file->getRealPath());
@@ -45,41 +84,80 @@ class CVAnalyzerController extends Controller
 
             // Some Gemini models reject PDF inline_data. Try model fallbacks for file analysis.
             $modelsToTry = $mimeType === 'application/pdf'
-                ? ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.5-flash']
+                ? ['gemini-1.5-flash', 'gemini-2.5-flash']
                 : ['gemini-2.5-flash', 'gemini-1.5-flash'];
 
             $analysisText = null;
             $lastError = 'Unknown error';
+            $lastHighDemandError = null;
 
             foreach ($modelsToTry as $model) {
-                $geminiResponse = Http::withHeader('Content-Type', 'application/json')
-                    ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$geminiKey}", $geminiPayload);
+                $retryCount = 0;
+                $modelSuccess = false;
 
-                if ($geminiResponse->successful()) {
-                    $candidateText = $geminiResponse->json('candidates.0.content.parts.0.text');
-                    if (is_string($candidateText) && trim($candidateText) !== '') {
-                        $analysisText = $candidateText;
+                while ($retryCount <= self::MAX_HIGH_DEMAND_RETRIES && !$modelSuccess) {
+                    $geminiResponse = Http::withHeader('Content-Type', 'application/json')
+                        ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$geminiKey}", $geminiPayload);
+
+                    if ($geminiResponse->successful()) {
+                        $candidateText = $geminiResponse->json('candidates.0.content.parts.0.text');
+                        if (is_string($candidateText) && trim($candidateText) !== '') {
+                            $analysisText = $candidateText;
+                            $modelSuccess = true;
+                            break;
+                        }
+                        $lastError = "Model {$model} returned empty analysis text";
+                        break;
+                    } else {
+                        $apiError = $geminiResponse->json('error.message')
+                            ?? $geminiResponse->json('error.status')
+                            ?? 'Unknown error';
+                        $lastError = "Model {$model} failed: {$apiError}";
+
+                        // Quota error: stop immediately
+                        if ($this->isQuotaError($apiError)) {
+                            $cooldownUntilTs = now()->addSeconds(self::QUOTA_COOLDOWN_SECONDS)->timestamp;
+                            Cache::put($cooldownKey, $cooldownUntilTs, now()->addSeconds(self::QUOTA_COOLDOWN_SECONDS));
+                            return response()->json([
+                                'message' => 'CV analysis temporarily unavailable due to Gemini quota limits. Please try again in 1-2 minutes.',
+                                'error' => $lastError,
+                                'retry_after_seconds' => self::QUOTA_COOLDOWN_SECONDS,
+                            ], 429);
+                        }
+
+                        // High demand error: retry up to MAX_HIGH_DEMAND_RETRIES times
+                        if ($this->isHighDemandError($apiError)) {
+                            $lastHighDemandError = $apiError;
+                            if ($retryCount < self::MAX_HIGH_DEMAND_RETRIES) {
+                                $retryCount++;
+                                sleep(self::HIGH_DEMAND_RETRY_DELAY);
+                                continue; // Retry same model
+                            }
+                            // Max retries reached, fall through to next model
+                            break;
+                        }
+
+                        // Other error: move to next model
                         break;
                     }
+                }
 
-                    $lastError = "Model {$model} returned empty analysis text";
-                } else {
-                    $apiError = $geminiResponse->json('error.message')
-                        ?? $geminiResponse->json('error.status')
-                        ?? 'Unknown error';
-                    $lastError = "Model {$model} failed: {$apiError}";
-
-                    // Stop immediately on quota/rate-limit to avoid burning extra model retries.
-                    if ($this->isQuotaError($apiError)) {
-                        return response()->json([
-                            'message' => 'CV analysis temporarily unavailable due to Gemini quota limits. Please try again in 1-2 minutes.',
-                            'error' => $lastError,
-                        ], 429);
-                    }
+                // If analysis succeeded, break out of model loop
+                if ($analysisText) {
+                    break;
                 }
             }
 
             if (!$analysisText) {
+                // If we encountered high demand errors, return 503
+                if ($lastHighDemandError) {
+                    return response()->json([
+                        'message' => 'AI models are currently experiencing high demand. Please try again in a few seconds.',
+                        'error' => $lastHighDemandError,
+                        'retry_after_seconds' => self::HIGH_DEMAND_RETRY_DELAY * 2,
+                    ], 503); // 503 Service Unavailable
+                }
+
                 return response()->json([
                     'message' => 'CV analysis failed',
                     'error' => $lastError,
@@ -99,6 +177,8 @@ class CVAnalyzerController extends Controller
                 'message' => 'CV analysis error',
                 'error' => $e->getMessage()
             ], 500);
+        } finally {
+            Cache::forget($inFlightKey);
         }
     }
 

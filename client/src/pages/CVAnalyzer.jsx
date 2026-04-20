@@ -668,46 +668,64 @@ export default function CVAnalyzer() {
     if (wantsJobMatch === null) { setError('Please choose whether you want job matching or CV-only analysis.'); return; }
     if (wantsJobMatch && !selectedJob) { setError('Please select a job for CV-job match analysis.'); return; }
     setLoading(true); setError('');
-    try {
-      const formData = new FormData();
-      formData.append('cv_file', file);
-      const res = await api.post('/cv-analyze', formData);
-      if (res.data?.analysis) {
-        const analysisData = res.data.analysis;
+    
+    const performAnalysis = async (retryDelay = 0) => {
+      if (retryDelay > 0) {
+        setError(`AI models are busy. Retrying in ${retryDelay} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay * 1000));
+      }
 
-        if (wantsJobMatch && selectedJob) {
-          setLoadingJobMatch(true);
-          const matchRes = await api.post('/cv-job-match', {
-            cv_analysis: analysisData,
-            job_id: selectedJob.id,
-          });
-          if (matchRes.data?.match_score) {
-            setJobMatchScore(matchRes.data.match_score);
+      try {
+        const formData = new FormData();
+        formData.append('cv_file', file);
+        const res = await api.post('/cv-analyze', formData);
+        if (res.data?.analysis) {
+          const analysisData = res.data.analysis;
+
+          if (wantsJobMatch && selectedJob) {
+            setLoadingJobMatch(true);
+            const matchRes = await api.post('/cv-job-match', {
+              cv_analysis: analysisData,
+              job_id: selectedJob.id,
+            });
+            if (matchRes.data?.match_score) {
+              setJobMatchScore(matchRes.data.match_score);
+            }
+            setLoadingJobMatch(false);
           }
-          setLoadingJobMatch(false);
+
+          setLoading(false);
+          setShowSuccess(true);
+          setTimeout(() => {
+            setShowSuccess(false);
+            setAnalysis(analysisData);
+          }, 1800);
+        } else {
+          setError('Analysis returned unexpected format');
+          setLoading(false);
+        }
+      } catch (err) {
+        // Handle 503 Service Unavailable (high demand) with retry
+        if (err.response?.status === 503) {
+          const retryAfter = err.response?.data?.retry_after_seconds || 5;
+          if (retryAfter < 60) { // Only auto-retry if wait time is reasonable
+            return performAnalysis(retryAfter);
+          }
         }
 
+        const backendMessage = err.response?.data?.message;
+        const backendError = err.response?.data?.error;
+        setError(
+          backendError
+            ? `${backendMessage || 'CV analysis failed'}: ${backendError}`
+            : (backendMessage || 'CV analysis failed. Please try again.')
+        );
         setLoading(false);
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          setAnalysis(analysisData);
-        }, 1800);
-      } else {
-        setError('Analysis returned unexpected format');
-        setLoading(false);
+        setLoadingJobMatch(false);
       }
-    } catch (err) {
-      const backendMessage = err.response?.data?.message;
-      const backendError = err.response?.data?.error;
-      setError(
-        backendError
-          ? `${backendMessage || 'CV analysis failed'}: ${backendError}`
-          : (backendMessage || 'CV analysis failed. Please try again.')
-      );
-      setLoading(false);
-      setLoadingJobMatch(false);
-    }
+    };
+
+    performAnalysis();
   };
 
   const removeFile = () => {

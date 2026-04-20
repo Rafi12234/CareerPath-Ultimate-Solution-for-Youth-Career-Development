@@ -50,12 +50,11 @@ services:
       APP_URL: http://localhost:8000
       APP_KEY: ${APP_KEY:-base64:xKq5w3QMpi6LdKo/aOgUFXJaVG9JYHsHfIo7AuwGl+k=}
       DB_CONNECTION: mysql
-      DB_HOST: careerpath-mysql-shajedulkabir106-f79a.b.aivencloud.com
-      DB_PORT: 18232
+      DB_HOST: db
+      DB_PORT: 3306
       DB_DATABASE: careerpath
-      DB_USERNAME: avnadmin
-      DB_PASSWORD: ${AIVEN_DB_PASSWORD:-CHANGE_ME_AIVEN_DB_PASSWORD}
-      MYSQL_ATTR_SSL_CA: /var/www/html/ca.pem
+      DB_USERNAME: careerpath_user
+      DB_PASSWORD: careerpath_pass
       SESSION_DRIVER: file
       CACHE_DRIVER: file
       QUEUE_CONNECTION: sync
@@ -67,10 +66,11 @@ services:
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
       FILESTACK_API_KEY: ${FILESTACK_API_KEY:-}
-    volumes:
-      - ./ca.pem:/var/www/html/ca.pem:ro
     ports:
       - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - careerpath-network
 
