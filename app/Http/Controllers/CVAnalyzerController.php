@@ -8,6 +8,19 @@ use Illuminate\Support\Facades\Http;
 
 class CVAnalyzerController extends Controller
 {
+    private function isQuotaError(?string $errorMessage): bool
+    {
+        if (!$errorMessage) {
+            return false;
+        }
+
+        $message = strtolower($errorMessage);
+        return str_contains($message, 'quota exceeded')
+            || str_contains($message, 'resource_exhausted')
+            || str_contains($message, 'request limit per minute')
+            || str_contains($message, 'rate limit');
+    }
+
     public function analyze(Request $request)
     {
         $request->validate([
@@ -55,6 +68,14 @@ class CVAnalyzerController extends Controller
                         ?? $geminiResponse->json('error.status')
                         ?? 'Unknown error';
                     $lastError = "Model {$model} failed: {$apiError}";
+
+                    // Stop immediately on quota/rate-limit to avoid burning extra model retries.
+                    if ($this->isQuotaError($apiError)) {
+                        return response()->json([
+                            'message' => 'CV analysis temporarily unavailable due to Gemini quota limits. Please try again in 1-2 minutes.',
+                            'error' => $lastError,
+                        ], 429);
+                    }
                 }
             }
 
