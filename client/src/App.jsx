@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import Chatbot from './pages/Chatbot';
 import CVAnalyzer from './pages/CVAnalyzer';
 import AICareerRoadmap from './pages/AICareerRoadmap';
+import VoiceMockInterview from './pages/VoiceMockInterview';
 import CoursePlayer from './pages/CoursePlayer';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminUsersPage from './pages/AdminUsersPage';
@@ -61,6 +62,7 @@ function App() {
             <Route path="/chatbot" element={<Chatbot />} />
             <Route path="/cv-analyzer" element={<CVAnalyzer />} />
             <Route path="/ai-career-roadmap" element={<AICareerRoadmap />} />
+            <Route path="/voice-mock-interview" element={<VoiceMockInterview />} />
             <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
             <Route path="/admin/courses" element={<AdminRoute><AdminCoursesPage /></AdminRoute>} />
