@@ -6,6 +6,7 @@ import { ChevronDown, X } from 'lucide-react';
  * Replaces native select elements with styled dropdown matching the modern UI
  */
 function CustomDropdown({
+    
   value,
   onChange,
   options,
