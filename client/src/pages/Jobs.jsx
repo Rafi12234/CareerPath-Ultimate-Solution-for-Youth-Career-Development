@@ -1,1366 +1,2732 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import {
-  Search, MapPin, Building2, Briefcase, TrendingUp, Send, X,
-  DollarSign, Star, CheckCircle, Clock, Award, ChevronRight,
-  Loader2, Sparkles, Zap, Eye, Target, Layers, Bookmark,
-  BookmarkCheck, ArrowRight, ChevronDown, Filter, Grid3X3,
-  LayoutList, ArrowUpRight, Flame, Shield, Code2, Crown
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  ArrowRight,
+  Award,
+  Bookmark,
+  BookmarkCheck,
+  Briefcase,
+  Building2,
+  CheckCircle,
+  ChevronDown,
+  Clock,
+  Code2,
+  Crown,
+  DollarSign,
+  Eye,
+  Flame,
+  Layers,
+  Loader2,
+  MapPin,
+  Search,
+  Send,
+  Shield,
+  Sparkles,
+  Star,
+  Target,
+  TrendingUp,
+  X,
+  Zap,
 } from 'lucide-react';
+
+import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 
-const skillColors = [
-  'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
-  'bg-blue-500/15 text-blue-400 border-blue-500/25',
-  'bg-purple-500/15 text-purple-300 border-purple-500/25',
-  'bg-pink-500/15 text-pink-400 border-pink-500/25',
-  'bg-amber-500/15 text-amber-400 border-amber-500/25',
+/* =========================================================
+   CONSTANTS
+   ========================================================= */
+
+const PROFICIENCY_RANK = {
+  Beginner: 1,
+  Intermediate: 2,
+  Expert: 3,
+  Professional: 4,
+};
+
+const JOB_LEVEL_RANK = {
+  'Entry Level': 1,
+  'Mid Level': 2,
+  Senior: 3,
+};
+
+const SKILL_COLORS = [
+  'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+  'bg-cyan-500/10 text-cyan-300 border-cyan-500/20',
+  'bg-blue-500/10 text-blue-300 border-blue-500/20',
+  'bg-purple-500/10 text-purple-300 border-purple-500/20',
+  'bg-amber-500/10 text-amber-300 border-amber-500/20',
 ];
 
-const InjectStyles = () => (
-  <style>{`
-    @keyframes morphBlob1 {
-      0%, 100% { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; transform: rotate(0deg) scale(1); }
-      25% { border-radius: 70% 30% 50% 50% / 30% 60% 40% 70%; transform: rotate(90deg) scale(1.05); }
-      50% { border-radius: 30% 70% 40% 60% / 55% 30% 70% 45%; transform: rotate(180deg) scale(0.95); }
-      75% { border-radius: 55% 45% 60% 40% / 40% 70% 30% 60%; transform: rotate(270deg) scale(1.02); }
-    }
-    @keyframes morphBlob2 {
-      0%, 100% { border-radius: 58% 42% 30% 70% / 55% 45% 55% 45%; transform: rotate(0deg); }
-      33% { border-radius: 40% 60% 60% 40% / 60% 30% 70% 40%; transform: rotate(120deg); }
-      66% { border-radius: 60% 40% 45% 55% / 35% 65% 35% 65%; transform: rotate(240deg); }
-    }
-    @keyframes floatSlow { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-20px) rotate(3deg); } }
-    @keyframes floatMed { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-14px) rotate(-2deg); } }
-    @keyframes floatFast { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-    @keyframes textReveal {
-      from { clip-path: inset(0 100% 0 0); opacity: 0; }
-      to { clip-path: inset(0 0 0 0); opacity: 1; }
-    }
-    @keyframes glowPulse {
-      0%, 100% { opacity: 0.4; filter: blur(40px); }
-      50% { opacity: 0.7; filter: blur(60px); }
-    }
-    @keyframes borderRotate {
-      from { --angle: 0deg; }
-      to { --angle: 360deg; }
-    }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes scaleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-    @keyframes slideRight { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes modalReveal {
-      from { opacity: 0; transform: translateY(80px) scale(0.9) rotateX(5deg); }
-      to { opacity: 1; transform: translateY(0) scale(1) rotateX(0); }
-    }
-    @keyframes modalBg { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(12px); } }
-    @keyframes ringProgress {
-      from { stroke-dasharray: 0 999; }
-    }
-    @keyframes sparkle {
-      0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-      50% { opacity: 1; transform: scale(1) rotate(180deg); }
-    }
-    @keyframes marquee {
-      from { transform: translateX(0); }
-      to { transform: translateX(-50%); }
-    }
-    @keyframes rippleEffect {
-      to { transform: scale(2.5); opacity: 0; }
-    }
-    @keyframes neonFlicker {
-      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { text-shadow: 0 0 10px rgba(20,184,166,0.5), 0 0 20px rgba(20,184,166,0.3), 0 0 40px rgba(20,184,166,0.1); }
-      20%, 24%, 55% { text-shadow: none; }
-    }
-    @keyframes cardShine {
-      0% { left: -100%; }
-      50%, 100% { left: 150%; }
-    }
-    @keyframes dotPulse {
-      0%, 80%, 100% { transform: scale(0); opacity: 0; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes tiltIn {
-      from { opacity: 0; transform: perspective(1000px) rotateY(-8deg) translateX(-30px); }
-      to { opacity: 1; transform: perspective(1000px) rotateY(0) translateX(0); }
-    }
-    @keyframes countFlip {
-      0% { transform: translateY(100%); opacity: 0; }
-      60% { transform: translateY(-10%); }
-      100% { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes orbFloat {
-      0% { transform: translate(0, 0) scale(1); }
-      25% { transform: translate(30px, -40px) scale(1.1); }
-      50% { transform: translate(-20px, -60px) scale(0.9); }
-      75% { transform: translate(40px, -20px) scale(1.05); }
-      100% { transform: translate(0, 0) scale(1); }
-    }
-    @keyframes scanLine {
-      0% { top: -10%; }
-      100% { top: 110%; }
-    }
-    @keyframes barGrow {
-      from { width: 0%; }
+/* =========================================================
+   SAFE DATA HELPERS
+
+   Important:
+   Company jobs may contain:
+   company: "ABC Ltd"
+
+   or, from an older/broken API response:
+   company: {
+     id: 1,
+     name: "ABC Ltd"
+   }
+
+   This page supports both and will not crash.
+   ========================================================= */
+
+function normalizeSkills(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((skill) => {
+        if (typeof skill === 'string') {
+          return skill.trim();
+        }
+
+        if (skill && typeof skill === 'object') {
+          return String(
+            skill.name ??
+            skill.skill_name ??
+            skill.label ??
+            ''
+          ).trim();
+        }
+
+        return '';
+      })
+      .filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return [];
     }
 
-    .blob-1 { animation: morphBlob1 15s ease-in-out infinite; }
-    .blob-2 { animation: morphBlob2 18s ease-in-out infinite; }
-    .float-slow { animation: floatSlow 6s ease-in-out infinite; }
-    .float-med { animation: floatMed 4.5s ease-in-out infinite; }
-    .float-fast { animation: floatFast 3s ease-in-out infinite; }
+    try {
+      const parsed = JSON.parse(trimmed);
 
-    .text-reveal { animation: textReveal 0.8s cubic-bezier(0.77,0,0.175,1) both; }
-    .slide-up { animation: slideUp 0.7s cubic-bezier(0.16,1,0.3,1) both; }
-    .slide-down { animation: slideDown 0.6s cubic-bezier(0.16,1,0.3,1) both; }
-    .scale-in { animation: scaleIn 0.5s cubic-bezier(0.16,1,0.3,1) both; }
-    .slide-right { animation: slideRight 0.6s cubic-bezier(0.16,1,0.3,1) both; }
-    .fade-in { animation: fadeIn 0.6s ease both; }
-    .tilt-in { animation: tiltIn 0.7s cubic-bezier(0.16,1,0.3,1) both; }
-
-    .gradient-text {
-      background: linear-gradient(135deg, #14b8a6, #06b6d4, #2dd4bf, #14b8a6);
-      background-size: 300% 300%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: gradientShift 4s ease infinite;
+      if (Array.isArray(parsed)) {
+        return normalizeSkills(parsed);
+      }
+    } catch {
+      // Normal comma-separated string.
     }
 
-    .neon-text { animation: neonFlicker 3s infinite; }
+    return trimmed
+      .split(',')
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+  }
 
-    .glass-card {
-      background: linear-gradient(135deg, rgba(10,26,34,0.9) 0%, rgba(7,16,21,0.95) 100%);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(30,58,66,0.4);
-      transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
-    }
-    .glass-card:hover {
-      border-color: rgba(20,184,166,0.3);
-      transform: translateY(-6px);
-      box-shadow: 0 20px 60px -15px rgba(20,184,166,0.15), 0 0 0 1px rgba(20,184,166,0.1);
-    }
-    .glass-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: linear-gradient(135deg, rgba(20,184,166,0.05) 0%, transparent 50%, rgba(6,182,212,0.03) 100%);
-      opacity: 0;
-      transition: opacity 0.5s;
-    }
-    .glass-card:hover::before { opacity: 1; }
-
-    .shine-effect {
-      position: relative;
-      overflow: hidden;
-    }
-    .shine-effect::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 60%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-      animation: cardShine 4s ease-in-out infinite;
-    }
-
-    .glow-border {
-      position: relative;
-    }
-    .glow-border::before {
-      content: '';
-      position: absolute;
-      inset: -1px;
-      border-radius: inherit;
-      padding: 1px;
-      background: conic-gradient(from var(--angle, 0deg), transparent 40%, #14b8a6 50%, transparent 60%);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      animation: borderRotate 4s linear infinite;
-      opacity: 0;
-      transition: opacity 0.5s;
-    }
-    .glow-border:hover::before { opacity: 1; }
-
-    @property --angle {
-      syntax: '<angle>';
-      initial-value: 0deg;
-      inherits: false;
-    }
-
-    .magnetic-btn {
-      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
-    }
-
-    .tab-indicator {
-      transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
-    }
-
-    .radar-grid { stroke: #1e3a42; fill: none; }
-    .radar-fill { transition: all 0.8s cubic-bezier(0.16,1,0.3,1); }
-
-    .featured-scroll {
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-    }
-    .featured-scroll > * {
-      scroll-snap-align: start;
-    }
-    .featured-scroll::-webkit-scrollbar { display: none; }
-
-    .marquee-viewport {
-      width: 100%;
-      overflow: hidden;
-    }
-
-    .marquee-track {
-      display: flex;
-      width: max-content;
-      min-width: 100%;
-      will-change: transform;
-      animation: marquee 30s linear infinite;
-    }
-
-    .marquee-group {
-      display: flex;
-      gap: 1rem;
-      flex-shrink: 0;
-      min-width: max-content;
-      padding-right: 1rem;
-    }
-
-    .marquee-track:hover {
-      animation-play-state: paused;
-    }
-
-    .ripple-container {
-      position: relative;
-      overflow: hidden;
-    }
-    .ripple-circle {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(20,184,166,0.3);
-      transform: scale(0);
-      animation: rippleEffect 0.6s ease-out;
-      pointer-events: none;
-    }
-
-    .scan-line::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(20,184,166,0.15), transparent);
-      animation: scanLine 8s linear infinite;
-    }
-
-    .bar-animate { animation: barGrow 1.2s cubic-bezier(0.16,1,0.3,1) both; }
-
-    .dot-grid {
-      background-image: radial-gradient(rgba(20,184,166,0.08) 1px, transparent 1px);
-      background-size: 24px 24px;
-    }
-
-    .job-card {
-      transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
-    }
-    .job-card:hover {
-      transform: translateY(-4px);
-      border-color: rgba(20,184,166,0.35);
-      box-shadow: 0 16px 40px -18px rgba(20,184,166,0.26), 0 0 0 1px rgba(20,184,166,0.14);
-    }
-    .job-title {
-      transition: color 0.25s ease, text-shadow 0.25s ease;
-    }
-    .job-card:hover .job-title {
-      color: #5eead4;
-      text-shadow: 0 0 18px rgba(20,184,166,0.2);
-    }
-
-    .modal-reveal { animation: modalReveal 0.45s cubic-bezier(0.16,1,0.3,1) both; }
-    .modal-bg { animation: modalBg 0.3s ease both; }
-
-    .skill-pop {
-      animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
-    }
-
-    .counter-flip {
-      animation: countFlip 0.6s cubic-bezier(0.16,1,0.3,1) both;
-    }
-
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #1e3a42; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: #14b8a6; }
-  `}</style>
-);
-
-/* ─── Hooks ─── */
-function useInView(opts = {}) {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.1, ...opts });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return [ref, visible];
+  return [];
 }
 
-function useAnimatedNumber(target, dur = 1000) {
-  const [val, setVal] = useState(0);
-  const prev = useRef(0);
-  useEffect(() => {
-    if (target === prev.current) return;
-    prev.current = target;
-    const s = performance.now();
-    const tick = (now) => {
-      const p = Math.min((now - s) / dur, 1);
-      const e = 1 - Math.pow(1 - p, 4);
-      setVal(Math.round(target * e));
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [target, dur]);
-  return val;
+function getCompanyName(job = {}) {
+  if (typeof job.company === 'string' && job.company.trim()) {
+    return job.company.trim();
+  }
+
+  if (
+    job.company &&
+    typeof job.company === 'object' &&
+    typeof job.company.name === 'string'
+  ) {
+    return job.company.name;
+  }
+
+  if (
+    job.employer_company &&
+    typeof job.employer_company.name === 'string'
+  ) {
+    return job.employer_company.name;
+  }
+
+  if (
+    job.employerCompany &&
+    typeof job.employerCompany.name === 'string'
+  ) {
+    return job.employerCompany.name;
+  }
+
+  return 'Company';
 }
 
-function useMousePosition() {
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  useEffect(() => {
-    const handler = (e) => setPos({ x: e.clientX, y: e.clientY });
-    window.addEventListener('mousemove', handler);
-    return () => window.removeEventListener('mousemove', handler);
-  }, []);
-  return pos;
-}
+function normalizeJob(job = {}) {
+  return {
+    ...job,
 
-/* ─── 3D Tilt Card Wrapper ─── */
-function TiltCard({ children, className = '' }) {
-  return <div className={className}>{children}</div>;
-}
+    id: job.id,
 
-/* ─── Ripple Button ─── */
-function RippleButton({ children, onClick, disabled, className, ...props }) {
-  const btnRef = useRef(null);
-  const createRipple = (e) => {
-    if (disabled) return;
-    const btn = btnRef.current;
-    const rect = btn.getBoundingClientRect();
-    const circle = document.createElement('span');
-    const d = Math.max(rect.width, rect.height);
-    circle.style.width = circle.style.height = d + 'px';
-    circle.style.left = e.clientX - rect.left - d / 2 + 'px';
-    circle.style.top = e.clientY - rect.top - d / 2 + 'px';
-    circle.className = 'ripple-circle';
-    btn.appendChild(circle);
-    setTimeout(() => circle.remove(), 600);
-    onClick?.(e);
+    title:
+      typeof job.title === 'string' && job.title.trim()
+        ? job.title.trim()
+        : 'Untitled Position',
+
+    company: getCompanyName(job),
+
+    location:
+      typeof job.location === 'string' && job.location.trim()
+        ? job.location.trim()
+        : 'Location not specified',
+
+    type:
+      typeof job.type === 'string' && job.type.trim()
+        ? job.type.trim()
+        : 'Not specified',
+
+    level:
+      typeof job.level === 'string' && job.level.trim()
+        ? job.level.trim()
+        : 'Entry Level',
+
+    description:
+      typeof job.description === 'string'
+        ? job.description
+        : '',
+
+    track:
+      typeof job.track === 'string'
+        ? job.track
+        : '',
+
+    skills: normalizeSkills(job.skills),
+
+    salary_min:
+      job.salary_min !== null &&
+      job.salary_min !== undefined &&
+      job.salary_min !== ''
+        ? Number(job.salary_min)
+        : null,
+
+    salary_max:
+      job.salary_max !== null &&
+      job.salary_max !== undefined &&
+      job.salary_max !== ''
+        ? Number(job.salary_max)
+        : null,
+
+    vacancies:
+      job.vacancies !== null &&
+      job.vacancies !== undefined
+        ? Number(job.vacancies)
+        : null,
+
+    application_deadline:
+      job.application_deadline || null,
   };
-  return (
-    <button ref={btnRef} onClick={createRipple} disabled={disabled} className={`ripple-container ${className}`} {...props}>
-      {children}
-    </button>
-  );
 }
 
-/* ─── Radar Chart ─── */
-function RadarChart({ skills, experience, track, size = 140 }) {
-  const c = size / 2;
-  const r = size * 0.38;
-  const angles = [-90, 30, 150].map(a => a * Math.PI / 180);
-  const values = [skills / 60, experience / 20, track / 20];
-  const labels = ['Skills', 'Exp', 'Track'];
+function getApiArray(response) {
+  if (Array.isArray(response?.data)) {
+    return response.data;
+  }
 
-  const point = (i, scale) => ({
-    x: c + Math.cos(angles[i]) * r * scale,
-    y: c + Math.sin(angles[i]) * r * scale,
+  if (Array.isArray(response?.data?.data)) {
+    return response.data.data;
+  }
+
+  return [];
+}
+
+function formatMoney(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return null;
+  }
+
+  return number.toLocaleString();
+}
+
+function formatDeadline(value) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   });
+}
 
-  const gridLevels = [0.33, 0.66, 1];
-  const dataPoints = values.map((v, i) => point(i, v));
-  const dataPath = dataPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ') + 'Z';
+/* =========================================================
+   PAGE STYLES
+   ========================================================= */
 
+function JobsStyles() {
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      {gridLevels.map((level, li) => (
-        <polygon key={li} className="radar-grid"
-          points={angles.map((_, i) => { const p = point(i, level); return `${p.x},${p.y}`; }).join(' ')}
-          strokeWidth="0.5" strokeDasharray={li < 2 ? '2,3' : 'none'} opacity={0.4 + li * 0.2}
-        />
-      ))}
-      {angles.map((_, i) => {
-        const p = point(i, 1);
-        return <line key={i} x1={c} y1={c} x2={p.x} y2={p.y} stroke="#1e3a42" strokeWidth="0.5" opacity="0.5" />;
-      })}
-      <polygon className="radar-fill" points={dataPath.replace(/[MLZ]/g, (m) => m === 'Z' ? '' : '').trim().replace(/(\d+\.?\d*),(\d+\.?\d*)/g, '$1,$2')}
-        fill="url(#radarGrad)" stroke="#14b8a6" strokeWidth="1.5" opacity="0.9"
-        style={{ filter: 'drop-shadow(0 0 8px rgba(20,184,166,0.3))' }}
-      />
-      <path d={dataPath} fill="url(#radarGrad)" stroke="#14b8a6" strokeWidth="1.5" strokeLinejoin="round" opacity="0.85" />
-      {dataPoints.map((p, i) => (
-        <g key={i}>
-          <circle cx={p.x} cy={p.y} r="4" fill="#0A1A22" stroke="#14b8a6" strokeWidth="2" />
-          <circle cx={p.x} cy={p.y} r="2" fill="#14b8a6" />
-        </g>
-      ))}
-      {angles.map((_, i) => {
-        const p = point(i, 1.25);
-        return (
-          <text key={i} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle"
-            fill="#9ca3af" fontSize="9" fontWeight="600">{labels[i]}</text>
+    <style>{`
+      @keyframes jobsFadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes jobsFadeIn {
+        from {
+          opacity: 0;
+        }
+
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes jobsFloat {
+        0%, 100% {
+          transform: translateY(0px);
+        }
+
+        50% {
+          transform: translateY(-12px);
+        }
+      }
+
+      @keyframes jobsPulseGlow {
+        0%, 100% {
+          opacity: .25;
+          transform: scale(1);
+        }
+
+        50% {
+          opacity: .45;
+          transform: scale(1.08);
+        }
+      }
+
+      @keyframes jobsGradient {
+        0% {
+          background-position: 0% 50%;
+        }
+
+        50% {
+          background-position: 100% 50%;
+        }
+
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      @keyframes jobsModalIn {
+        from {
+          opacity: 0;
+          transform: translateY(30px) scale(.97);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .jobs-fade-up {
+        animation: jobsFadeUp .55s cubic-bezier(.16,1,.3,1) both;
+      }
+
+      .jobs-fade-in {
+        animation: jobsFadeIn .4s ease both;
+      }
+
+      .jobs-float {
+        animation: jobsFloat 7s ease-in-out infinite;
+      }
+
+      .jobs-modal-in {
+        animation: jobsModalIn .35s cubic-bezier(.16,1,.3,1) both;
+      }
+
+      .jobs-gradient-text {
+        background: linear-gradient(
+          120deg,
+          #2dd4bf,
+          #22d3ee,
+          #5eead4,
+          #14b8a6
         );
-      })}
-      <defs>
-        <radialGradient id="radarGrad">
-          <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.08" />
-        </radialGradient>
-      </defs>
-    </svg>
+
+        background-size: 250% 250%;
+        animation: jobsGradient 5s ease infinite;
+
+        -webkit-background-clip: text;
+        background-clip: text;
+
+        -webkit-text-fill-color: transparent;
+      }
+
+      .jobs-card {
+        background:
+          linear-gradient(
+            145deg,
+            rgba(10,26,34,.92),
+            rgba(6,17,23,.95)
+          );
+
+        border: 1px solid rgba(30,58,66,.55);
+        backdrop-filter: blur(16px);
+
+        transition:
+          transform .3s cubic-bezier(.16,1,.3,1),
+          border-color .3s ease,
+          box-shadow .3s ease;
+      }
+
+      .jobs-card:hover {
+        transform: translateY(-4px);
+
+        border-color: rgba(45,212,191,.30);
+
+        box-shadow:
+          0 24px 55px -30px rgba(20,184,166,.45),
+          0 0 0 1px rgba(20,184,166,.05);
+      }
+
+      .jobs-card-title {
+        transition:
+          color .25s ease,
+          text-shadow .25s ease;
+      }
+
+      .jobs-card:hover .jobs-card-title {
+        color: #5eead4;
+
+        text-shadow:
+          0 0 20px rgba(20,184,166,.15);
+      }
+
+      .jobs-dot-grid {
+        background-image:
+          radial-gradient(
+            rgba(45,212,191,.065) 1px,
+            transparent 1px
+          );
+
+        background-size: 28px 28px;
+      }
+
+      .jobs-scrollbar::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+
+      .jobs-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .jobs-scrollbar::-webkit-scrollbar-thumb {
+        background: #1e3a42;
+        border-radius: 20px;
+      }
+
+      .jobs-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #14b8a6;
+      }
+    `}</style>
   );
 }
 
-/* ─── Ring Score ─── */
-function ScoreRing({ score, size = 90, sw = 5 }) {
-  const r = (size - sw * 2) / 2;
-  const circ = 2 * Math.PI * r;
-  const dash = (score / 100) * circ;
-  const color = score >= 80 ? '#10b981' : score >= 60 ? '#14b8a6' : '#f59e0b';
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <div className="absolute inset-3 rounded-full blur-lg opacity-25" style={{ background: color }} />
-      <svg className="w-full h-full -rotate-90" viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#0F3A42" strokeWidth={sw} />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={sw}
-          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 6px ${color}50)`, animation: 'ringProgress 1.2s ease-out both' }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-black text-white tabular-nums">{score}%</span>
-      </div>
-    </div>
-  );
-}
+/* =========================================================
+   CURSOR GLOW
 
-/* ─── Skeleton ─── */
-function Skeleton() {
-  return (
-    <div className="glass-card rounded-2xl p-6 relative overflow-hidden">
-      <div className="flex gap-6">
-        <div className="w-24 h-24 rounded-full bg-[#1e3a42]/30 animate-pulse shrink-0" />
-        <div className="flex-1 space-y-3 py-1">
-          <div className="h-5 w-2/3 bg-[#1e3a42]/30 rounded-lg animate-pulse" />
-          <div className="h-4 w-1/3 bg-[#1e3a42]/20 rounded-lg animate-pulse" style={{ animationDelay: '0.1s' }} />
-          <div className="h-3 w-full bg-[#1e3a42]/15 rounded-lg animate-pulse" style={{ animationDelay: '0.2s' }} />
-          <div className="flex gap-2">
-            {[1,2,3].map(i => <div key={i} className="h-6 w-16 bg-[#1e3a42]/20 rounded-full animate-pulse" style={{ animationDelay: `${i*0.1}s` }} />)}
-          </div>
-        </div>
-      </div>
-      <div className="absolute inset-0 scan-line pointer-events-none" />
-    </div>
-  );
-}
+   Important:
+   This uses direct DOM style updates.
+   It does NOT call setState on mousemove.
+   Therefore moving the mouse does not rerender the page.
+   ========================================================= */
 
-/* ─── Stats Card ─── */
-function StatsCard({ stat, statsVisible, index }) {
-  const animVal = useAnimatedNumber(statsVisible ? stat.value : 0);
-
-  return (
-    <TiltCard intensity={4}>
-      <div className="glass-card rounded-2xl p-5 text-center relative overflow-hidden group cursor-default"
-        style={{ animationDelay: `${index * 0.08}s` }}>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-[2px] rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-          style={{ background: stat.color }} />
-        <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
-          style={{ background: `${stat.bg}15` }}>
-          <stat.icon size={18} style={{ color: stat.color }} />
-        </div>
-        <div className="text-3xl font-black tabular-nums mb-1" style={{ color: stat.color }}>
-          {animVal}
-        </div>
-        <div className="text-[10px] text-gray-500 uppercase tracking-[0.15em] font-bold">{stat.label}</div>
-      </div>
-    </TiltCard>
-  );
-}
-
-/* ─── Featured Job Card ─── */
-function FeaturedCard({ job, score, onApply, onDetails, applied, applying }) {
-  const color = score >= 80 ? '#10b981' : score >= 60 ? '#14b8a6' : '#f59e0b';
-  const label = score >= 80 ? 'Top Match' : score >= 60 ? 'Good Fit' : 'Explore';
-
-  return (
-    <TiltCard intensity={6} className="shrink-0 w-[320px] sm:w-[360px]">
-      <div className="glass-card glow-border shine-effect rounded-2xl p-5 h-full relative overflow-hidden">
-        {/* Badge */}
-        <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-          style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}>
-          <Flame size={10} /> {label}
-        </div>
-
-        {/* Score */}
-        <div className="flex items-center gap-4 mb-4">
-          <div className="relative w-14 h-14 shrink-0">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
-              <circle cx="28" cy="28" r="24" fill="none" stroke="#0F3A42" strokeWidth="3" />
-              <circle cx="28" cy="28" r="24" fill="none" stroke={color} strokeWidth="3"
-                strokeDasharray={`${(score/100)*2*Math.PI*24} ${2*Math.PI*24}`} strokeLinecap="round"
-                style={{ filter: `drop-shadow(0 0 4px ${color}40)` }} />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-sm font-black text-white">{score}%</span>
-            </div>
-          </div>
-          <div className="min-w-0">
-            <h4 className="text-base font-bold text-white truncate">{job.title}</h4>
-            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><Building2 size={11} /> {job.company}</p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-1 mb-4">
-          {[{ icon: MapPin, t: job.location }, { icon: Briefcase, t: job.level }].map((m, i) => (
-            <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#0F3A42]/40 rounded text-[10px] text-gray-400 border border-[#1e3a42]/30">
-              <m.icon size={10} /> {m.t}
-            </span>
-          ))}
-        </div>
-
-        {(job.salary_min || job.salary_max) && (
-          <div className="text-sm font-bold text-emerald-400 mb-4">
-            ৳{job.salary_min?.toLocaleString()} – ৳{job.salary_max?.toLocaleString()}<span className="text-emerald-400/40 text-xs font-normal"> /mo</span>
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-1 mb-4">
-          {(job.skills || []).slice(0, 4).map((s, i) => (
-            <span key={i} className="px-2 py-0.5 text-[10px] rounded-full bg-[#14b8a6]/10 text-[#2dd4bf] border border-[#14b8a6]/20">{s}</span>
-          ))}
-          {(job.skills || []).length > 4 && <span className="px-2 py-0.5 text-[10px] rounded-full bg-[#0F3A42]/40 text-gray-500">+{job.skills.length - 4}</span>}
-        </div>
-
-        <div className="flex gap-2 mt-auto">
-          <RippleButton onClick={() => onApply(job.id)} disabled={applied || applying}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold text-white cursor-pointer
-              ${applied ? 'bg-emerald-600/70' : applying ? 'bg-gray-600' : 'bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] hover:shadow-lg hover:shadow-[#14b8a6]/20'}`}>
-            {applied ? <><CheckCircle size={12} /> Applied</> : applying ? <><Loader2 size={12} className="animate-spin" /> ...</> : <><Send size={12} /> Apply</>}
-          </RippleButton>
-          <button onClick={() => onDetails(job)}
-            className="px-3 py-2 border border-[#1e3a42]/50 rounded-xl text-gray-500 hover:text-white hover:border-[#14b8a6]/30 transition-all text-xs cursor-pointer">
-            <Eye size={14} />
-          </button>
-        </div>
-      </div>
-    </TiltCard>
-  );
-}
-
-/* ═══════════════════════════════════════
-   MAIN EXPORT
-   ═══════════════════════════════════════ */
-export default function Jobs() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [jobs, setJobs] = useState([]);
-  const [userSkills, setUserSkills] = useState([]);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [appliedJobs, setAppliedJobs] = useState(new Set());
-  const [applyingTo, setApplyingTo] = useState(null);
-  const [savedJobs, setSavedJobs] = useState(new Set());
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [expandedCard, setExpandedCard] = useState(null);
-  const mousePos = useMousePosition();
-  const featuredRef = useRef(null);
-
-  const [heroRef, heroVisible] = useInView();
-  const [statsRef, statsVisible] = useInView();
-  const [listRef, listVisible] = useInView();
+function CursorGlow() {
+  const ref = useRef(null);
 
   useEffect(() => {
-    fetchJobs();
-    if (user) { fetchUserSkills(); fetchAppliedJobs(); }
-  }, [user]);
+    let animationFrame = null;
 
-  const fetchJobs = async () => {
-    try { const r = await api.get('/jobs'); setJobs(Array.isArray(r.data) ? r.data : []); }
-    catch { setJobs([]); }
-    finally { setLoading(false); }
-  };
-  const fetchUserSkills = async () => {
-    try { const r = await api.get(`/user-skills?user_id=${user.id}`); setUserSkills(Array.isArray(r.data) ? r.data : []); }
-    catch { setUserSkills([]); }
-  };
-  const fetchAppliedJobs = async () => {
-    try { const r = await api.get(`/job-applications?user_id=${user.id}`); setAppliedJobs(new Set((Array.isArray(r.data) ? r.data : []).map(a => a.job_id))); }
-    catch {}
-  };
+    const handleMouseMove = (event) => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
 
-  const applyToJob = (jobId) => {
-    if (!user) { navigate('/login'); return; }
-    if (appliedJobs.has(jobId)) return;
-    // Navigate to the comprehensive application form instead of quick apply
-    navigate(`/apply-job/${jobId}`);
-  };
+      animationFrame = requestAnimationFrame(() => {
+        if (!ref.current) {
+          return;
+        }
 
-  const toggleSave = (id) => setSavedJobs(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+        ref.current.style.transform =
+          `translate3d(${event.clientX - 220}px, ${event.clientY - 220}px, 0)`;
+      });
+    };
 
-  const proficiencyRank = { Beginner: 1, Intermediate: 2, Expert: 3, Professional: 4 };
-  const jobLevelRank = { 'Entry Level': 1, 'Mid Level': 2, Senior: 3 };
-  const avgProficiency = userSkills.length > 0 ? userSkills.reduce((s, sk) => s + (proficiencyRank[sk.proficiency] || 1), 0) / userSkills.length : 0;
-  const userSkillNames = useMemo(() => userSkills.map(s => (s.skill_name || '').toLowerCase()), [userSkills]);
-
-  const getMatchDetails = useCallback((job) => {
-    if (!user || userSkills.length === 0) return { total: 0, skills: 0, experience: 0, track: 0, matchedSkills: [] };
-    const jsk = (Array.isArray(job.skills) ? job.skills : []).map(s => s.toLowerCase());
-    const matched = jsk.filter(js => userSkillNames.includes(js));
-    const skillScore = jsk.length > 0 ? Math.round((matched.length / jsk.length) * 60) : 0;
-    const req = jobLevelRank[job.level] || 1;
-    let expScore = avgProficiency >= req ? 20 : (req - avgProficiency <= 1 ? 12 : req - avgProficiency <= 2 ? 5 : 0);
-    let trackScore = matched.length > 0 ? (matched.length >= jsk.length * 0.5 ? 20 : 10) : 0;
-    return { total: skillScore + expScore + trackScore, skills: skillScore, experience: expScore, track: trackScore, matchedSkills: matched };
-  }, [user, userSkills, userSkillNames, avgProficiency]);
-
-  const getMatchScore = (j) => getMatchDetails(j).total;
-  const avgLevelLabel = avgProficiency >= 3.5 ? 'Professional' : avgProficiency >= 2.5 ? 'Expert' : avgProficiency >= 1.5 ? 'Intermediate' : avgProficiency > 0 ? 'Beginner' : 'N/A';
-
-  const filteredJobs = useMemo(() => {
-    const filtered = jobs.filter(j => {
-      const ms = [j.title, j.company, ...(j.skills || [])].some(s => (s || '').toLowerCase().includes(search.toLowerCase()));
-      if (filter === 'all') return ms;
-      const sc = getMatchScore(j);
-      if (filter === 'excellent') return ms && sc >= 80;
-      if (filter === 'good') return ms && sc >= 60 && sc < 80;
-      if (filter === 'fair') return ms && sc < 60;
-      if (filter === 'saved') return ms && savedJobs.has(j.id);
-      return ms;
+    window.addEventListener('mousemove', handleMouseMove, {
+      passive: true,
     });
 
-    if (user) {
-      return [...filtered].sort((a, b) => getMatchScore(b) - getMatchScore(a));
-    }
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
 
-    return filtered;
-  }, [jobs, search, filter, savedJobs, getMatchScore, user]);
-
-  const topMatches = useMemo(() =>
-    [...jobs].sort((a, b) => getMatchScore(b) - getMatchScore(a)).slice(0, 6).filter(j => getMatchScore(j) > 0),
-    [jobs, getMatchScore]
-  );
-
-  const excellentCount = useMemo(() => jobs.filter(j => getMatchScore(j) >= 80).length, [jobs]);
-  const goodCount = useMemo(() => jobs.filter(j => { const s = getMatchScore(j); return s >= 60 && s < 80; }).length, [jobs]);
-  const fairCount = useMemo(() => jobs.filter(j => getMatchScore(j) < 60).length, [jobs]);
-
-  const filters = [
-    { key: 'all', label: 'All', icon: Layers, count: jobs.length },
-    ...(user ? [
-      { key: 'excellent', label: 'Excellent', icon: Crown, count: excellentCount, c: '#10b981' },
-      { key: 'good', label: 'Good', icon: Zap, count: goodCount, c: '#14b8a6' },
-      { key: 'fair', label: 'Fair', icon: Target, count: fairCount, c: '#f59e0b' },
-      { key: 'saved', label: 'Saved', icon: Bookmark, count: savedJobs.size, c: '#ec4899' },
-    ] : []),
-  ];
-
-  const activeIdx = filters.findIndex(f => f.key === filter);
+      window.removeEventListener(
+        'mousemove',
+        handleMouseMove
+      );
+    };
+  }, []);
 
   return (
-    <>
-      <InjectStyles />
-      <div className="min-h-screen relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #050D11 0%, #0A1A22 40%, #071218 100%)' }}>
+    <div
+      ref={ref}
+      className="fixed pointer-events-none z-0"
+      style={{
+        left: 0,
+        top: 0,
+        width: 440,
+        height: 440,
 
-        {/* ── Cursor glow ── */}
-        <div className="fixed pointer-events-none z-50 mix-blend-screen"
-          style={{ left: mousePos.x - 200, top: mousePos.y - 200, width: 400, height: 400,
-            background: 'radial-gradient(circle, rgba(20,184,166,0.03) 0%, transparent 70%)',
-            transition: 'left 0.3s ease-out, top 0.3s ease-out' }} />
+        transform:
+          'translate3d(-1000px,-1000px,0)',
 
-        {/* ── Background ── */}
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="blob-1 absolute -top-[20%] -left-[10%] w-[500px] h-[500px] bg-[#14b8a6]/[0.03]" />
-          <div className="blob-2 absolute -bottom-[10%] -right-[15%] w-[600px] h-[600px] bg-[#06b6d4]/[0.03]" />
-          <div className="absolute top-[30%] left-[60%] w-[400px] h-[400px] bg-[radial-gradient(ellipse,rgba(45,212,191,0.025)_0%,transparent_70%)]"
-            style={{ animation: 'orbFloat 20s ease-in-out infinite' }} />
-          <div className="dot-grid absolute inset-0 opacity-40" />
+        background:
+          'radial-gradient(circle, rgba(20,184,166,.045) 0%, rgba(6,182,212,.015) 40%, transparent 72%)',
+
+        willChange: 'transform',
+      }}
+    />
+  );
+}
+
+/* =========================================================
+   SCORE RING
+   ========================================================= */
+
+function ScoreRing({
+  score = 0,
+  size = 82,
+}) {
+  const safeScore = Math.max(
+    0,
+    Math.min(100, Number(score) || 0)
+  );
+
+  const strokeWidth = 5;
+  const radius =
+    (size - strokeWidth * 2) / 2;
+
+  const circumference =
+    2 * Math.PI * radius;
+
+  const progress =
+    (safeScore / 100) * circumference;
+
+  const color =
+    safeScore >= 80
+      ? '#10b981'
+      : safeScore >= 60
+        ? '#14b8a6'
+        : '#f59e0b';
+
+  return (
+    <div
+      className="relative shrink-0"
+      style={{
+        width: size,
+        height: size,
+      }}
+    >
+      <svg
+        width={size}
+        height={size}
+        className="-rotate-90"
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#12333c"
+          strokeWidth={strokeWidth}
+        />
+
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={`${progress} ${circumference}`}
+          style={{
+            transition:
+              'stroke-dasharray .7s cubic-bezier(.16,1,.3,1)',
+            filter:
+              `drop-shadow(0 0 6px ${color}55)`,
+          }}
+        />
+      </svg>
+
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-lg text-white font-black">
+          {safeScore}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   SKELETON
+   ========================================================= */
+
+function JobSkeleton() {
+  return (
+    <div className="jobs-card rounded-2xl p-6 overflow-hidden">
+      <div className="flex gap-5">
+        <div className="w-16 h-16 shrink-0 rounded-2xl bg-[#12333c]/40 animate-pulse" />
+
+        <div className="flex-1">
+          <div className="h-5 w-2/5 bg-[#12333c]/40 rounded-lg animate-pulse mb-3" />
+
+          <div className="h-4 w-1/4 bg-[#12333c]/30 rounded-lg animate-pulse mb-5" />
+
+          <div className="flex gap-2 mb-4">
+            <div className="h-6 w-20 bg-[#12333c]/25 rounded-lg animate-pulse" />
+            <div className="h-6 w-24 bg-[#12333c]/25 rounded-lg animate-pulse" />
+            <div className="h-6 w-20 bg-[#12333c]/25 rounded-lg animate-pulse" />
+          </div>
+
+          <div className="h-3 w-full bg-[#12333c]/20 rounded animate-pulse" />
         </div>
+      </div>
+    </div>
+  );
+}
 
-        <div className="relative z-10 pt-24 pb-20">
+/* =========================================================
+   MATCH BAR
+   ========================================================= */
 
-          {/* ════════════════════════════════════
-              HERO SECTION
-             ════════════════════════════════════ */}
-          <div ref={heroRef} className="max-w-[1280px] mx-auto px-6 sm:px-8 lg:px-12 mb-16">
-            <div className={`text-center ${heroVisible ? 'slide-down' : 'opacity-0'}`}>
-              {/* Floating decorative elements */}
-              <div className="relative inline-block mb-8">
-                <div className="absolute -top-8 -left-12 float-slow opacity-40">
-                  <div className="w-3 h-3 rounded-full bg-[#14b8a6]/40 blur-[2px]" />
-                </div>
-                <div className="absolute -top-4 -right-16 float-med opacity-30">
-                  <div className="w-2 h-2 rounded-full bg-[#06b6d4]/60" />
-                </div>
-                <div className="absolute top-6 -left-20 float-fast opacity-20">
-                  <div className="w-4 h-4 rounded bg-[#2dd4bf]/20 rotate-45" />
+function MatchBar({
+  label,
+  value,
+  max,
+  color,
+}) {
+  const width =
+    max > 0
+      ? Math.min(
+          100,
+          Math.max(0, (value / max) * 100)
+        )
+      : 0;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[11px] text-gray-500">
+          {label}
+        </span>
+
+        <span
+          className="text-[11px] font-bold"
+          style={{ color }}
+        >
+          {value}/{max}
+        </span>
+      </div>
+
+      <div className="h-1.5 rounded-full bg-[#12333c]/60 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{
+            width: `${width}%`,
+            background: color,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   JOB CARD
+
+   Declared OUTSIDE Jobs() so React does not recreate
+   the component type during search/filter changes.
+   ========================================================= */
+
+function JobCard({
+  job,
+  user,
+  match,
+  applied,
+  saved,
+  index,
+  onApply,
+  onDetails,
+  onSave,
+}) {
+  const [expanded, setExpanded] =
+    useState(false);
+
+  const score = match.total;
+
+  const scoreColor =
+    score >= 80
+      ? '#10b981'
+      : score >= 60
+        ? '#14b8a6'
+        : '#f59e0b';
+
+  const matchLabel =
+    score >= 80
+      ? 'Excellent'
+      : score >= 60
+        ? 'Good'
+        : 'Fair';
+
+  const salaryMin =
+    formatMoney(job.salary_min);
+
+  const salaryMax =
+    formatMoney(job.salary_max);
+
+  const deadline =
+    formatDeadline(job.application_deadline);
+
+  return (
+    <article
+      className="jobs-card jobs-fade-up rounded-2xl relative overflow-hidden"
+      style={{
+        animationDelay:
+          `${Math.min(index, 8) * 50}ms`,
+      }}
+    >
+      <div
+        className="absolute top-0 left-0 right-0 h-[2px]"
+        style={{
+          background:
+            user
+              ? `linear-gradient(90deg, transparent, ${scoreColor}80, transparent)`
+              : 'linear-gradient(90deg, transparent, rgba(20,184,166,.45), transparent)',
+        }}
+      />
+
+      <div className="p-5 sm:p-6">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-5">
+          {user && (
+            <div className="shrink-0">
+              <ScoreRing score={score} />
+            </div>
+          )}
+
+          <div className="flex-1 min-w-0">
+            <div className="flex gap-4 justify-between items-start">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  <h2 className="jobs-card-title text-lg sm:text-xl text-white font-bold leading-snug">
+                    {job.title}
+                  </h2>
+
+                  {user && (
+                    <span
+                      className="px-2 py-0.5 rounded-md border text-[9px] uppercase tracking-wider font-black"
+                      style={{
+                        color: scoreColor,
+                        borderColor:
+                          `${scoreColor}35`,
+                        background:
+                          `${scoreColor}12`,
+                      }}
+                    >
+                      {matchLabel} Match
+                    </span>
+                  )}
                 </div>
 
-                <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#14b8a6]/[0.08] border border-[#14b8a6]/20 mb-6">
-                  <Sparkles size={14} className="text-[#14b8a6] animate-pulse" />
-                  <span className="text-xs font-bold text-[#2dd4bf] uppercase tracking-[0.2em]">
-                    {user ? 'Intelligent Matching' : 'Career Portal'}
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  <span className="inline-flex items-center gap-1">
+                    <Building2 size={12} />
+                    {job.company}
                   </span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#14b8a6] animate-pulse" />
+
+                  <span className="text-gray-700">
+                    •
+                  </span>
+
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin size={12} />
+                    {job.location}
+                  </span>
                 </div>
               </div>
 
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-[1.1] tracking-tight">
-                {user ? (
-                  <>Discover Your<br /><span className="gradient-text">Dream Career</span></>
-                ) : (
-                  <>Explore<br /><span className="gradient-text">Opportunities</span></>
-                )}
-              </h1>
-              <p className="text-gray-500 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed mb-8 text-reveal" style={{ animationDelay: '0.3s' }}>
-                {user
-                  ? 'AI-powered matching analyzes your skills, experience, and trajectory to find the perfect role'
-                  : 'Browse curated positions from top companies and take the next step'}
-              </p>
-
-              {/* Stats bubbles in hero */}
               {user && (
-                <div className="flex justify-center gap-3 sm:gap-5 flex-wrap scale-in" style={{ animationDelay: '0.5s' }}>
-                  {[
-                    { icon: Shield, label: 'Skills', value: userSkills.length, color: '#14b8a6' },
-                    { icon: Award, label: 'Level', value: avgLevelLabel, color: '#06b6d4' },
-                    { icon: Briefcase, label: 'Jobs', value: jobs.length, color: '#2dd4bf' },
-                  ].map((b, i) => (
-                    <div key={i} className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-[#0A1A22]/80 border border-[#1e3a42]/40 backdrop-blur-sm">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${b.color}15` }}>
-                        <b.icon size={15} style={{ color: b.color }} />
-                      </div>
-                      <div className="text-left">
-                        <div className="text-[10px] text-gray-600 uppercase tracking-wider font-bold">{b.label}</div>
-                        <div className="text-sm font-bold text-white">{b.value}</div>
-                      </div>
-                    </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onSave(job.id)
+                  }
+                  className={`w-10 h-10 shrink-0 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+                    saved
+                      ? 'bg-[#14b8a6]/15 border-[#14b8a6]/30 text-[#2dd4bf]'
+                      : 'bg-[#0c2028]/50 border-[#1e3a42]/50 text-gray-500 hover:text-[#2dd4bf] hover:border-[#14b8a6]/30'
+                  }`}
+                  title={
+                    saved
+                      ? 'Remove saved job'
+                      : 'Save job'
+                  }
+                >
+                  {saved ? (
+                    <BookmarkCheck size={17} />
+                  ) : (
+                    <Bookmark size={17} />
+                  )}
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2 mt-4">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0f2c34]/50 border border-[#1e3a42]/40 text-[11px] text-gray-400">
+                <Briefcase size={11} />
+                {job.type}
+              </span>
+
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0f2c34]/50 border border-[#1e3a42]/40 text-[11px] text-gray-400">
+                <TrendingUp size={11} />
+                {job.level}
+              </span>
+
+              {job.vacancies > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0f2c34]/50 border border-[#1e3a42]/40 text-[11px] text-gray-400">
+                  <Layers size={11} />
+                  {job.vacancies}{' '}
+                  {job.vacancies === 1
+                    ? 'opening'
+                    : 'openings'}
+                </span>
+              )}
+
+              {deadline && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0f2c34]/50 border border-[#1e3a42]/40 text-[11px] text-gray-400">
+                  <Clock size={11} />
+                  {deadline}
+                </span>
+              )}
+            </div>
+
+            {(salaryMin || salaryMax) && (
+              <div className="flex items-center gap-2 mt-4 text-emerald-300 font-bold text-sm">
+                <DollarSign size={15} />
+
+                <span>
+                  {salaryMin && salaryMax
+                    ? `৳${salaryMin} – ৳${salaryMax}`
+                    : salaryMin
+                      ? `From ৳${salaryMin}`
+                      : `Up to ৳${salaryMax}`}
+
+                  <span className="text-emerald-300/40 text-xs font-normal ml-1">
+                    /month
+                  </span>
+                </span>
+              </div>
+            )}
+
+            {job.description && (
+              <p className="mt-4 text-sm text-gray-500 leading-relaxed line-clamp-2">
+                {job.description}
+              </p>
+            )}
+
+            {job.skills.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-4">
+                {job.skills
+                  .slice(0, 7)
+                  .map((skill, skillIndex) => (
+                    <span
+                      key={`${job.id}-${skill}-${skillIndex}`}
+                      className={`px-2.5 py-1 rounded-full text-[10px] border font-medium ${
+                        SKILL_COLORS[
+                          skillIndex %
+                            SKILL_COLORS.length
+                        ]
+                      }`}
+                    >
+                      {skill}
+                    </span>
                   ))}
+
+                {job.skills.length > 7 && (
+                  <span className="px-2.5 py-1 rounded-full text-[10px] bg-[#12333c]/30 border border-[#1e3a42]/40 text-gray-500">
+                    +{job.skills.length - 7}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {user && expanded && (
+              <div className="jobs-fade-in mt-5 p-4 rounded-xl bg-[#06151b]/70 border border-[#1e3a42]/35">
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <MatchBar
+                    label="Skills"
+                    value={match.skills}
+                    max={60}
+                    color="#14b8a6"
+                  />
+
+                  <MatchBar
+                    label="Experience"
+                    value={match.experience}
+                    max={20}
+                    color="#22d3ee"
+                  />
+
+                  <MatchBar
+                    label="Career Fit"
+                    value={match.track}
+                    max={20}
+                    color="#5eead4"
+                  />
+                </div>
+
+                {match.matchedSkills.length >
+                  0 && (
+                  <div className="mt-4">
+                    <div className="text-[10px] text-gray-600 uppercase tracking-wider font-bold mb-2">
+                      Matched skills
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {match.matchedSkills.map(
+                        (skill) => (
+                          <span
+                            key={skill}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px]"
+                          >
+                            <CheckCircle
+                              size={10}
+                            />
+                            {skill}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2.5 mt-5">
+              <button
+                type="button"
+                disabled={applied}
+                onClick={() =>
+                  onApply(job.id)
+                }
+                className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  applied
+                    ? 'bg-emerald-600/60 text-white cursor-default'
+                    : 'bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] text-white hover:shadow-lg hover:shadow-[#14b8a6]/20 hover:scale-[1.02] active:scale-[.98] cursor-pointer'
+                }`}
+              >
+                {applied ? (
+                  <>
+                    <CheckCircle size={14} />
+                    Applied
+                  </>
+                ) : (
+                  <>
+                    <Send size={14} />
+                    Apply
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  onDetails(job)
+                }
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#1e3a42]/50 text-gray-400 hover:text-white hover:border-[#14b8a6]/30 hover:bg-[#14b8a6]/5 transition-all text-sm cursor-pointer"
+              >
+                <Eye size={14} />
+                Details
+              </button>
+
+              {user && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpanded(
+                      (current) =>
+                        !current
+                    )
+                  }
+                  className="ml-auto inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-gray-600 hover:text-[#2dd4bf] transition-colors cursor-pointer"
+                >
+                  {expanded
+                    ? 'Hide Breakdown'
+                    : 'Match Breakdown'}
+
+                  <ChevronDown
+                    size={13}
+                    className={`transition-transform duration-300 ${
+                      expanded
+                        ? 'rotate-180'
+                        : ''
+                    }`}
+                  />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/* =========================================================
+   FEATURED CARD
+   ========================================================= */
+
+function FeaturedJob({
+  job,
+  score,
+  applied,
+  onApply,
+  onDetails,
+}) {
+  const color =
+    score >= 80
+      ? '#10b981'
+      : score >= 60
+        ? '#14b8a6'
+        : '#f59e0b';
+
+  return (
+    <div className="jobs-card rounded-2xl p-5 w-[310px] sm:w-[350px] shrink-0 relative overflow-hidden">
+      <div
+        className="absolute top-0 left-0 right-0 h-[2px]"
+        style={{
+          background:
+            `linear-gradient(90deg, transparent, ${color}, transparent)`,
+        }}
+      />
+
+      <div className="flex items-center gap-4 mb-4">
+        <ScoreRing
+          score={score}
+          size={64}
+        />
+
+        <div className="min-w-0">
+          <h3 className="text-white font-bold truncate">
+            {job.title}
+          </h3>
+
+          <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+            <Building2 size={11} />
+            <span className="truncate">
+              {job.company}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#12333c]/30 text-gray-400 text-[10px]">
+          <MapPin size={10} />
+          {job.location}
+        </span>
+
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#12333c]/30 text-gray-400 text-[10px]">
+          <Briefcase size={10} />
+          {job.type}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-1 mb-5">
+        {job.skills
+          .slice(0, 4)
+          .map((skill) => (
+            <span
+              key={skill}
+              className="px-2 py-1 rounded-full bg-[#14b8a6]/10 border border-[#14b8a6]/15 text-[#5eead4] text-[10px]"
+            >
+              {skill}
+            </span>
+          ))}
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          disabled={applied}
+          onClick={() =>
+            onApply(job.id)
+          }
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold ${
+            applied
+              ? 'bg-emerald-600/60 text-white'
+              : 'bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] text-white hover:shadow-lg hover:shadow-[#14b8a6]/20'
+          }`}
+        >
+          {applied ? (
+            <>
+              <CheckCircle size={12} />
+              Applied
+            </>
+          ) : (
+            <>
+              <Send size={12} />
+              Apply
+            </>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            onDetails(job)
+          }
+          className="w-10 h-10 flex items-center justify-center rounded-xl border border-[#1e3a42]/50 text-gray-500 hover:text-white hover:border-[#14b8a6]/30 transition-all"
+        >
+          <Eye size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   JOB DETAIL MODAL
+   ========================================================= */
+
+function JobDetailsModal({
+  job,
+  user,
+  match,
+  applied,
+  onApply,
+  onClose,
+}) {
+  useEffect(() => {
+    const oldOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow =
+      'hidden';
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener(
+      'keydown',
+      handleEscape
+    );
+
+    return () => {
+      document.body.style.overflow =
+        oldOverflow;
+
+      window.removeEventListener(
+        'keydown',
+        handleEscape
+      );
+    };
+  }, [onClose]);
+
+  const salaryMin =
+    formatMoney(job.salary_min);
+
+  const salaryMax =
+    formatMoney(job.salary_max);
+
+  const deadline =
+    formatDeadline(job.application_deadline);
+
+  const scoreColor =
+    match.total >= 80
+      ? '#10b981'
+      : match.total >= 60
+        ? '#14b8a6'
+        : '#f59e0b';
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      onMouseDown={(event) => {
+        if (
+          event.target ===
+          event.currentTarget
+        ) {
+          onClose();
+        }
+      }}
+    >
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-md" />
+
+      <div className="jobs-modal-in jobs-scrollbar relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#081a22] border border-[#1e3a42]/70 rounded-3xl shadow-2xl">
+        <div className="h-1 bg-gradient-to-r from-[#14b8a6] via-[#22d3ee] to-[#2dd4bf] rounded-t-3xl" />
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-5 top-5 z-20 w-10 h-10 rounded-xl bg-[#0e2a33]/80 border border-[#1e3a42]/70 flex items-center justify-center text-gray-400 hover:text-white hover:border-[#14b8a6]/30 transition-all cursor-pointer"
+        >
+          <X size={18} />
+        </button>
+
+        <div className="p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-5 pr-10">
+            {user && (
+              <ScoreRing
+                score={match.total}
+                size={96}
+              />
+            )}
+
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-3">
+                {job.title}
+              </h2>
+
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#12333c]/30 border border-[#1e3a42]/40 text-xs text-gray-400">
+                  <Building2 size={11} />
+                  {job.company}
+                </span>
+
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#12333c]/30 border border-[#1e3a42]/40 text-xs text-gray-400">
+                  <MapPin size={11} />
+                  {job.location}
+                </span>
+
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#12333c]/30 border border-[#1e3a42]/40 text-xs text-gray-400">
+                  <Briefcase size={11} />
+                  {job.type}
+                </span>
+
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#12333c]/30 border border-[#1e3a42]/40 text-xs text-gray-400">
+                  <TrendingUp size={11} />
+                  {job.level}
+                </span>
+              </div>
+
+              {user && (
+                <div
+                  className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full border text-xs font-bold"
+                  style={{
+                    color: scoreColor,
+                    background:
+                      `${scoreColor}10`,
+                    borderColor:
+                      `${scoreColor}28`,
+                  }}
+                >
+                  <Sparkles size={11} />
+                  {match.total}% Match
                 </div>
               )}
             </div>
           </div>
 
-          {/* ════════════════════════════════════
-              MARQUEE SKILLS TICKER
-             ════════════════════════════════════ */}
-          {user && userSkills.length > 0 && (
-            <div className="relative mb-12 overflow-hidden py-3 border-y border-[#1e3a42]/20 fade-in" style={{ animationDelay: '0.6s' }}>
-              <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#050D11] to-transparent z-10" />
-              <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#050D11] to-transparent z-10" />
-              <div className="marquee-viewport">
-                <div className="marquee-track">
-                  <div className="marquee-group">
-                    {userSkills.map((s, i) => (
-                      <span key={`marquee-a-${s.id ?? i}-${s.skill_name}`} className={`shrink-0 px-3 py-1.5 border rounded-full text-xs font-medium whitespace-nowrap ${skillColors[i % skillColors.length]}`}>
-                        {s.skill_name} • {s.proficiency}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="marquee-group" aria-hidden="true">
-                    {userSkills.map((s, i) => (
-                      <span key={`marquee-b-${s.id ?? i}-${s.skill_name}`} className={`shrink-0 px-3 py-1.5 border rounded-full text-xs font-medium whitespace-nowrap ${skillColors[i % skillColors.length]}`}>
-                        {s.skill_name} • {s.proficiency}
-                      </span>
-                    ))}
-                  </div>
+          {(salaryMin ||
+            salaryMax) && (
+            <div className="mt-7 flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/[.04] border border-emerald-500/15">
+              <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <DollarSign
+                  size={20}
+                  className="text-emerald-300"
+                />
+              </div>
+
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-gray-600 font-bold">
+                  Salary Range
+                </div>
+
+                <div className="text-lg text-emerald-300 font-black mt-0.5">
+                  {salaryMin &&
+                  salaryMax
+                    ? `৳${salaryMin} – ৳${salaryMax}`
+                    : salaryMin
+                      ? `From ৳${salaryMin}`
+                      : `Up to ৳${salaryMax}`}
+
+                  <span className="text-xs font-normal text-emerald-300/40 ml-1">
+                    /month
+                  </span>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="max-w-[1280px] mx-auto px-6 sm:px-8 lg:px-12">
-
-            {/* ════════════════════════════════════
-                TOP MATCHES CAROUSEL
-               ════════════════════════════════════ */}
-            {user && topMatches.length > 0 && !loading && (
-              <div className="mb-14 slide-up" style={{ animationDelay: '0.3s' }}>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center shadow-lg shadow-[#14b8a6]/20">
-                      <Flame size={16} className="text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-white">Top Matches</h2>
-                      <p className="text-xs text-gray-600">Best fits based on your profile</p>
-                    </div>
-                  </div>
-                  <button onClick={() => featuredRef.current?.scrollBy({ left: 370, behavior: 'smooth' })}
-                    className="flex items-center gap-1 text-xs text-[#14b8a6] hover:text-[#2dd4bf] font-semibold transition-colors cursor-pointer group">
-                    Scroll <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-                <div ref={featuredRef} className="featured-scroll flex gap-4 overflow-x-auto pb-4 -mx-2 px-2">
-                  {topMatches.map((job, i) => (
-                    <div key={job.id} className="slide-right" style={{ animationDelay: `${i * 0.08}s` }}>
-                      <FeaturedCard job={job} score={getMatchScore(job)} onApply={applyToJob}
-                        onDetails={setSelectedJob} applied={appliedJobs.has(job.id)} applying={applyingTo === job.id} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ════════════════════════════════════
-                STATS GRID
-               ════════════════════════════════════ */}
-            {user && (
-              <div ref={statsRef} className={`grid grid-cols-2 lg:grid-cols-4 gap-3 mb-10 ${statsVisible ? 'slide-up' : 'opacity-0'}`}>
-                {[
-                  { label: 'Total Jobs', value: jobs.length, icon: Briefcase, color: '#2dd4bf', bg: '#14b8a6' },
-                  { label: 'Excellent', value: excellentCount, icon: Crown, color: '#10b981', bg: '#10b981' },
-                  { label: 'Good Match', value: goodCount, icon: Zap, color: '#14b8a6', bg: '#14b8a6' },
-                  { label: 'Fair Match', value: fairCount, icon: Target, color: '#f59e0b', bg: '#f59e0b' },
-                ].map((stat, i) => (
-                  <StatsCard
-                    key={stat.label}
-                    stat={stat}
-                    statsVisible={statsVisible}
-                    index={i}
+          {(job.vacancies ||
+            deadline) && (
+            <div className="grid sm:grid-cols-2 gap-3 mt-4">
+              {job.vacancies > 0 && (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-[#0b232c]/60 border border-[#1e3a42]/40">
+                  <Layers
+                    size={17}
+                    className="text-[#2dd4bf]"
                   />
-                ))}
+
+                  <div>
+                    <div className="text-[9px] text-gray-600 uppercase tracking-wider font-bold">
+                      Openings
+                    </div>
+
+                    <div className="text-sm text-white font-semibold">
+                      {job.vacancies}{' '}
+                      {job.vacancies === 1
+                        ? 'position'
+                        : 'positions'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {deadline && (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-[#0b232c]/60 border border-[#1e3a42]/40">
+                  <Clock
+                    size={17}
+                    className="text-cyan-300"
+                  />
+
+                  <div>
+                    <div className="text-[9px] text-gray-600 uppercase tracking-wider font-bold">
+                      Application Deadline
+                    </div>
+
+                    <div className="text-sm text-white font-semibold">
+                      {deadline}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {job.description && (
+            <section className="mt-7">
+              <h3 className="text-xs text-white uppercase tracking-[.16em] font-black mb-3">
+                Job Description
+              </h3>
+
+              <div className="text-sm text-gray-400 leading-7 whitespace-pre-line border-l-2 border-[#14b8a6]/20 pl-4">
+                {job.description}
+              </div>
+            </section>
+          )}
+
+          {job.skills.length > 0 && (
+            <section className="mt-7">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="text-xs text-white uppercase tracking-[.16em] font-black flex items-center gap-2">
+                  <Star
+                    size={14}
+                    className="text-[#2dd4bf]"
+                  />
+                  Required Skills
+                </h3>
+
+                {user && (
+                  <span className="text-[10px] text-gray-600">
+                    {
+                      match
+                        .matchedSkills
+                        .length
+                    }{' '}
+                    of{' '}
+                    {job.skills.length}{' '}
+                    matched
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {job.skills.map(
+                  (skill, index) => {
+                    const matched =
+                      match.matchedSkills.includes(
+                        skill.toLowerCase()
+                      );
+
+                    return (
+                      <span
+                        key={`${skill}-${index}`}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs ${
+                          user && matched
+                            ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-300'
+                            : 'bg-[#12333c]/30 border-[#1e3a42]/40 text-gray-400'
+                        }`}
+                      >
+                        {user &&
+                          matched && (
+                            <CheckCircle
+                              size={11}
+                            />
+                          )}
+
+                        {skill}
+                      </span>
+                    );
+                  }
+                )}
+              </div>
+            </section>
+          )}
+
+          {user && (
+            <section className="mt-7 p-5 rounded-2xl bg-[#06151b]/65 border border-[#1e3a42]/40">
+              <h3 className="text-xs text-white uppercase tracking-[.16em] font-black mb-5 flex items-center gap-2">
+                <Award
+                  size={14}
+                  className="text-[#2dd4bf]"
+                />
+                Match Breakdown
+              </h3>
+
+              <div className="space-y-4">
+                <MatchBar
+                  label="Skills Match"
+                  value={match.skills}
+                  max={60}
+                  color="#14b8a6"
+                />
+
+                <MatchBar
+                  label="Experience Level"
+                  value={match.experience}
+                  max={20}
+                  color="#22d3ee"
+                />
+
+                <MatchBar
+                  label="Career Compatibility"
+                  value={match.track}
+                  max={20}
+                  color="#5eead4"
+                />
+              </div>
+            </section>
+          )}
+
+          <div className="flex gap-3 mt-7">
+            <button
+              type="button"
+              disabled={applied}
+              onClick={() =>
+                onApply(job.id)
+              }
+              className={`flex-1 flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-sm font-bold transition-all ${
+                applied
+                  ? 'bg-emerald-600/60 text-white cursor-default'
+                  : 'bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] text-white hover:shadow-xl hover:shadow-[#14b8a6]/20 hover:scale-[1.01] active:scale-[.99] cursor-pointer'
+              }`}
+            >
+              {applied ? (
+                <>
+                  <CheckCircle
+                    size={16}
+                  />
+                  Already Applied
+                </>
+              ) : (
+                <>
+                  <Send size={16} />
+                  Apply Now
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-3.5 rounded-xl border border-[#1e3a42]/50 text-gray-400 hover:text-white hover:border-[#14b8a6]/30 transition-all cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   MAIN PAGE
+   ========================================================= */
+
+export default function Jobs() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [jobs, setJobs] =
+    useState([]);
+
+  const [userSkills, setUserSkills] =
+    useState([]);
+
+  const [appliedJobs, setAppliedJobs] =
+    useState(() => new Set());
+
+  const [savedJobs, setSavedJobs] =
+    useState(() => {
+      try {
+        const stored =
+          JSON.parse(
+            localStorage.getItem(
+              'careerpath_saved_jobs'
+            ) || '[]'
+          );
+
+        return new Set(
+          Array.isArray(stored)
+            ? stored
+            : []
+        );
+      } catch {
+        return new Set();
+      }
+    });
+
+  const [search, setSearch] =
+    useState('');
+
+  const [filter, setFilter] =
+    useState('all');
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState('');
+
+  const [selectedJob, setSelectedJob] =
+    useState(null);
+
+  const [searchFocused, setSearchFocused] =
+    useState(false);
+
+  const featuredRef =
+    useRef(null);
+
+  /* =======================================================
+     FETCH PUBLIC JOBS
+     ======================================================= */
+
+  const fetchJobs =
+    useCallback(async () => {
+      setLoading(true);
+      setError('');
+
+      try {
+        const response =
+          await api.get('/jobs');
+
+        const data =
+          getApiArray(response);
+
+        const normalized =
+          data
+            .filter(
+              (item) =>
+                item &&
+                typeof item ===
+                  'object'
+            )
+            .map(normalizeJob);
+
+        setJobs(normalized);
+      } catch (requestError) {
+        console.error(
+          'Failed to load jobs:',
+          requestError
+        );
+
+        setJobs([]);
+
+        setError(
+          requestError?.response?.data
+            ?.message ||
+            'Unable to load jobs right now.'
+        );
+      } finally {
+        setLoading(false);
+      }
+    }, []);
+
+  /* =======================================================
+     FETCH USER PROFILE DATA
+     ======================================================= */
+
+  const fetchUserData =
+    useCallback(async () => {
+      if (!user?.id) {
+        setUserSkills([]);
+        setAppliedJobs(
+          new Set()
+        );
+
+        return;
+      }
+
+      const [
+        skillsResult,
+        applicationsResult,
+      ] =
+        await Promise.allSettled([
+          api.get(
+            `/user-skills?user_id=${user.id}`
+          ),
+
+          api.get(
+            `/job-applications?user_id=${user.id}`
+          ),
+        ]);
+
+      if (
+        skillsResult.status ===
+        'fulfilled'
+      ) {
+        setUserSkills(
+          getApiArray(
+            skillsResult.value
+          )
+        );
+      } else {
+        console.error(
+          'Failed to load user skills:',
+          skillsResult.reason
+        );
+
+        setUserSkills([]);
+      }
+
+      if (
+        applicationsResult.status ===
+        'fulfilled'
+      ) {
+        const applications =
+          getApiArray(
+            applicationsResult.value
+          );
+
+        setAppliedJobs(
+          new Set(
+            applications
+              .map(
+                (application) =>
+                  Number(
+                    application.job_id
+                  )
+              )
+              .filter(
+                Number.isFinite
+              )
+          )
+        );
+      } else {
+        console.error(
+          'Failed to load applications:',
+          applicationsResult.reason
+        );
+
+        setAppliedJobs(
+          new Set()
+        );
+      }
+    }, [user?.id]);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
+
+  /* =======================================================
+     SAVE JOBS
+     ======================================================= */
+
+  useEffect(() => {
+    localStorage.setItem(
+      'careerpath_saved_jobs',
+      JSON.stringify(
+        [...savedJobs]
+      )
+    );
+  }, [savedJobs]);
+
+  const toggleSave =
+    useCallback((jobId) => {
+      setSavedJobs(
+        (current) => {
+          const next =
+            new Set(current);
+
+          if (next.has(jobId)) {
+            next.delete(jobId);
+          } else {
+            next.add(jobId);
+          }
+
+          return next;
+        }
+      );
+    }, []);
+
+  /* =======================================================
+     APPLICATION
+     ======================================================= */
+
+  const applyToJob =
+    useCallback(
+      (jobId) => {
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+
+        if (
+          appliedJobs.has(jobId)
+        ) {
+          return;
+        }
+
+        navigate(
+          `/apply-job/${jobId}`
+        );
+      },
+      [
+        user,
+        appliedJobs,
+        navigate,
+      ]
+    );
+
+  /* =======================================================
+     USER SKILL ANALYSIS
+     ======================================================= */
+
+  const userSkillNames =
+    useMemo(() => {
+      return userSkills
+        .map((skill) =>
+          String(
+            skill?.skill_name ??
+            skill?.name ??
+            ''
+          )
+            .trim()
+            .toLowerCase()
+        )
+        .filter(Boolean);
+    }, [userSkills]);
+
+  const avgProficiency =
+    useMemo(() => {
+      if (
+        userSkills.length === 0
+      ) {
+        return 0;
+      }
+
+      const total =
+        userSkills.reduce(
+          (sum, skill) => {
+            const level =
+              PROFICIENCY_RANK[
+                skill?.proficiency
+              ] || 1;
+
+            return sum + level;
+          },
+          0
+        );
+
+      return (
+        total /
+        userSkills.length
+      );
+    }, [userSkills]);
+
+  const avgLevelLabel =
+    useMemo(() => {
+      if (
+        avgProficiency >= 3.5
+      ) {
+        return 'Professional';
+      }
+
+      if (
+        avgProficiency >= 2.5
+      ) {
+        return 'Expert';
+      }
+
+      if (
+        avgProficiency >= 1.5
+      ) {
+        return 'Intermediate';
+      }
+
+      if (
+        avgProficiency > 0
+      ) {
+        return 'Beginner';
+      }
+
+      return 'N/A';
+    }, [avgProficiency]);
+
+  /* =======================================================
+     JOB MATCH CALCULATION
+     ======================================================= */
+
+  const getMatchDetails =
+    useCallback(
+      (job) => {
+        if (
+          !user ||
+          userSkills.length === 0
+        ) {
+          return {
+            total: 0,
+            skills: 0,
+            experience: 0,
+            track: 0,
+            matchedSkills: [],
+          };
+        }
+
+        const jobSkills =
+          normalizeSkills(
+            job?.skills
+          ).map((skill) =>
+            skill.toLowerCase()
+          );
+
+        const matchedSkills =
+          jobSkills.filter(
+            (skill) =>
+              userSkillNames.includes(
+                skill
+              )
+          );
+
+        const skillScore =
+          jobSkills.length > 0
+            ? Math.round(
+                (matchedSkills.length /
+                  jobSkills.length) *
+                  60
+              )
+            : 0;
+
+        const requiredLevel =
+          JOB_LEVEL_RANK[
+            job?.level
+          ] || 1;
+
+        let experienceScore =
+          0;
+
+        if (
+          avgProficiency >=
+          requiredLevel
+        ) {
+          experienceScore = 20;
+        } else {
+          const difference =
+            requiredLevel -
+            avgProficiency;
+
+          if (difference <= 1) {
+            experienceScore = 12;
+          } else if (
+            difference <= 2
+          ) {
+            experienceScore = 5;
+          }
+        }
+
+        let trackScore = 0;
+
+        if (
+          matchedSkills.length > 0
+        ) {
+          if (
+            matchedSkills.length >=
+            jobSkills.length * 0.5
+          ) {
+            trackScore = 20;
+          } else {
+            trackScore = 10;
+          }
+        }
+
+        return {
+          total:
+            skillScore +
+            experienceScore +
+            trackScore,
+
+          skills:
+            skillScore,
+
+          experience:
+            experienceScore,
+
+          track:
+            trackScore,
+
+          matchedSkills,
+        };
+      },
+      [
+        user,
+        userSkills.length,
+        userSkillNames,
+        avgProficiency,
+      ]
+    );
+
+  const getMatchScore =
+    useCallback(
+      (job) =>
+        getMatchDetails(job)
+          .total,
+      [getMatchDetails]
+    );
+
+  /* =======================================================
+     FILTERING
+     ======================================================= */
+
+  const filteredJobs =
+    useMemo(() => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
+
+      const result =
+        jobs.filter((job) => {
+          const searchableValues = [
+            job.title,
+            job.company,
+            job.location,
+            job.type,
+            job.level,
+            job.track,
+            ...job.skills,
+          ];
+
+          const matchesSearch =
+            !query ||
+            searchableValues.some(
+              (value) =>
+                String(
+                  value ?? ''
+                )
+                  .toLowerCase()
+                  .includes(query)
+            );
+
+          if (
+            !matchesSearch
+          ) {
+            return false;
+          }
+
+          if (
+            filter === 'all'
+          ) {
+            return true;
+          }
+
+          if (
+            filter === 'saved'
+          ) {
+            return savedJobs.has(
+              job.id
+            );
+          }
+
+          const score =
+            getMatchScore(job);
+
+          if (
+            filter ===
+            'excellent'
+          ) {
+            return score >= 80;
+          }
+
+          if (
+            filter === 'good'
+          ) {
+            return (
+              score >= 60 &&
+              score < 80
+            );
+          }
+
+          if (
+            filter === 'fair'
+          ) {
+            return score < 60;
+          }
+
+          return true;
+        });
+
+      if (!user) {
+        return result;
+      }
+
+      return [...result].sort(
+        (first, second) =>
+          getMatchScore(
+            second
+          ) -
+          getMatchScore(first)
+      );
+    }, [
+      jobs,
+      search,
+      filter,
+      savedJobs,
+      user,
+      getMatchScore,
+    ]);
+
+  /* =======================================================
+     MATCH COUNTS
+     ======================================================= */
+
+  const excellentCount =
+    useMemo(
+      () =>
+        jobs.filter(
+          (job) =>
+            getMatchScore(job) >=
+            80
+        ).length,
+      [jobs, getMatchScore]
+    );
+
+  const goodCount =
+    useMemo(
+      () =>
+        jobs.filter(
+          (job) => {
+            const score =
+              getMatchScore(job);
+
+            return (
+              score >= 60 &&
+              score < 80
+            );
+          }
+        ).length,
+      [jobs, getMatchScore]
+    );
+
+  const fairCount =
+    useMemo(
+      () =>
+        jobs.filter(
+          (job) =>
+            getMatchScore(job) <
+            60
+        ).length,
+      [jobs, getMatchScore]
+    );
+
+  const topMatches =
+    useMemo(() => {
+      if (!user) {
+        return [];
+      }
+
+      return [...jobs]
+        .sort(
+          (first, second) =>
+            getMatchScore(
+              second
+            ) -
+            getMatchScore(first)
+        )
+        .filter(
+          (job) =>
+            getMatchScore(job) >
+            0
+        )
+        .slice(0, 6);
+    }, [
+      jobs,
+      user,
+      getMatchScore,
+    ]);
+
+  const filters =
+    useMemo(() => {
+      const items = [
+        {
+          key: 'all',
+          label: 'All Jobs',
+          icon: Layers,
+          count: jobs.length,
+        },
+      ];
+
+      if (user) {
+        items.push(
+          {
+            key: 'excellent',
+            label: 'Excellent',
+            icon: Crown,
+            count:
+              excellentCount,
+          },
+          {
+            key: 'good',
+            label: 'Good',
+            icon: Zap,
+            count: goodCount,
+          },
+          {
+            key: 'fair',
+            label: 'Fair',
+            icon: Target,
+            count: fairCount,
+          },
+          {
+            key: 'saved',
+            label: 'Saved',
+            icon: Bookmark,
+            count: savedJobs.size,
+          }
+        );
+      }
+
+      return items;
+    }, [
+      user,
+      jobs.length,
+      excellentCount,
+      goodCount,
+      fairCount,
+      savedJobs.size,
+    ]);
+
+  const selectedMatch =
+    useMemo(() => {
+      if (!selectedJob) {
+        return null;
+      }
+
+      return getMatchDetails(
+        selectedJob
+      );
+    }, [
+      selectedJob,
+      getMatchDetails,
+    ]);
+
+  const clearFilters = () => {
+    setSearch('');
+    setFilter('all');
+  };
+
+  /* =======================================================
+     RENDER
+     ======================================================= */
+
+  return (
+    <>
+      <JobsStyles />
+
+      <div
+        className="min-h-screen relative overflow-hidden"
+        style={{
+          background:
+            'linear-gradient(180deg, #050d11 0%, #081820 40%, #061117 100%)',
+        }}
+      >
+        <CursorGlow />
+
+        {/* Background */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="jobs-dot-grid absolute inset-0 opacity-60" />
+
+          <div
+            className="absolute -top-52 -left-40 w-[520px] h-[520px] rounded-full blur-[120px]"
+            style={{
+              background:
+                'rgba(20,184,166,.055)',
+              animation:
+                'jobsPulseGlow 8s ease-in-out infinite',
+            }}
+          />
+
+          <div
+            className="absolute -bottom-52 -right-40 w-[600px] h-[600px] rounded-full blur-[130px]"
+            style={{
+              background:
+                'rgba(6,182,212,.045)',
+              animation:
+                'jobsPulseGlow 10s ease-in-out infinite',
+            }}
+          />
+        </div>
+
+        <main className="relative z-10 pt-24 pb-20">
+          {/* HERO */}
+          <section className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12">
+            <div className="jobs-fade-up text-center pt-8 pb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#14b8a6]/[.07] border border-[#14b8a6]/20 mb-6">
+                <Sparkles
+                  size={13}
+                  className="text-[#2dd4bf]"
+                />
+
+                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[.18em] text-[#5eead4]">
+                  {user
+                    ? 'Intelligent Career Matching'
+                    : 'Career Opportunities'}
+                </span>
+              </div>
+
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.05]">
+                Find Your Next
+                <br />
+
+                <span className="jobs-gradient-text">
+                  Career Opportunity
+                </span>
+              </h1>
+
+              <p className="max-w-2xl mx-auto text-gray-500 text-sm sm:text-lg leading-relaxed mt-6">
+                {user
+                  ? 'Discover roles matched with your skills, experience and career profile.'
+                  : 'Explore available opportunities and find the role that fits your career.'}
+              </p>
+
+              {user && (
+                <div className="flex items-center justify-center flex-wrap gap-3 mt-8">
+                  <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#0a1d25]/80 border border-[#1e3a42]/45">
+                    <Shield
+                      size={15}
+                      className="text-[#2dd4bf]"
+                    />
+
+                    <div className="text-left">
+                      <div className="text-[9px] text-gray-600 uppercase tracking-wider font-bold">
+                        Skills
+                      </div>
+
+                      <div className="text-sm text-white font-bold">
+                        {
+                          userSkills.length
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#0a1d25]/80 border border-[#1e3a42]/45">
+                    <Award
+                      size={15}
+                      className="text-cyan-300"
+                    />
+
+                    <div className="text-left">
+                      <div className="text-[9px] text-gray-600 uppercase tracking-wider font-bold">
+                        Your Level
+                      </div>
+
+                      <div className="text-sm text-white font-bold">
+                        {avgLevelLabel}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#0a1d25]/80 border border-[#1e3a42]/45">
+                    <Briefcase
+                      size={15}
+                      className="text-[#5eead4]"
+                    />
+
+                    <div className="text-left">
+                      <div className="text-[9px] text-gray-600 uppercase tracking-wider font-bold">
+                        Available
+                      </div>
+
+                      <div className="text-sm text-white font-bold">
+                        {jobs.length}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12">
+            {/* TOP MATCHES */}
+            {user &&
+              !loading &&
+              topMatches.length >
+                0 && (
+                <div className="jobs-fade-up mb-12">
+                  <div className="flex items-end justify-between gap-4 mb-5">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#06b6d4] flex items-center justify-center">
+                          <Flame
+                            size={17}
+                            className="text-white"
+                          />
+                        </div>
+
+                        <div>
+                          <h2 className="text-white font-bold">
+                            Top Matches
+                          </h2>
+
+                          <p className="text-[11px] text-gray-600">
+                            Strongest matches
+                            for your profile
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        featuredRef.current?.scrollBy(
+                          {
+                            left: 370,
+                            behavior:
+                              'smooth',
+                          }
+                        )
+                      }
+                      className="flex items-center gap-1 text-xs font-semibold text-[#2dd4bf] hover:text-[#5eead4] transition-colors cursor-pointer"
+                    >
+                      Scroll
+                      <ArrowRight
+                        size={13}
+                      />
+                    </button>
+                  </div>
+
+                  <div
+                    ref={featuredRef}
+                    className="jobs-scrollbar flex gap-4 overflow-x-auto pb-4"
+                  >
+                    {topMatches.map(
+                      (job) => (
+                        <FeaturedJob
+                          key={job.id}
+                          job={job}
+                          score={getMatchScore(
+                            job
+                          )}
+                          applied={appliedJobs.has(
+                            Number(
+                              job.id
+                            )
+                          )}
+                          onApply={
+                            applyToJob
+                          }
+                          onDetails={
+                            setSelectedJob
+                          }
+                        />
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+            {/* STAT CARDS */}
+            {user && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+                {[
+                  {
+                    label:
+                      'Total Jobs',
+                    value: jobs.length,
+                    icon: Briefcase,
+                    color:
+                      '#2dd4bf',
+                  },
+                  {
+                    label:
+                      'Excellent',
+                    value:
+                      excellentCount,
+                    icon: Crown,
+                    color:
+                      '#10b981',
+                  },
+                  {
+                    label:
+                      'Good Match',
+                    value:
+                      goodCount,
+                    icon: Zap,
+                    color:
+                      '#14b8a6',
+                  },
+                  {
+                    label:
+                      'Fair Match',
+                    value:
+                      fairCount,
+                    icon: Target,
+                    color:
+                      '#f59e0b',
+                  },
+                ].map(
+                  ({
+                    label,
+                    value,
+                    icon: Icon,
+                    color,
+                  }) => (
+                    <div
+                      key={label}
+                      className="jobs-card rounded-2xl p-4 sm:p-5 text-center"
+                    >
+                      <div
+                        className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center mb-3"
+                        style={{
+                          background:
+                            `${color}12`,
+                        }}
+                      >
+                        <Icon
+                          size={18}
+                          style={{
+                            color,
+                          }}
+                        />
+                      </div>
+
+                      <div
+                        className="text-2xl sm:text-3xl font-black"
+                        style={{
+                          color,
+                        }}
+                      >
+                        {value}
+                      </div>
+
+                      <div className="text-[9px] sm:text-[10px] uppercase tracking-[.14em] text-gray-600 font-bold mt-1">
+                        {label}
+                      </div>
+                    </div>
+                  )
+                )}
               </div>
             )}
 
-            {/* ════════════════════════════════════
-                SEARCH + FILTERS
-               ════════════════════════════════════ */}
-            <div className="mb-8 slide-up" style={{ animationDelay: '0.2s' }}>
-              {/* Search */}
-              <div className="relative mb-5 group">
-                <div className={`absolute inset-0 rounded-2xl transition-opacity duration-500 ${searchFocused ? 'opacity-100' : 'opacity-0'}`}
-                  style={{ background: 'linear-gradient(135deg, rgba(20,184,166,0.08) 0%, rgba(6,182,212,0.04) 100%)', filter: 'blur(20px)' }} />
+            {/* SEARCH */}
+            <div className="jobs-fade-up mb-5">
+              <div className="relative">
+                <div
+                  className={`absolute inset-0 rounded-2xl blur-xl transition-opacity duration-300 ${
+                    searchFocused
+                      ? 'opacity-100'
+                      : 'opacity-0'
+                  }`}
+                  style={{
+                    background:
+                      'rgba(20,184,166,.045)',
+                  }}
+                />
+
                 <div className="relative">
-                  <div className={`absolute left-5 top-1/2 -translate-y-1/2 transition-all duration-300 ${searchFocused ? 'text-[#14b8a6] scale-110' : 'text-gray-600'}`}>
-                    <Search size={18} />
-                  </div>
-                  <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-                    onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)}
-                    placeholder="Search by title, company, or skills..."
-                    className="w-full pl-13 pr-12 py-4 bg-[#0A1A22]/80 border border-[#1e3a42]/50 rounded-2xl text-white placeholder-gray-600 text-[15px]
-                      focus:border-[#14b8a6]/40 focus:ring-2 focus:ring-[#14b8a6]/10 transition-all duration-400 backdrop-blur-sm" />
+                  <Search
+                    size={18}
+                    className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${
+                      searchFocused
+                        ? 'text-[#2dd4bf]'
+                        : 'text-gray-600'
+                    }`}
+                  />
+
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(event) =>
+                      setSearch(
+                        event.target
+                          .value
+                      )
+                    }
+                    onFocus={() =>
+                      setSearchFocused(
+                        true
+                      )
+                    }
+                    onBlur={() =>
+                      setSearchFocused(
+                        false
+                      )
+                    }
+                    placeholder="Search title, company, location or skills..."
+                    className="w-full bg-[#091c24]/90 border border-[#1e3a42]/55 rounded-2xl pl-12 pr-12 py-4 text-sm text-white placeholder:text-gray-600 outline-none focus:border-[#14b8a6]/40 focus:ring-2 focus:ring-[#14b8a6]/10 transition-all"
+                  />
+
                   {search && (
-                    <button onClick={() => setSearch('')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg bg-[#1e3a42]/50 text-gray-400 hover:text-white transition-all cursor-pointer hover:bg-[#1e3a42] hover:scale-110">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSearch('')
+                      }
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-[#12333c]/60 flex items-center justify-center text-gray-500 hover:text-white transition-all cursor-pointer"
+                    >
                       <X size={13} />
                     </button>
                   )}
-                  {/* Animated border bottom */}
-                  <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] bg-gradient-to-r from-transparent via-[#14b8a6] to-transparent rounded-full transition-all duration-500 ${searchFocused ? 'w-[90%] opacity-100' : 'w-0 opacity-0'}`} />
-                </div>
-              </div>
-
-              {/* Filter tabs with sliding indicator */}
-              <div className="relative">
-                <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
-                  {filters.map((f, i) => (
-                    <button key={f.key} onClick={() => setFilter(f.key)}
-                      className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all duration-300
-                        ${filter === f.key
-                          ? 'bg-[#14b8a6]/15 text-[#2dd4bf] border border-[#14b8a6]/30 shadow-lg shadow-[#14b8a6]/5'
-                          : 'text-gray-500 border border-transparent hover:text-gray-300 hover:bg-[#0F3A42]/30'
-                        }`}>
-                      {filter === f.key && <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: f.c || '#14b8a6' }} />}
-                      <f.icon size={13} />
-                      {f.label}
-                      <span className={`ml-0.5 tabular-nums px-1.5 py-0.5 rounded-md text-[10px] ${filter === f.key ? 'bg-[#14b8a6]/20' : 'bg-[#0F3A42]/40'}`}>
-                        {f.count}
-                      </span>
-                    </button>
-                  ))}
                 </div>
               </div>
             </div>
 
-            {/* ════════════════════════════════════
-                RESULTS HEADER
-               ════════════════════════════════════ */}
-            <div ref={listRef} className={`flex items-center justify-between mb-5 ${listVisible ? 'fade-in' : 'opacity-0'}`}>
+            {/* FILTERS */}
+            <div className="jobs-scrollbar flex gap-2 overflow-x-auto pb-3 mb-6">
+              {filters.map(
+                ({
+                  key,
+                  label,
+                  icon: Icon,
+                  count,
+                }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() =>
+                      setFilter(key)
+                    }
+                    className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      filter === key
+                        ? 'bg-[#14b8a6]/12 border-[#14b8a6]/30 text-[#5eead4]'
+                        : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300 hover:bg-[#12333c]/25'
+                    }`}
+                  >
+                    <Icon size={13} />
+                    {label}
+
+                    <span className="px-1.5 py-0.5 rounded-md bg-[#12333c]/50 text-[10px]">
+                      {count}
+                    </span>
+                  </button>
+                )
+              )}
+            </div>
+
+            {/* HEADER */}
+            <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-5 rounded-full bg-gradient-to-b from-[#14b8a6] to-[#06b6d4]" />
-                <h2 className="text-sm font-bold text-white uppercase tracking-[0.15em]">
-                  {filter === 'all' ? 'All Jobs' : filters.find(f => f.key === filter)?.label || 'Results'}
+                <div className="w-1 h-5 rounded-full bg-gradient-to-b from-[#14b8a6] to-[#22d3ee]" />
+
+                <h2 className="text-xs sm:text-sm text-white uppercase tracking-[.14em] font-black">
+                  Opportunities
                 </h2>
-                <span className="text-[10px] text-gray-600 bg-[#0F3A42]/40 px-2 py-0.5 rounded-full tabular-nums font-bold">
-                  {filteredJobs.length}
+
+                <span className="px-2 py-0.5 rounded-full bg-[#12333c]/40 text-gray-500 text-[10px] font-bold">
+                  {
+                    filteredJobs.length
+                  }
                 </span>
               </div>
+
+              <button
+                type="button"
+                onClick={fetchJobs}
+                className="text-[11px] text-gray-600 hover:text-[#2dd4bf] transition-colors cursor-pointer"
+              >
+                Refresh
+              </button>
             </div>
 
-            {/* ════════════════════════════════════
-                JOBS LIST
-               ════════════════════════════════════ */}
+            {/* ERROR */}
+            {error && (
+              <div className="mb-5 px-4 py-3 rounded-xl bg-red-500/[.06] border border-red-500/20 text-red-300 text-sm flex items-center justify-between gap-3">
+                <span>{error}</span>
+
+                <button
+                  type="button"
+                  onClick={fetchJobs}
+                  className="shrink-0 px-3 py-1.5 rounded-lg border border-red-500/25 hover:bg-red-500/10 transition-all"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* CONTENT */}
             {loading ? (
               <div className="space-y-4">
-                {[1,2,3,4].map(i => <div key={i} className="slide-up" style={{ animationDelay: `${i * 0.1}s` }}><Skeleton /></div>)}
+                {[
+                  1, 2, 3, 4,
+                ].map((item) => (
+                  <JobSkeleton
+                    key={item}
+                  />
+                ))}
               </div>
-            ) : filteredJobs.length === 0 ? (
-              <div className="text-center py-28 slide-up">
-                <div className="relative inline-block mb-6">
-                  <div className="w-24 h-24 rounded-3xl bg-[#0A1A22] border border-[#1e3a42]/40 flex items-center justify-center mx-auto float-slow">
-                    <Briefcase size={36} className="text-gray-700" />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-xl bg-[#14b8a6]/10 border border-[#14b8a6]/20 flex items-center justify-center scale-in" style={{ animationDelay: '0.3s' }}>
-                    <Search size={14} className="text-[#14b8a6]" />
-                  </div>
+            ) : filteredJobs.length ===
+              0 ? (
+              <div className="jobs-fade-up text-center py-24">
+                <div className="jobs-float w-24 h-24 rounded-3xl bg-[#091c24] border border-[#1e3a42]/50 flex items-center justify-center mx-auto mb-6">
+                  <Briefcase
+                    size={35}
+                    className="text-gray-700"
+                  />
                 </div>
-                <p className="text-white text-lg font-bold mb-2">No jobs found</p>
-                <p className="text-gray-600 text-sm max-w-sm mx-auto mb-6">Try different search terms or adjust your filters</p>
-                {(search || filter !== 'all') && (
-                  <button onClick={() => { setSearch(''); setFilter('all'); }}
-                    className="px-6 py-2.5 bg-[#14b8a6]/10 border border-[#14b8a6]/20 rounded-xl text-[#2dd4bf] text-sm font-bold hover:bg-[#14b8a6]/20 transition-all cursor-pointer">
-                    Clear All Filters
+
+                <h3 className="text-xl text-white font-bold">
+                  No jobs found
+                </h3>
+
+                <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
+                  Try another keyword or
+                  change the selected
+                  filter.
+                </p>
+
+                {(search ||
+                  filter !==
+                    'all') && (
+                  <button
+                    type="button"
+                    onClick={
+                      clearFilters
+                    }
+                    className="mt-5 px-5 py-2.5 rounded-xl bg-[#14b8a6]/10 border border-[#14b8a6]/20 text-[#5eead4] text-sm font-bold hover:bg-[#14b8a6]/15 transition-all cursor-pointer"
+                  >
+                    Clear Filters
                   </button>
                 )}
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredJobs.map((job, idx) => {
-                  const details = getMatchDetails(job);
-                  const score = details.total;
-                  const jobSkills = Array.isArray(job.skills) ? job.skills : [];
-                  const isSaved = savedJobs.has(job.id);
-                  const isExpanded = expandedCard === job.id;
-                  const scoreColor = score >= 80 ? '#10b981' : score >= 60 ? '#14b8a6' : '#f59e0b';
-                  const matchText = score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : 'Fair';
-
-                  return (
-                    <div key={job.id} className="tilt-in" style={{ animationDelay: `${idx * 0.06}s` }}>
-                      <TiltCard intensity={3}>
-                        <div className="glass-card glow-border shine-effect job-card rounded-2xl relative overflow-hidden">
-                          {/* Top color accent */}
-                          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
-                            background: `linear-gradient(90deg, transparent, ${scoreColor}60, transparent)`
-                          }} />
-
-                          <div className="p-5 sm:p-6 relative z-10">
-                            <div className="flex flex-col lg:flex-row gap-5 lg:gap-6">
-
-                              {/* ── Score + Radar ── */}
-                              {user && (
-                                <div className="flex items-center lg:flex-col gap-5 lg:gap-3 lg:justify-center lg:min-w-[130px]">
-                                  <ScoreRing score={score} />
-                                  <div className="hidden lg:block">
-                                    <RadarChart skills={details.skills} experience={details.experience} track={details.track} size={120} />
-                                  </div>
-                                  <span className="text-[11px] font-bold uppercase tracking-wider lg:hidden" style={{ color: scoreColor }}>
-                                    {matchText} Match
-                                  </span>
-                                </div>
-                              )}
-
-                              {/* ── Content ── */}
-                              <div className="flex-1 min-w-0">
-                                {/* Header row */}
-                                <div className="flex items-start justify-between gap-3 mb-3">
-                                  <div>
-                                    <div className="flex items-center gap-2 mb-1.5">
-                                      <h3 className="job-title text-lg sm:text-xl font-bold text-white leading-snug cursor-default">
-                                        {job.title}
-                                      </h3>
-                                      {user && (
-                                        <span className="shrink-0 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider"
-                                          style={{ background: `${scoreColor}15`, color: scoreColor, border: `1px solid ${scoreColor}25` }}>
-                                          {matchText}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {[
-                                        { icon: Building2, t: job.company },
-                                        { icon: MapPin, t: job.location },
-                                        { icon: Briefcase, t: job.level },
-                                      ].map((m, i) => (
-                                        <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#0F3A42]/30 rounded-md text-[11px] text-gray-500 border border-[#1e3a42]/25">
-                                          <m.icon size={10} className="text-gray-600" /> {m.t}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <button onClick={() => toggleSave(job.id)} title={isSaved ? 'Unsave' : 'Save'}
-                                    className={`shrink-0 w-9 h-9 flex items-center justify-center rounded-xl border cursor-pointer transition-all duration-300 hover:scale-110
-                                      ${isSaved ? 'bg-pink-500/15 border-pink-500/25 text-pink-400' : 'bg-[#0F3A42]/30 border-[#1e3a42]/30 text-gray-600 hover:text-gray-300'}`}>
-                                    {isSaved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
-                                  </button>
-                                </div>
-
-                                {/* Description */}
-                                {job.description && (
-                                  <p className={`text-sm text-gray-400/80 leading-relaxed mb-3 ${isExpanded ? '' : 'line-clamp-2'}`}>
-                                    {job.description}
-                                  </p>
-                                )}
-
-                                {/* Salary */}
-                                {(job.salary_min || job.salary_max) && (
-                                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/[0.06] border border-emerald-500/15 rounded-lg mb-3">
-                                    <DollarSign size={12} className="text-emerald-400" />
-                                    <span className="text-sm font-bold text-emerald-400">
-                                      ৳{job.salary_min?.toLocaleString()} – ৳{job.salary_max?.toLocaleString()}
-                                      <span className="text-emerald-400/40 text-[10px] font-normal ml-1">/mo</span>
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Skills */}
-                                <div className="mb-4">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] text-gray-600 uppercase tracking-[0.15em] font-bold">
-                                      Skills {user && <span className="text-[#14b8a6]">{details.matchedSkills.length}/{jobSkills.length}</span>}
-                                    </span>
-                                    {user && jobSkills.length > 0 && (
-                                      <div className="flex items-center gap-1.5">
-                                        <div className="w-16 h-1 bg-[#0F3A42] rounded-full overflow-hidden">
-                                          <div className="h-full rounded-full bar-animate" style={{
-                                            width: `${(details.matchedSkills.length / jobSkills.length) * 100}%`,
-                                            background: `linear-gradient(90deg, ${scoreColor}, ${scoreColor}80)`
-                                          }} />
-                                        </div>
-                                        <span className="text-[9px] tabular-nums font-bold" style={{ color: scoreColor }}>
-                                          {Math.round((details.matchedSkills.length / jobSkills.length) * 100)}%
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {jobSkills.map((skill, i) => {
-                                      const matched = user && details.matchedSkills.includes(skill.toLowerCase());
-                                      return (
-                                        <span key={i} className={`skill-pop inline-flex items-center gap-1 px-2.5 py-1 text-[11px] rounded-full border cursor-default transition-all duration-200 hover:scale-105
-                                          ${matched
-                                            ? 'bg-emerald-500/12 text-emerald-300 border-emerald-500/25 shadow-sm shadow-emerald-500/5'
-                                            : 'bg-[#0F3A42]/30 text-gray-500 border-[#1e3a42]/30 hover:border-[#1e3a42]/60'}`}
-                                          style={{ animationDelay: `${i * 0.04}s` }}>
-                                          {matched && <CheckCircle size={9} />} {skill}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-
-                                {/* Match indicators */}
-                                {user && (
-                                  <div className="flex flex-wrap gap-2 mb-4">
-                                    {[
-                                      { icon: TrendingUp, label: details.experience >= 20 ? 'Meets level' : details.experience >= 12 ? 'Close' : 'Below',
-                                        active: details.experience >= 12, color: details.experience >= 20 ? '#10b981' : details.experience >= 12 ? '#f59e0b' : '#6b7280' },
-                                      { icon: Target, label: details.track >= 20 ? 'Same track' : details.track >= 10 ? 'Related' : 'Different',
-                                        active: details.track >= 10, color: details.track >= 20 ? '#10b981' : details.track >= 10 ? '#14b8a6' : '#6b7280' },
-                                    ].map((ind, i) => (
-                                      <span key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-all"
-                                        style={{ background: `${ind.color}08`, color: ind.color, borderColor: `${ind.color}20` }}>
-                                        <ind.icon size={10} /> {ind.label}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* Expandable details */}
-                                {isExpanded && user && (
-                                  <div className="scale-in mb-4 p-4 bg-[#071015]/50 border border-[#1e3a42]/25 rounded-xl">
-                                    <div className="grid grid-cols-3 gap-3 mb-3">
-                                      {[
-                                        { label: 'Skills', val: details.skills, max: 60, c: '#14b8a6' },
-                                        { label: 'Experience', val: details.experience, max: 20, c: '#06b6d4' },
-                                        { label: 'Track', val: details.track, max: 20, c: '#2dd4bf' },
-                                      ].map(b => (
-                                        <div key={b.label} className="text-center">
-                                          <div className="text-[10px] text-gray-600 uppercase tracking-wider font-bold mb-1">{b.label}</div>
-                                          <div className="text-lg font-black tabular-nums" style={{ color: b.c }}>{b.val}<span className="text-gray-600 text-[10px]">/{b.max}</span></div>
-                                          <div className="w-full h-1 bg-[#0F3A42] rounded-full mt-1 overflow-hidden">
-                                            <div className="h-full rounded-full bar-animate" style={{ width: `${(b.val / b.max) * 100}%`, background: b.c }} />
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                    {/* Inline radar */}
-                                    <div className="flex justify-center">
-                                      <RadarChart skills={details.skills} experience={details.experience} track={details.track} size={160} />
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Actions */}
-                                <div className="flex items-center gap-2.5">
-                                  <RippleButton onClick={() => applyToJob(job.id)}
-                                    disabled={appliedJobs.has(job.id) || applyingTo === job.id}
-                                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-bold transition-all duration-300 cursor-pointer
-                                      ${appliedJobs.has(job.id) ? 'bg-emerald-600/70 cursor-default shadow-lg shadow-emerald-500/10'
-                                        : applyingTo === job.id ? 'bg-gray-600 cursor-wait'
-                                        : 'bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] hover:shadow-xl hover:shadow-[#14b8a6]/20 hover:scale-[1.03] active:scale-[0.97]'}`}>
-                                    {appliedJobs.has(job.id) ? <><CheckCircle size={14} /> Applied</> : applyingTo === job.id ? <><Loader2 size={14} className="animate-spin" /> ...</> : <><Send size={14} /> Apply</>}
-                                  </RippleButton>
-
-                                  <button onClick={() => setSelectedJob(job)}
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 border border-[#1e3a42]/40 rounded-xl text-gray-400 text-sm font-medium hover:border-[#14b8a6]/30 hover:text-white hover:bg-[#14b8a6]/5 transition-all duration-300 cursor-pointer group/d">
-                                    <Eye size={14} /> Details
-                                    <ArrowUpRight size={11} className="opacity-0 group-hover/d:opacity-100 transition-all duration-200" />
-                                  </button>
-
-                                  {user && (
-                                    <button onClick={() => setExpandedCard(isExpanded ? null : job.id)}
-                                      className="ml-auto flex items-center gap-1 text-[10px] text-gray-600 hover:text-[#14b8a6] transition-colors cursor-pointer font-semibold uppercase tracking-wider">
-                                      {isExpanded ? 'Less' : 'Breakdown'}
-                                      <ChevronDown size={12} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* ── Side breakdown (desktop) ── */}
-                              {user && (
-                                <div className="hidden xl:block xl:min-w-[180px] self-start">
-                                  <div className="bg-[#071015]/50 border border-[#1e3a42]/25 rounded-xl p-4">
-                                    <h4 className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-3 flex items-center gap-1.5">
-                                      <Award size={10} className="text-[#2dd4bf]" /> Breakdown
-                                    </h4>
-                                    {[
-                                      { l: 'Skills', v: details.skills, m: 60, c: '#14b8a6' },
-                                      { l: 'Experience', v: details.experience, m: 20, c: '#06b6d4' },
-                                      { l: 'Track', v: details.track, m: 20, c: '#2dd4bf' },
-                                    ].map(item => (
-                                      <div key={item.l} className="mb-3 last:mb-0">
-                                        <div className="flex justify-between text-[10px] mb-1.5">
-                                          <span className="text-gray-600 font-medium">{item.l}</span>
-                                          <span className="font-bold tabular-nums" style={{ color: item.c }}>{item.v}/{item.m}</span>
-                                        </div>
-                                        <div className="h-1.5 bg-[#0F3A42]/60 rounded-full overflow-hidden">
-                                          <div className="h-full rounded-full bar-animate"
-                                            style={{ width: `${(item.v / item.m) * 100}%`, background: `linear-gradient(90deg, ${item.c}, ${item.c}80)`,
-                                              boxShadow: `0 0 8px ${item.c}25` }} />
-                                        </div>
-                                      </div>
-                                    ))}
-                                    {/* Mini radar */}
-                                    <div className="mt-4 flex justify-center">
-                                      <RadarChart skills={details.skills} experience={details.experience} track={details.track} size={100} />
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </TiltCard>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Results count */}
-            {!loading && filteredJobs.length > 0 && (
-              <div className="text-center mt-12 fade-in">
-                <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-[#0A1A22]/60 border border-[#1e3a42]/30 rounded-full">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#14b8a6] animate-pulse" />
-                  <span className="text-xs text-gray-500">
-                    Showing <span className="text-white font-bold">{filteredJobs.length}</span> of <span className="text-white font-bold">{jobs.length}</span> jobs
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════
-            MODAL
-           ═══════════════════════════════════ */}
-        {selectedJob && (() => {
-          const d = getMatchDetails(selectedJob);
-          const sc = d.total;
-          const jSkills = Array.isArray(selectedJob.skills) ? selectedJob.skills : [];
-          const scoreColor = sc >= 80 ? '#10b981' : sc >= 60 ? '#14b8a6' : '#f59e0b';
-          const matchText = sc >= 80 ? 'Excellent Match' : sc >= 60 ? 'Good Match' : 'Fair Match';
-
-          return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedJob(null)}>
-              <div className="modal-bg absolute inset-0 bg-black/70 backdrop-blur-lg" />
-              <div onClick={e => e.stopPropagation()}
-                className="modal-reveal relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0A1A22] border border-[#1e3a42]/60 rounded-3xl shadow-2xl shadow-[#14b8a6]/5">
-
-                {/* Gradient top */}
-                <div className="h-1 bg-gradient-to-r from-[#14b8a6] via-[#06b6d4] to-[#2dd4bf] rounded-t-3xl" style={{ backgroundSize: '200% 200%', animation: 'gradientShift 3s ease infinite' }} />
-
-                <div className="absolute top-0 right-0 w-60 h-60 bg-[radial-gradient(ellipse,rgba(20,184,166,0.04)_0%,transparent_70%)] pointer-events-none" />
-
-                <button onClick={() => setSelectedJob(null)}
-                  className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-xl bg-[#0F3A42]/50 border border-[#1e3a42] text-gray-400 hover:text-white hover:border-[#14b8a6]/30 transition-all cursor-pointer z-10 hover:rotate-90 duration-300">
-                  <X size={18} />
-                </button>
-
-                <div className="p-6 sm:p-8">
-                  {/* Header */}
-                  <div className="flex items-start gap-5 mb-7">
-                    {user && (
-                      <div className="shrink-0 flex flex-col items-center gap-3">
-                        <ScoreRing score={sc} size={100} sw={5} />
-                        <RadarChart skills={d.skills} experience={d.experience} track={d.track} size={110} />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0 pt-1">
-                      <h2 className="text-2xl font-black text-white mb-2 leading-tight pr-10">{selectedJob.title}</h2>
-                      <div className="flex flex-wrap gap-1.5 mb-3">
-                        {[{ icon: Building2, t: selectedJob.company }, { icon: MapPin, t: selectedJob.location }, { icon: Briefcase, t: selectedJob.level }].map((m, i) => (
-                          <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#0F3A42]/30 rounded-lg text-xs text-gray-400 border border-[#1e3a42]/25">
-                            <m.icon size={11} className="text-gray-500" /> {m.t}
-                          </span>
-                        ))}
-                      </div>
-                      {user && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border"
-                          style={{ background: `${scoreColor}12`, color: scoreColor, borderColor: `${scoreColor}25` }}>
-                          <Sparkles size={11} /> {matchText}
-                        </span>
+                {filteredJobs.map(
+                  (job, index) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      index={index}
+                      user={user}
+                      match={getMatchDetails(
+                        job
                       )}
-                    </div>
-                  </div>
+                      applied={appliedJobs.has(
+                        Number(job.id)
+                      )}
+                      saved={savedJobs.has(
+                        job.id
+                      )}
+                      onApply={
+                        applyToJob
+                      }
+                      onDetails={
+                        setSelectedJob
+                      }
+                      onSave={
+                        toggleSave
+                      }
+                    />
+                  )
+                )}
+              </div>
+            )}
 
-                  {/* Salary */}
-                  {(selectedJob.salary_min || selectedJob.salary_max) && (
-                    <div className="flex items-center gap-3 bg-emerald-500/[0.04] border border-emerald-500/12 rounded-xl px-5 py-4 mb-6 group">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <DollarSign size={18} className="text-emerald-400" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-gray-600 uppercase tracking-wider font-bold mb-0.5">Salary Range</div>
-                        <div className="text-lg font-black text-emerald-400">
-                          ৳{selectedJob.salary_min?.toLocaleString()} – ৳{selectedJob.salary_max?.toLocaleString()}
-                          <span className="text-emerald-400/40 font-normal text-sm ml-1">/month</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+            {!loading &&
+              filteredJobs.length >
+                0 && (
+                <div className="flex justify-center mt-10">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#091c24]/80 border border-[#1e3a42]/40 text-[11px] text-gray-500">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#14b8a6] animate-pulse" />
 
-                  {/* Description */}
-                  {selectedJob.description && (
-                    <div className="mb-6">
-                      <h4 className="text-xs font-black text-white uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
-                        <ChevronRight size={14} className="text-[#14b8a6]" /> Description
-                      </h4>
-                      <p className="text-sm text-gray-400 leading-relaxed pl-5 border-l-2 border-[#1e3a42]/30">{selectedJob.description}</p>
-                    </div>
-                  )}
+                    Showing
 
-                  {/* Skills */}
-                  <div className="mb-6">
-                    <h4 className="text-xs font-black text-white uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
-                      <Star size={14} className="text-[#06b6d4]" /> Required Skills
-                      {user && <span className="text-[10px] font-normal text-gray-600 ml-auto">{d.matchedSkills.length} of {jSkills.length}</span>}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {jSkills.map((skill, i) => {
-                        const matched = user && d.matchedSkills.includes(skill.toLowerCase());
-                        return (
-                          <span key={i} className={`skill-pop inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border cursor-default
-                            ${matched ? 'bg-emerald-500/12 text-emerald-300 border-emerald-500/25 shadow-sm shadow-emerald-500/5' : 'bg-[#0F3A42]/30 text-gray-500 border-[#1e3a42]/30'}`}
-                            style={{ animationDelay: `${i * 0.05}s` }}>
-                            {matched && <CheckCircle size={11} />} {skill}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
+                    <span className="text-white font-bold">
+                      {
+                        filteredJobs.length
+                      }
+                    </span>
 
-                  {/* Breakdown */}
-                  {user && (
-                    <div className="bg-[#071015]/60 border border-[#1e3a42]/25 rounded-xl p-5 mb-6">
-                      <h4 className="text-xs font-black text-white uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
-                        <Award size={14} className="text-[#2dd4bf]" /> Match Breakdown
-                      </h4>
-                      <div className="space-y-4">
-                        {[
-                          { label: 'Skills Match', value: d.skills, max: 60, color: '#14b8a6', icon: Code2,
-                            desc: `${d.matchedSkills.length} of ${jSkills.length} required skills` },
-                          { label: 'Experience', value: d.experience, max: 20, color: '#06b6d4', icon: TrendingUp,
-                            desc: d.experience >= 20 ? 'Meets required level' : d.experience >= 12 ? 'Close to required' : 'Below required' },
-                          { label: 'Career Track', value: d.track, max: 20, color: '#2dd4bf', icon: Target,
-                            desc: d.track >= 20 ? 'Same track' : d.track >= 10 ? 'Related track' : 'Different track' },
-                        ].map(item => (
-                          <div key={item.label}>
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm text-gray-300 font-semibold flex items-center gap-2">
-                                <item.icon size={13} style={{ color: item.color }} /> {item.label}
-                              </span>
-                              <span className="text-sm font-black tabular-nums" style={{ color: item.color }}>{item.value}/{item.max}</span>
-                            </div>
-                            <div className="h-2 bg-[#0F3A42]/60 rounded-full overflow-hidden mb-1.5">
-                              <div className="h-full rounded-full bar-animate" style={{
-                                width: `${(item.value / item.max) * 100}%`,
-                                background: `linear-gradient(90deg, ${item.color}, ${item.color}80)`,
-                                boxShadow: `0 0 10px ${item.color}25`
-                              }} />
-                            </div>
-                            <p className="text-[11px] text-gray-600">{item.desc}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    of
 
-                  {/* Level comparison */}
-                  {user && (
-                    <div className="grid grid-cols-2 gap-3 mb-7">
-                      {[
-                        { icon: Clock, label: 'Required', value: selectedJob.level, color: '#06b6d4' },
-                        { icon: Award, label: 'Your Level', value: avgLevelLabel, color: '#2dd4bf' },
-                      ].map((card, i) => (
-                        <div key={i} className="bg-[#071015]/30 border border-[#1e3a42]/25 rounded-xl p-4 text-center group hover:border-[#14b8a6]/20 transition-all">
-                          <div className="w-10 h-10 rounded-xl mx-auto mb-2.5 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"
-                            style={{ background: `${card.color}12` }}>
-                            <card.icon size={18} style={{ color: card.color }} />
-                          </div>
-                          <div className="text-[10px] text-gray-600 uppercase tracking-wider font-bold mb-1">{card.label}</div>
-                          <div className="text-sm font-bold text-white">{card.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    <span className="text-white font-bold">
+                      {jobs.length}
+                    </span>
 
-                  {/* Actions */}
-                  <div className="flex gap-3">
-                    <RippleButton onClick={() => applyToJob(selectedJob.id)}
-                      disabled={appliedJobs.has(selectedJob.id) || applyingTo === selectedJob.id}
-                      className={`flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-white text-sm font-bold transition-all duration-300 cursor-pointer
-                        ${appliedJobs.has(selectedJob.id) ? 'bg-emerald-600/70 cursor-default shadow-lg shadow-emerald-500/10'
-                          : applyingTo === selectedJob.id ? 'bg-gray-600 cursor-wait'
-                          : 'bg-gradient-to-r from-[#14b8a6] to-[#06b6d4] hover:shadow-xl hover:shadow-[#14b8a6]/20 hover:scale-[1.02] active:scale-[0.98]'}`}>
-                      {appliedJobs.has(selectedJob.id) ? <><CheckCircle size={16} /> Applied Successfully</> : applyingTo === selectedJob.id ? <><Loader2 size={16} className="animate-spin" /> Applying...</> : <><Send size={16} /> Apply Now</>}
-                    </RippleButton>
-                    <button onClick={() => setSelectedJob(null)}
-                      className="px-6 py-3.5 border border-[#1e3a42]/40 rounded-xl text-gray-400 text-sm font-semibold hover:border-[#14b8a6]/30 hover:text-white hover:bg-[#14b8a6]/5 transition-all duration-300 cursor-pointer">
-                      Close
-                    </button>
+                    jobs
                   </div>
                 </div>
-              </div>
-            </div>
-          );
-        })()}
+              )}
+          </section>
+        </main>
+
+        {selectedJob &&
+          selectedMatch && (
+            <JobDetailsModal
+              job={selectedJob}
+              user={user}
+              match={
+                selectedMatch
+              }
+              applied={appliedJobs.has(
+                Number(
+                  selectedJob.id
+                )
+              )}
+              onApply={
+                applyToJob
+              }
+              onClose={() =>
+                setSelectedJob(
+                  null
+                )
+              }
+            />
+          )}
       </div>
     </>
   );
