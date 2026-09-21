@@ -25,12 +25,20 @@ class JobApplication extends Model
         'references',
         'online_profiles',
         'application_notes',
+        'company_notes',
+        'reviewed_at',
         'submitted_at',
+    ];
+
+    // Employer-only notes must never leak through candidate-facing application APIs.
+    protected $hidden = [
+        'company_notes',
     ];
 
     protected $casts = [
         'applied_at' => 'datetime',
         'submitted_at' => 'datetime',
+        'reviewed_at' => 'datetime',
         'personal_info' => 'array',
         'work_experience' => 'array',
         'education_info' => 'array',
