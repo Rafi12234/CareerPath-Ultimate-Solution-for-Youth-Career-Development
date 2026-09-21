@@ -8,6 +8,19 @@ use Illuminate\Support\Facades\Cache;
 
 class JobController extends Controller
 {
+private function publicQuery()
+{
+    return Job::query()
+        ->where('status', 'published')
+        ->where(function ($q) {
+            $q->whereNull('application_deadline')
+                ->orWhereDate('application_deadline', '>=', now()->toDateString());
+        })
+        ->with([
+            'employerCompany:id,name,logo_url,industry,website'
+        ]);
+}
+
     public function index(Request $request)
     {
         $hasFilters =
@@ -17,70 +30,32 @@ class JobController extends Controller
             ($request->has('track') && $request->track !== 'all'));
 
         if (!$hasFilters) {
-            $jobs = Cache::remember('jobs:index:v1', now()->addMinutes(5), function () {
-                return Job::query()->latest()->get();
+            $jobs = Cache::remember('jobs:index:v2', now()->addMinutes(3), function () {
+                return $this->publicQuery()->latest()->get();
             });
-
             return response()->json($jobs);
         }
 
-        $query = Job::query();
+        $query = $this->publicQuery();
 
-        if ($request->has('search')) {
-            $search = $request->search;
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('company', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('track', 'like', "%{$search}%");
+                    ->orWhere('company', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('track', 'like', "%{$search}%");
             });
         }
-
-        if ($request->has('level') && $request->level !== 'all') {
-            $query->where('level', $request->level);
-        }
-
-        if ($request->has('type') && $request->type !== 'all') {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->has('track') && $request->track !== 'all') {
-            $query->where('track', $request->track);
-        }
+        if ($request->has('level') && $request->level !== 'all') $query->where('level', $request->level);
+        if ($request->has('type') && $request->type !== 'all') $query->where('type', $request->type);
+        if ($request->has('track') && $request->track !== 'all') $query->where('track', $request->track);
 
         return response()->json($query->latest()->get());
     }
 
     public function show($id)
     {
-        $job = Job::findOrFail($id);
-        return response()->json($job);
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'company' => 'required|string|max:255',
-        ]);
-
-        $job = Job::create($request->all());
-        Cache::forget('jobs:index:v1');
-        return response()->json($job, 201);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $job = Job::findOrFail($id);
-        $job->update($request->all());
-        Cache::forget('jobs:index:v1');
-        return response()->json($job);
-    }
-
-    public function destroy($id)
-    {
-        Job::findOrFail($id)->delete();
-        Cache::forget('jobs:index:v1');
-        return response()->json(['message' => 'Job deleted']);
+        return response()->json($this->publicQuery()->findOrFail($id));
     }
 }
