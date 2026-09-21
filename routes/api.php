@@ -17,6 +17,10 @@ use App\Http\Controllers\CourseVideoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CompanyAuthController;
+use App\Http\Controllers\CompanyDashboardController;
+use App\Http\Controllers\CompanyJobController;
+use App\Http\Controllers\CompanyApplicationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -41,9 +45,6 @@ Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
 // Jobs
 Route::get('/jobs', [JobController::class, 'index']);
 Route::get('/jobs/{id}', [JobController::class, 'show']);
-Route::post('/jobs', [JobController::class, 'store']);
-Route::put('/jobs/{id}', [JobController::class, 'update']);
-Route::delete('/jobs/{id}', [JobController::class, 'destroy']);
 
 // Enrollments
 Route::get('/enrollments', [EnrollmentController::class, 'index']);
@@ -64,14 +65,16 @@ Route::post('/user-skills', [UserSkillController::class, 'store']);
 Route::put('/user-skills/{id}', [UserSkillController::class, 'update']);
 Route::delete('/user-skills/{id}', [UserSkillController::class, 'destroy']);
 
-// Job Applications
-Route::middleware('jwt.auth')->get('/job-applications/init/{jobId}', [JobApplicationController::class, 'initializeApplication']);
-Route::middleware('jwt.auth')->post('/job-applications/generate-cover-letter', [JobApplicationController::class, 'generateCoverLetterAI']);
-Route::get('/job-applications', [JobApplicationController::class, 'index']);
-Route::post('/job-applications', [JobApplicationController::class, 'store']);
-Route::get('/job-applications/{id}', [JobApplicationController::class, 'show']);
-Route::put('/job-applications/{id}', [JobApplicationController::class, 'update']);
-Route::delete('/job-applications/{id}', [JobApplicationController::class, 'destroy']);
+// Job Applications (candidate-owned)
+Route::middleware(['jwt.auth', 'candidate.auth'])->group(function () {
+    Route::get('/job-applications/init/{jobId}', [JobApplicationController::class, 'initializeApplication']);
+    Route::post('/job-applications/generate-cover-letter', [JobApplicationController::class, 'generateCoverLetterAI']);
+    Route::get('/job-applications', [JobApplicationController::class, 'index']);
+    Route::post('/job-applications', [JobApplicationController::class, 'store']);
+    Route::get('/job-applications/{id}', [JobApplicationController::class, 'show']);
+    Route::put('/job-applications/{id}', [JobApplicationController::class, 'update']);
+    Route::delete('/job-applications/{id}', [JobApplicationController::class, 'destroy']);
+});
 
 // Contacts
 Route::get('/contacts', [ContactController::class, 'index']);
@@ -108,6 +111,32 @@ Route::post('/items', [UsersController::class, 'store']);
 Route::put('/items/{id}', [UsersController::class, 'update']);
 Route::patch('/items/{id}', [UsersController::class, 'patch']);
 Route::delete('/items/{id}', [UsersController::class, 'destroy']);
+
+
+/*
+|--------------------------------------------------------------------------
+| COMPANY PORTAL ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::post('/company/register', [CompanyAuthController::class, 'register']);
+Route::post('/company/login', [CompanyAuthController::class, 'login']);
+
+Route::middleware(['jwt.auth', 'company.auth'])->prefix('company')->group(function () {
+    Route::post('/logout', [CompanyAuthController::class, 'logout']);
+    Route::get('/me', [CompanyAuthController::class, 'me']);
+    Route::put('/profile', [CompanyAuthController::class, 'updateProfile']);
+    Route::get('/dashboard', [CompanyDashboardController::class, 'index']);
+
+    Route::get('/jobs', [CompanyJobController::class, 'index']);
+    Route::post('/jobs', [CompanyJobController::class, 'store']);
+    Route::get('/jobs/{jobId}', [CompanyJobController::class, 'show']);
+    Route::put('/jobs/{jobId}', [CompanyJobController::class, 'update']);
+    Route::delete('/jobs/{jobId}', [CompanyJobController::class, 'destroy']);
+
+    Route::get('/applications', [CompanyApplicationController::class, 'index']);
+    Route::get('/applications/{applicationId}', [CompanyApplicationController::class, 'show']);
+    Route::put('/applications/{applicationId}', [CompanyApplicationController::class, 'update']);
+});
 
 /*
 |--------------------------------------------------------------------------
