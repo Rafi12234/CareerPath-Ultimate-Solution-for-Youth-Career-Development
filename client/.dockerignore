@@ -1,5 +1,0 @@
-# Frontend .dockerignore
-node_modules
-dist
-.git
-*.md
