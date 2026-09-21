@@ -1072,6 +1072,9 @@ export default function Register() {
                         <ArrowUpRight size={13} className="inline ml-0.5 opacity-0 group-hover/link:opacity-100 transition-all duration-200 -translate-y-0.5" />
                       </Link>
                     </p>
+                    <Link to="/company/register" className="mt-3 inline-flex items-center gap-1.5 text-xs text-gray-600 hover:text-[#2dd4bf] transition-colors">
+                      <Briefcase size={13} /> Registering an employer? Create a Company Portal account <ArrowUpRight size={12} />
+                    </Link>
                   </div>
                 </div>
               </div>
