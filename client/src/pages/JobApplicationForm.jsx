@@ -1426,7 +1426,6 @@ const JobApplicationForm = () => {
       setSubmissionStatus('Preparing form data...');
 
       const formData = new FormData();
-      formData.append('user_id', user.id);
       formData.append('job_id', jobId);
       formData.append('personal_info', JSON.stringify(form.personal_info));
       formData.append('work_experience', JSON.stringify(form.work_experience));
