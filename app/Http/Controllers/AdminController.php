@@ -9,6 +9,7 @@ use App\Models\Job;
 use App\Models\JobApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -580,9 +581,10 @@ class AdminController extends Controller
         }
 
         $jobData = $request->validated();
-        $jobData['skills'] = json_encode($request->skills ?? []);
+        $jobData['skills'] = $request->skills ?? [];
 
         $job = Job::create($jobData);
+        Cache::forget('jobs:index:v2');
 
         return response()->json([
             'message' => 'Job created successfully',
@@ -619,10 +621,11 @@ class AdminController extends Controller
 
         $jobData = $request->validated();
         if (isset($jobData['skills'])) {
-            $jobData['skills'] = json_encode($jobData['skills']);
+            $jobData['skills'] = array_values($jobData['skills']);
         }
 
         $job->update($jobData);
+        Cache::forget('jobs:index:v2');
 
         return response()->json([
             'message' => 'Job updated successfully',
@@ -641,6 +644,7 @@ class AdminController extends Controller
         }
 
         $job->delete();
+        Cache::forget('jobs:index:v2');
 
         return response()->json([
             'message' => 'Job deleted successfully',
