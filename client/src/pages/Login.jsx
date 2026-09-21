@@ -5,7 +5,7 @@ import {
   Mail, Lock, Eye, EyeOff, LogIn, ArrowRight, Shield, Users,
   Zap, Globe, CheckCircle, KeyRound, ShieldCheck,
   Layers, Fingerprint, TrendingUp, Award, Star, Activity,
-  ChevronRight, Code2, Cpu, ArrowUpRight
+  ChevronRight, Code2, Cpu, ArrowUpRight, BriefcaseBusiness
 } from 'lucide-react';
 import api from '../utils/api';
 
@@ -985,6 +985,11 @@ export default function Login() {
                       </p>
                     </div>
                   )}
+                  <div className="mt-4 text-center slide-up" style={{ animationDelay: '.9s' }}>
+                    <Link to="/company/login" className="inline-flex items-center gap-1.5 text-xs text-gray-600 hover:text-[#2dd4bf] transition-colors">
+                      <BriefcaseBusiness size={13} /> Hiring for a company? Open Company Portal <ArrowUpRight size={12} />
+                    </Link>
+                  </div>
                 </div>
               </div>
 
