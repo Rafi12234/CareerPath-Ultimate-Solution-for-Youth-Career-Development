@@ -10,6 +10,7 @@ class Job extends Model
     use HasFactory;
 
     protected $fillable = [
+        'company_id',
         'title',
         'company',
         'location',
@@ -20,11 +21,21 @@ class Job extends Model
         'salary_max',
         'track',
         'skills',
+        'status',
+        'application_deadline',
+        'vacancies',
     ];
 
     protected $casts = [
         'skills' => 'array',
+        'application_deadline' => 'date',
+        'vacancies' => 'integer',
     ];
+
+public function employerCompany()
+{
+    return $this->belongsTo(Company::class, 'company_id');
+}
 
     public function screeningQuestions()
     {
