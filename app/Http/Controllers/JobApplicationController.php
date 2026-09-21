@@ -15,18 +15,14 @@ class JobApplicationController extends Controller
      */
     public function index(Request $request)
     {
-        $userId = $request->query('user_id');
+        $user = $request->user();
 
-        if ($userId) {
-            return response()->json(
-                JobApplication::where('user_id', $userId)
-                    ->with('job', 'screeningResponses.screeningQuestion')
-                    ->latest()
-                    ->get()
-            );
-        }
-
-        return response()->json(JobApplication::with('job', 'screeningResponses.screeningQuestion')->latest()->get());
+        return response()->json(
+            JobApplication::where('user_id', $user->id)
+                ->with('job', 'screeningResponses.screeningQuestion')
+                ->latest()
+                ->get()
+        );
     }
 
     /**
@@ -36,6 +32,10 @@ class JobApplicationController extends Controller
     {
         $job = \App\Models\Job::with('screeningQuestions')->findOrFail($jobId);
         $user = auth()->user();
+
+        if ($job->status !== 'published' || ($job->application_deadline && $job->application_deadline->lt(today()))) {
+            return response()->json(['message' => 'This position is no longer accepting applications.'], 422);
+        }
 
         if (!$user) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
@@ -129,22 +129,14 @@ class JobApplicationController extends Controller
     {
         try {
             $this->normalizeJsonArrayFields($request, [
-                'personal_info',
-                'work_experience',
-                'education_info',
-                'skills',
-                'references',
-                'online_profiles',
-                'work_eligibility',
-                'additional_documents',
-                'screening_responses',
+                'personal_info', 'work_experience', 'education_info', 'skills', 'references',
+                'online_profiles', 'work_eligibility', 'additional_documents', 'screening_responses',
             ]);
 
             $request->validate([
-                'user_id' => 'required|exists:users,id',
                 'job_id' => 'required|exists:jobs,id',
                 'personal_info' => 'required|array',
-                'cover_letter' => 'required|string',
+                'cover_letter' => 'required|string|max:15000',
                 'work_experience' => 'nullable|array',
                 'education_info' => 'nullable|array',
                 'skills' => 'nullable|array',
@@ -153,25 +145,44 @@ class JobApplicationController extends Controller
                 'work_eligibility' => 'nullable|array',
                 'additional_documents' => 'nullable|array',
                 'screening_responses' => 'nullable|array',
-                'resume' => 'nullable|file|mimes:pdf,doc,docx|max:10240', // 10MB
+                'screening_responses.*.question_id' => 'required|integer',
+                'screening_responses.*.response' => 'nullable|string|max:10000',
+                'resume' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
             ]);
 
-            $user = \App\Models\User::findOrFail($request->user_id);
+            $user = $request->user();
+            $job = \App\Models\Job::with('screeningQuestions')->findOrFail($request->job_id);
 
-            // Check if already applied
-            $existing = JobApplication::where('user_id', $request->user_id)
-                ->where('job_id', $request->job_id)
+            if ($job->status !== 'published' || ($job->application_deadline && $job->application_deadline->lt(today()))) {
+                return response()->json(['message' => 'This position is no longer accepting applications.'], 422);
+            }
+
+            $existing = JobApplication::where('user_id', $user->id)
+                ->where('job_id', $job->id)
                 ->first();
-
             if ($existing) {
                 return response()->json(['message' => 'Already applied to this job'], 409);
             }
 
-            // Handle resume upload to Filestack
+            $responseMap = collect($request->input('screening_responses', []))
+                ->filter(fn ($item) => is_array($item) && isset($item['question_id']))
+                ->keyBy(fn ($item) => (int) $item['question_id']);
+
+            foreach ($job->screeningQuestions as $question) {
+                if (!$question->required) continue;
+                $answer = data_get($responseMap->get((int) $question->id), 'response');
+                if ($answer === null || trim((string) $answer) === '') {
+                    return response()->json([
+                        'message' => 'Please answer all required screening questions.',
+                        'errors' => ['screening_responses' => ["A response is required for: {$question->question_text}"]],
+                    ], 422);
+                }
+            }
+
             $resumePath = null;
             if ($request->hasFile('resume')) {
                 try {
-                    $resumePath = $this->uploadResumeToFilestack($request->file('resume'), $request->user_id);
+                    $resumePath = $this->uploadResumeToFilestack($request->file('resume'), $user->id);
                 } catch (\Exception $e) {
                     return response()->json([
                         'message' => 'Failed to upload resume to Filestack: ' . $e->getMessage(),
@@ -180,10 +191,9 @@ class JobApplicationController extends Controller
                 }
             }
 
-            // Create application
             $application = JobApplication::create([
-                'user_id' => $request->user_id,
-                'job_id' => $request->job_id,
+                'user_id' => $user->id,
+                'job_id' => $job->id,
                 'status' => 'Pending',
                 'applied_at' => now(),
                 'submitted_at' => now(),
@@ -199,28 +209,21 @@ class JobApplicationController extends Controller
                 'online_profiles' => $request->online_profiles,
             ]);
 
-            // Store screening responses
-            if ($request->has('screening_responses') && is_array($request->screening_responses)) {
-                foreach ($request->screening_responses as $response) {
-                    ScreeningResponse::create([
-                        'job_application_id' => $application->id,
-                        'screening_question_id' => $response['question_id'],
-                        'response_text' => $response['response'],
-                    ]);
-                }
+            foreach ($responseMap as $questionId => $response) {
+                if (!$job->screeningQuestions->contains('id', (int) $questionId)) continue;
+                ScreeningResponse::create([
+                    'job_application_id' => $application->id,
+                    'screening_question_id' => (int) $questionId,
+                    'response_text' => $response['response'] ?? null,
+                ]);
             }
 
             return response()->json($application->load('job', 'screeningResponses.screeningQuestion'), 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Validation error',
-                'errors' => $e->errors(),
-            ], 422);
+            return response()->json(['message' => 'Validation error', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
             \Log::error('Job application submission error', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+                'error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine(),
             ]);
             return response()->json([
                 'message' => 'Failed to submit application',
@@ -232,9 +235,10 @@ class JobApplicationController extends Controller
     /**
      * Get single application with all details
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $application = JobApplication::with('job', 'user', 'screeningResponses.screeningQuestion')
+        $application = JobApplication::where('user_id', $request->user()->id)
+            ->with('job', 'user', 'screeningResponses.screeningQuestion')
             ->findOrFail($id);
         return response()->json($application);
     }
@@ -244,7 +248,7 @@ class JobApplicationController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $application = JobApplication::findOrFail($id);
+        $application = JobApplication::where('user_id', $request->user()->id)->findOrFail($id);
 
         $this->normalizeJsonArrayFields($request, [
             'personal_info',
@@ -287,9 +291,10 @@ class JobApplicationController extends Controller
     /**
      * Withdraw / delete an application
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        JobApplication::findOrFail($id)->delete();
+        $application = JobApplication::where('user_id', $request->user()->id)->findOrFail($id);
+        $application->delete();
         return response()->json(['message' => 'Application withdrawn']);
     }
 
@@ -304,6 +309,10 @@ class JobApplicationController extends Controller
         ]);
 
         $job = \App\Models\Job::findOrFail($request->job_id);
+        if ($job->status !== 'published' || ($job->application_deadline && $job->application_deadline->lt(today()))) {
+            return response()->json(['message' => 'This position is no longer accepting applications.'], 422);
+        }
+
         $userProfile = $request->user_profile;
 
         // Build prompt for GPT/AI
