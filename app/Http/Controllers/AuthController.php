@@ -128,7 +128,7 @@ class AuthController extends Controller
         }
 
         try {
-            $user = User::where('email', $payload['email'])->first();
+            $user = User::where('email', $payload['email'])->where('role', 'user')->first();
 
             if (!$user || !Hash::check($payload['password'], $user->password)) {
                 return response()->json([
