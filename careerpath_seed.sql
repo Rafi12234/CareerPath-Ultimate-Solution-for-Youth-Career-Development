@@ -1,3 +1,4 @@
+-- LEGACY REFERENCE FILE. For local setup use database/careerpath_local_full.sql instead.
 -- ============================================================
 -- CareerPath — Complete Database Setup
 -- ============================================================
