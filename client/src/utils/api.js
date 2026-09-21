@@ -109,11 +109,13 @@ api.interceptors.request.use((config) => {
 
   const userToken = localStorage.getItem('auth_token');
   const adminToken = localStorage.getItem('admin_token');
+  const companyToken = localStorage.getItem('company_token');
   const url = String(config.url || '');
   const isAdminRoute = url.startsWith('/admin');
+  const isCompanyRoute = url.startsWith('/company');
 
   // Use only the token that matches the API namespace to avoid wrong-token 401s.
-  const token = isAdminRoute ? adminToken : userToken;
+  const token = isAdminRoute ? adminToken : isCompanyRoute ? companyToken : userToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
